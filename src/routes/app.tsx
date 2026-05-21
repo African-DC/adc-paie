@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet, useLocation } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
 import { LayoutDashboard, Users, Calculator, FileCheck2, Settings, Search, Bell, ChevronRight, Sparkles, CalendarDays, UserCircle2, Wallet, Menu, X, FileText, BadgeCheck, ShieldCheck, ArrowLeftRight, LogOut, Clock } from 'lucide-react'
-import { CURRENT_USER, TENANT, EMPLOYEES } from '../lib/mock'
+import { CURRENT_USER, EMPLOYEES } from '../lib/mock'
 import { Spotlight } from '../components/spotlight'
 import { NotificationsPanel, Toast } from '../components/notifications'
 import { ADCAChat, ChatFAB } from '../components/adca-chat'
@@ -37,6 +37,7 @@ function AppLayout() {
   const loc = useLocation()
   const navigate = useNavigate()
   const unread = useStore((s) => s.notifs.filter((n) => !n.read).length)
+  const org = useStore((s) => s.org)
   const isMac = typeof navigator !== 'undefined' && navigator.platform.toLowerCase().includes('mac')
   const [drawer, setDrawer] = useState(false)
   const [confirmLogout, setConfirmLogout] = useState(false)
@@ -65,11 +66,11 @@ function AppLayout() {
         </div>
 
         {!isEmployeeMode ? (
-          <button onClick={() => store.toast('Multi-établissements disponible en tier Business', 'info')} className="px-6 py-4 border-b border-white/10 text-left hover:bg-white/5">
-            <p className="text-[10px] tracking-[0.22em] uppercase text-n-400 font-semibold mb-1">Espace administrateur</p>
-            <p className="text-sm font-semibold truncate">{TENANT.name}</p>
-            <p className="text-[11px] text-n-400 mt-0.5">IFU · {TENANT.ifu}</p>
-          </button>
+          <Link to="/app/settings" className="px-6 py-4 border-b border-white/10 text-left hover:bg-white/5 block" title="Modifier les informations dans Réglages">
+            <p className="text-[10px] tracking-[0.22em] uppercase text-n-400 font-semibold mb-1">Organisation</p>
+            <p className="text-sm font-semibold truncate">{org.name}</p>
+            <p className="text-[11px] text-n-400 mt-0.5">IFU · {org.ifu}</p>
+          </Link>
         ) : (
           <div className="px-6 py-4 border-b border-white/10 bg-gradient-to-br from-orange/15 to-transparent">
             <p className="text-[10px] tracking-[0.22em] uppercase text-orange font-semibold mb-1 inline-flex items-center gap-1.5"><ShieldCheck className="w-3 h-3" /> Espace salarié</p>

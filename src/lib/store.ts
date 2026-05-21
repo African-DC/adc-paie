@@ -2,6 +2,12 @@ import { useEffect, useState } from 'react'
 
 type Notif = { id: string; title: string; desc: string; time: string; read: boolean; type: 'info' | 'warning' | 'success' }
 
+export type Org = { name: string; ifu: string; cnps: string; sector: string; taux_at: string; city: string }
+const DEFAULT_ORG: Org = { name: 'Sahel Industries SARL', ifu: 'CI-2104-A-098456', cnps: '048120', sector: 'Agro-industrie', taux_at: '3.5', city: 'Abidjan, Plateau' }
+const ORG_KEY = 'adc-paie-org-v1'
+function loadOrg(): Org { try { if (typeof localStorage === 'undefined') return DEFAULT_ORG; const s = localStorage.getItem(ORG_KEY); return s ? { ...DEFAULT_ORG, ...JSON.parse(s) } : DEFAULT_ORG } catch { return DEFAULT_ORG } }
+function saveOrg(o: Org) { try { if (typeof localStorage !== 'undefined') localStorage.setItem(ORG_KEY, JSON.stringify(o)) } catch {} }
+
 const NOTIFS_INITIAL: Notif[] = [
   { id: 'n1', title: 'Bordereau CNPS prêt', desc: 'La déclaration de novembre 2026 attend votre validation.', time: 'il y a 12 min', read: false, type: 'warning' },
   { id: 'n2', title: 'Paie d\'octobre validée', desc: 'Tous les bulletins ont été générés et envoyés.', time: 'il y a 2 jours', read: false, type: 'success' },
@@ -17,6 +23,7 @@ type State = {
   onboardingDone: boolean
   toast: { id: string; msg: string; type: 'success' | 'info' | 'warning' } | null
   notifs: Notif[]
+  org: Org
 }
 
 let state: State = {
@@ -27,6 +34,7 @@ let state: State = {
   onboardingDone: false,
   toast: null,
   notifs: NOTIFS_INITIAL,
+  org: loadOrg(),
 }
 
 const listeners = new Set<() => void>()
@@ -58,6 +66,9 @@ export const store = {
   closeHire: () => setState({ hireOpen: false }),
   markAllRead: () => setState({ notifs: state.notifs.map((n) => ({ ...n, read: true })) }),
   markRead: (id: string) => setState({ notifs: state.notifs.map((n) => n.id === id ? { ...n, read: true } : n) }),
+  setOrg: (patch: Partial<Org>) => { const next = { ...state.org, ...patch }; saveOrg(next); setState({ org: next }) },
+  resetOrg: () => { saveOrg(DEFAULT_ORG); setState({ org: DEFAULT_ORG }) },
+  getOrg: () => state.org,
   toast: (msg: string, type: 'success' | 'info' | 'warning' = 'success') => {
     const id = String(Date.now())
     setState({ toast: { id, msg, type } })

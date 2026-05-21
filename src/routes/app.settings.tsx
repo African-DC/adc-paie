@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import { Building2, Users, Shield, Bell, History, X, Edit3, Check, CheckCircle2, AlertCircle, LogIn, FileSignature, Send, Wallet, Trash2 } from 'lucide-react'
-import { TENANT, EMPLOYEES } from '../lib/mock'
-import { store } from '../lib/store'
+import { EMPLOYEES } from '../lib/mock'
+import { store, useStore } from '../lib/store'
 import { downloadAuditLogCSV, downloadEmployeesExcel } from '../lib/downloads'
 
 export const Route = createFileRoute('/app/settings')({ component: SettingsPage })
@@ -14,10 +14,11 @@ function SettingsPage() {
     setToggles({ ...toggles, [k]: next })
     store.toast(next ? 'Préférence activée' : 'Préférence désactivée', 'success')
   }
-  const [tenant, setTenant] = useState({ name: TENANT.name, ifu: TENANT.ifu, cnps: TENANT.cnps, sector: TENANT.sector, taux_at: String(TENANT.taux_at), city: TENANT.city })
+  const org = useStore((s) => s.org)
   const [editing, setEditing] = useState<string | null>(null)
-  const setField = (k: string, v: string) => setTenant((t) => ({ ...t, [k]: v }))
-  const saveField = (k: string) => { setEditing(null); store.toast(`${({ name: 'Raison sociale', ifu: 'IFU', cnps: 'CNPS', sector: 'Secteur', taux_at: 'Taux AT', city: 'Ville' } as any)[k]} mis à jour`, 'success') }
+  const setField = (k: string, v: string) => store.setOrg({ [k]: v } as any)
+  const saveField = (k: string) => { setEditing(null); store.toast(`${({ name: 'Raison sociale', ifu: 'IFU', cnps: 'CNPS', sector: 'Secteur', taux_at: 'Taux AT', city: 'Ville' } as any)[k]} mis à jour · répercuté dans toute l'app`, 'success') }
+  const tenant = org
   return (
     <div className="space-y-6 max-w-4xl">
       <div>

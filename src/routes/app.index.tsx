@@ -3,7 +3,7 @@ import { useEffect } from 'react'
 import { TrendingUp, Users, CalendarClock, Wallet, ArrowRight, AlertCircle, Calculator, Send, UserPlus } from 'lucide-react'
 import { TOTALS, EMPLOYEES, DECLARATIONS, fcfa } from '../lib/mock'
 import { AnomaliesBanner } from '../components/extras'
-import { store } from '../lib/store'
+import { store, useStore } from '../lib/store'
 
 export const Route = createFileRoute('/app/')({
   component: Dashboard,
@@ -12,6 +12,7 @@ export const Route = createFileRoute('/app/')({
 function Dashboard() {
   const next = DECLARATIONS.find(d => d.status === 'À soumettre' || d.status === 'En cours')
   const recentHires = EMPLOYEES.filter(e => e.status === 'active').slice(-3).reverse()
+  const org = useStore((s) => s.org)
   useEffect(() => {
     if (typeof window !== 'undefined' && window.location.hash === '#hire') {
       store.openHire()
@@ -21,11 +22,11 @@ function Dashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-[11px] tracking-[0.28em] uppercase text-n-500 font-semibold mb-2">Tableau de bord · Novembre 2026</p>
+        <p className="text-[11px] tracking-[0.28em] uppercase text-n-500 font-semibold mb-2">{org.name} · Tableau de bord Novembre 2026</p>
         <h1 className="font-serif text-3xl lg:text-4xl font-semibold tracking-tight">
           Bienvenue, <span className="em-serif">Marcel</span>.
         </h1>
-        <p className="mt-2 text-n-700">Voici un aperçu de votre paie pour la période en cours.</p>
+        <p className="mt-2 text-n-700">Voici un aperçu de la paie de <strong>{org.name}</strong> pour la période en cours.</p>
       </div>
 
       <AnomaliesBanner />
