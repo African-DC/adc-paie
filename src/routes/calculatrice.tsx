@@ -3,6 +3,7 @@ import { useState, useMemo } from 'react'
 import { Calculator, ArrowRight, ArrowLeftRight, Sparkles, ShieldCheck, Mail, BookOpen } from 'lucide-react'
 import { fcfa, computePayslip } from '../lib/mock'
 import { MarketingFooter } from '../components/marketing-footer'
+import { MarketingHeader } from '../components/marketing-header'
 
 export const Route = createFileRoute('/calculatrice')({ component: CalculatricePage })
 
@@ -41,16 +42,7 @@ function CalculatricePage() {
 
   return (
     <div className="min-h-screen bg-n-50 flex flex-col">
-      <header className="bg-white border-b border-n-200">
-        <div className="max-w-6xl mx-auto px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link to="/" className="font-serif text-xl font-semibold tracking-tight">ADC <span className="em-serif">Paie</span></Link>
-          <nav className="hidden md:flex items-center gap-6 text-sm">
-            <Link to="/" className="hover:text-orange">Accueil</Link>
-            <Link to="/aide" className="hover:text-orange">Aide & barèmes</Link>
-            <Link to="/app" className="bg-orange text-white px-4 h-9 inline-flex items-center text-xs font-semibold uppercase tracking-wider hover:bg-orange-deep">Tester la démo</Link>
-          </nav>
-        </div>
-      </header>
+      <MarketingHeader />
 
       <main className="flex-1 max-w-6xl w-full mx-auto px-6 lg:px-8 py-10 lg:py-16">
         <div className="text-center mb-10">

@@ -51,7 +51,7 @@ function AppLayout() {
       {drawer && <div className="fixed inset-0 bg-ink/60 z-40 lg:hidden" onClick={() => setDrawer(false)} />}
       <aside className={`fixed lg:sticky inset-y-0 lg:inset-y-auto lg:top-0 lg:h-screen left-0 w-72 lg:w-64 bg-ink-2 text-white shrink-0 z-50 lg:z-auto transform transition-transform duration-200 lg:transform-none flex flex-col ${drawer ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
         <div className="px-6 py-5 border-b border-white/10 flex items-center justify-between">
-          <Link to="/" className="block">
+          <Link to={isEmployeeMode ? '/app/me' : '/app'} className="block" title={isEmployeeMode ? 'Mon espace salarié' : 'Accueil dashboard'}>
             <span className="font-serif text-xl font-semibold">ADC <span style={{color:'var(--color-orange)',fontStyle:'italic',fontWeight:500}}>Paie</span></span>
           </Link>
           <button onClick={() => setDrawer(false)} className="lg:hidden w-8 h-8 rounded-sm hover:bg-white/10 flex items-center justify-center" aria-label="Fermer le menu">
@@ -118,24 +118,31 @@ function AppLayout() {
           )}
         </div>
 
-        <div className="px-6 py-4 border-t border-white/10 flex items-center gap-3">
+        <div className="px-3 py-3 border-t border-white/10 flex items-center gap-2">
           {!isEmployeeMode ? (
             <>
-              <div className="w-9 h-9 bg-orange text-white font-semibold text-sm rounded-full flex items-center justify-center shrink-0">{CURRENT_USER.initials}</div>
-              <div className="min-w-0">
-                <p className="text-sm font-medium truncate">{CURRENT_USER.name}</p>
-                <p className="text-[11px] text-n-400 truncate">{CURRENT_USER.role}</p>
+              <div className="flex items-center gap-3 flex-1 min-w-0 px-3">
+                <div className="w-9 h-9 bg-orange text-white font-semibold text-sm rounded-full flex items-center justify-center shrink-0">{CURRENT_USER.initials}</div>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{CURRENT_USER.name}</p>
+                  <p className="text-[11px] text-n-400 truncate">{CURRENT_USER.role}</p>
+                </div>
               </div>
             </>
           ) : (
             <>
-              <div className="w-9 h-9 bg-orange text-white font-semibold text-sm rounded-full flex items-center justify-center shrink-0">{ME.firstName[0]}{ME.lastName[0]}</div>
-              <div className="min-w-0">
-                <p className="text-sm font-medium truncate">{ME.firstName} {ME.lastName}</p>
-                <p className="text-[11px] text-n-400 truncate">Connecté(e) · Salarié</p>
+              <div className="flex items-center gap-3 flex-1 min-w-0 px-3">
+                <div className="w-9 h-9 bg-orange text-white font-semibold text-sm rounded-full flex items-center justify-center shrink-0">{ME.firstName[0]}{ME.lastName[0]}</div>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{ME.firstName} {ME.lastName}</p>
+                  <p className="text-[11px] text-n-400 truncate">Connecté(e) · Salarié</p>
+                </div>
               </div>
             </>
           )}
+          <Link to="/" onClick={() => store.toast('Déconnexion réussie', 'success')} title="Se déconnecter" className="w-9 h-9 hover:bg-red-500/20 hover:text-red-400 text-n-400 rounded-sm flex items-center justify-center shrink-0 transition-colors">
+            <LogOut className="w-4 h-4" />
+          </Link>
         </div>
       </aside>
 
@@ -145,7 +152,7 @@ function AppLayout() {
             <button onClick={() => setDrawer(true)} className="lg:hidden w-9 h-9 hover:bg-n-100 rounded-sm inline-flex items-center justify-center" aria-label="Ouvrir le menu">
               <Menu className="w-5 h-5 text-ink" />
             </button>
-            <Link to={isEmployeeMode ? '/app/me' : '/app'} className="lg:hidden font-serif text-base font-semibold">ADC <span className="em-serif">Paie</span></Link>
+            <Link to={isEmployeeMode ? '/app/me' : '/app'} className="lg:hidden font-serif text-base font-semibold" title={isEmployeeMode ? 'Mon espace salarié' : 'Accueil dashboard'}>ADC <span className="em-serif">Paie</span></Link>
             <div className="hidden md:flex items-center gap-2 text-[13px] text-n-500">
               {isEmployeeMode ? (
                 <>
