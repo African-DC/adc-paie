@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { Plus, Filter, Download, MoreHorizontal, Search, ArrowUpDown, ArrowUp, ArrowDown, X } from 'lucide-react'
+import { Plus, Filter, Download, MoreHorizontal, Search, ArrowUpDown, ArrowUp, ArrowDown, X, Upload } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import { EMPLOYEES, fcfa } from '../lib/mock'
 import { store } from '../lib/store'
+import { HireWizard } from '../components/hire-wizard'
 
 export const Route = createFileRoute('/app/employees/')({
   component: EmployeesPage,
@@ -16,6 +17,8 @@ function EmployeesPage() {
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState<SortKey>(null)
   const [dir, setDir] = useState<SortDir>('asc')
+  const [hireOpen, setHireOpen] = useState(false)
+  const [importOpen, setImportOpen] = useState(false)
 
   const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '')
 
@@ -53,11 +56,14 @@ function EmployeesPage() {
           </h1>
           <p className="mt-2 text-n-700">{EMPLOYEES.filter(e => e.status === 'active').length} salariés en poste · {EMPLOYEES.filter(e => e.status === 'leave').length} en congé</p>
         </div>
-        <div className="flex items-center gap-2">
-          <button onClick={() => store.toast('Annuaire salariés exporté au format Excel', 'success')} className="inline-flex items-center gap-2 border border-n-300 text-n-700 px-4 h-9 text-sm font-medium hover:bg-n-50 transition-colors rounded-sm" title="Exporter au format Excel">
+        <div className="flex items-center gap-2 flex-wrap">
+          <button onClick={() => setImportOpen(true)} className="inline-flex items-center gap-2 border border-n-300 text-n-700 px-3 h-9 text-xs font-medium hover:bg-n-50 transition-colors rounded-sm uppercase tracking-wider" title="Importer depuis Excel">
+            <Upload className="w-3.5 h-3.5" /> Importer
+          </button>
+          <button onClick={() => store.toast('Annuaire salariés exporté au format Excel', 'success')} className="inline-flex items-center gap-2 border border-n-300 text-n-700 px-3 h-9 text-xs font-medium hover:bg-n-50 transition-colors rounded-sm uppercase tracking-wider" title="Exporter au format Excel">
             <Download className="w-3.5 h-3.5" /> Exporter
           </button>
-          <button onClick={() => store.toast('Wizard d\'embauche disponible en tier Pro', 'info')} className="inline-flex items-center gap-2 bg-orange text-white px-4 h-9 text-sm font-semibold uppercase tracking-wider hover:bg-orange-deep transition-colors rounded-sm">
+          <button onClick={() => setHireOpen(true)} className="inline-flex items-center gap-2 bg-orange text-white px-4 h-9 text-sm font-semibold uppercase tracking-wider hover:bg-orange-deep transition-colors rounded-sm">
             <Plus className="w-3.5 h-3.5" /> Ajouter un salarié
           </button>
         </div>
@@ -161,6 +167,82 @@ function EmployeesPage() {
             <button className="px-3 h-7 hover:bg-white rounded-sm disabled:opacity-50 disabled:cursor-not-allowed" disabled>Suivant</button>
           </div>
         </div>
+      </div>
+      <HireWizard open={hireOpen} onClose={() => setHireOpen(false)} />
+      <ImportEmployeesModal open={importOpen} onClose={() => setImportOpen(false)} />
+    </div>
+  )
+}
+
+function ImportEmployeesModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const [phase, setPhase] = useState<'drop' | 'preview' | 'importing' | 'done'>('drop')
+  const [count, setCount] = useState(0)
+  if (!open) return null
+  const handleFile = () => {
+    const n = 8 + Math.floor(Math.random() * 12)
+    setCount(n); setPhase('preview')
+  }
+  const doImport = () => {
+    setPhase('importing')
+    setTimeout(() => setPhase('done'), 1500)
+  }
+  const close = () => { setPhase('drop'); setCount(0); onClose() }
+  return (
+    <div className="fixed inset-0 z-[85] bg-ink/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={close}>
+      <div className="bg-white w-full max-w-lg rounded-sm shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="px-6 py-4 border-b border-n-200 flex items-center justify-between">
+          <h3 className="font-serif text-lg font-semibold tracking-tight inline-flex items-center gap-2"><Upload className="w-4 h-4 text-orange" /> Importer des salariés</h3>
+          <button onClick={close} className="w-8 h-8 hover:bg-n-100 rounded-sm flex items-center justify-center"><X className="w-4 h-4" /></button>
+        </div>
+        {phase === 'drop' && (
+          <div className="p-6">
+            <button onClick={handleFile} className="w-full border-2 border-dashed border-n-300 rounded-sm py-10 hover:border-orange hover:bg-orange-tint/30 transition-colors text-center">
+              <Upload className="w-8 h-8 text-n-400 mx-auto mb-2" />
+              <p className="text-sm font-semibold">Cliquez pour sélectionner un fichier</p>
+              <p className="text-xs text-n-500 mt-1">Excel .xlsx, CSV ou Google Sheets (10 Mo max)</p>
+            </button>
+            <div className="mt-4 p-3 bg-n-50 border border-n-200 rounded-sm text-xs text-n-700">
+              <p className="font-semibold text-ink mb-1">Modèle attendu</p>
+              <p>Colonnes : Prénom, Nom, Matricule CNPS, Fonction, Type contrat (CDI/CDD), Salaire brut, Date embauche, E-mail.</p>
+              <button onClick={() => store.toast('Modèle Excel téléchargé', 'success')} className="mt-2 text-orange font-semibold hover:underline">Télécharger le modèle</button>
+            </div>
+          </div>
+        )}
+        {phase === 'preview' && (
+          <div className="p-6">
+            <div className="bg-green-50 border border-green-200 p-3 rounded-sm text-sm text-green-800 mb-4">
+              <p className="font-semibold">Fichier validé · {count} salariés détectés</p>
+              <p className="text-xs mt-1">Aucune erreur de format. Tous les matricules CNPS sont valides.</p>
+            </div>
+            <p className="text-[10px] uppercase tracking-[0.22em] text-n-500 font-semibold mb-2">Aperçu (3 premières lignes)</p>
+            <div className="border border-n-200 rounded-sm overflow-hidden text-xs">
+              {['Aminata Touré · Comptable · CDI · 380 000 XOF', 'Yacouba Sanogo · Commercial · CDD · 220 000 XOF', 'Mariam Bamba · Designer · CDI · 410 000 XOF'].map((l, i) => (
+                <div key={i} className="px-3 py-2 border-b border-n-100 last:border-0 font-mono text-[11px]">{l}</div>
+              ))}
+            </div>
+            <div className="mt-5 flex items-center justify-end gap-2">
+              <button onClick={close} className="px-4 h-10 text-sm border border-n-300 rounded-sm hover:bg-n-50">Annuler</button>
+              <button onClick={doImport} className="px-4 h-10 text-sm font-semibold uppercase tracking-wider bg-orange text-white rounded-sm hover:bg-orange-deep">Importer {count} salariés</button>
+            </div>
+          </div>
+        )}
+        {phase === 'importing' && (
+          <div className="p-12 text-center">
+            <div className="w-10 h-10 border-4 border-orange border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+            <p className="font-serif text-lg font-semibold">Import en cours…</p>
+            <p className="text-xs text-n-500 mt-1">Création des fiches et déclarations CNPS</p>
+          </div>
+        )}
+        {phase === 'done' && (
+          <div className="p-8 text-center">
+            <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <Upload className="w-6 h-6 text-green-600" />
+            </div>
+            <p className="font-serif text-xl font-semibold">{count} salariés importés</p>
+            <p className="text-xs text-n-500 mt-1">Toutes les fiches sont actives. DPAE soumises à la CNPS.</p>
+            <button onClick={close} className="mt-5 px-5 h-10 text-sm font-semibold uppercase tracking-wider bg-orange text-white rounded-sm hover:bg-orange-deep">Fermer</button>
+          </div>
+        )}
       </div>
     </div>
   )

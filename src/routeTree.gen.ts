@@ -10,7 +10,9 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as CalculatriceRouteImport } from './routes/calculatrice'
 import { Route as AppRouteImport } from './routes/app'
+import { Route as AideRouteImport } from './routes/aide'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
@@ -28,9 +30,19 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CalculatriceRoute = CalculatriceRouteImport.update({
+  id: '/calculatrice',
+  path: '/calculatrice',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppRoute = AppRouteImport.update({
   id: '/app',
   path: '/app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AideRoute = AideRouteImport.update({
+  id: '/aide',
+  path: '/aide',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -91,7 +103,9 @@ const AppPayrollPayslipIdRoute = AppPayrollPayslipIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/aide': typeof AideRoute
   '/app': typeof AppRouteWithChildren
+  '/calculatrice': typeof CalculatriceRoute
   '/login': typeof LoginRoute
   '/app/advances': typeof AppAdvancesRoute
   '/app/declarations': typeof AppDeclarationsRoute
@@ -106,6 +120,8 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/aide': typeof AideRoute
+  '/calculatrice': typeof CalculatriceRoute
   '/login': typeof LoginRoute
   '/app/advances': typeof AppAdvancesRoute
   '/app/declarations': typeof AppDeclarationsRoute
@@ -121,7 +137,9 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/aide': typeof AideRoute
   '/app': typeof AppRouteWithChildren
+  '/calculatrice': typeof CalculatriceRoute
   '/login': typeof LoginRoute
   '/app/advances': typeof AppAdvancesRoute
   '/app/declarations': typeof AppDeclarationsRoute
@@ -138,7 +156,9 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/aide'
     | '/app'
+    | '/calculatrice'
     | '/login'
     | '/app/advances'
     | '/app/declarations'
@@ -153,6 +173,8 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/aide'
+    | '/calculatrice'
     | '/login'
     | '/app/advances'
     | '/app/declarations'
@@ -167,7 +189,9 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/aide'
     | '/app'
+    | '/calculatrice'
     | '/login'
     | '/app/advances'
     | '/app/declarations'
@@ -183,7 +207,9 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AideRoute: typeof AideRoute
   AppRoute: typeof AppRouteWithChildren
+  CalculatriceRoute: typeof CalculatriceRoute
   LoginRoute: typeof LoginRoute
 }
 
@@ -196,11 +222,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/calculatrice': {
+      id: '/calculatrice'
+      path: '/calculatrice'
+      fullPath: '/calculatrice'
+      preLoaderRoute: typeof CalculatriceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app': {
       id: '/app'
       path: '/app'
       fullPath: '/app'
       preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/aide': {
+      id: '/aide'
+      path: '/aide'
+      fullPath: '/aide'
+      preLoaderRoute: typeof AideRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -313,7 +353,9 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AideRoute: AideRoute,
   AppRoute: AppRouteWithChildren,
+  CalculatriceRoute: CalculatriceRoute,
   LoginRoute: LoginRoute,
 }
 export const routeTree = rootRouteImport

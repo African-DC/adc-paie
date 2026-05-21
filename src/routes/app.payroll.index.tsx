@@ -8,7 +8,8 @@ import { PaySalariesModal, ExportAuditModal } from '../components/payroll-modals
 export const Route = createFileRoute('/app/payroll/')({ component: PayrollPage })
 
 function PayrollPage() {
-  const [month] = useState('Novembre 2026')
+  const [month, setMonth] = useState('Novembre 2026')
+  const [periodOpen, setPeriodOpen] = useState(false)
   const [days, setDays] = useState<Record<string, string>>({})
   const [bonus, setBonus] = useState<Record<string, string>>({})
   const [payOpen, setPayOpen] = useState(false)
@@ -36,7 +37,7 @@ function PayrollPage() {
           <h1 className="font-serif text-3xl lg:text-4xl font-semibold tracking-tight">Saisie <span className="em-serif">mensuelle</span></h1>
           <p className="mt-2 text-n-700 inline-flex items-center gap-2"><Calendar className="w-4 h-4 text-orange" /> Période · <strong>{month}</strong></p>
         </div>
-        <button onClick={() => store.toast('Sélecteur de période disponible en tier Pro', 'info')} className="inline-flex items-center gap-2 border border-n-300 px-4 h-9 text-sm font-medium hover:bg-n-50 transition-colors rounded-sm">
+        <button onClick={() => setPeriodOpen(true)} className="inline-flex items-center gap-2 border border-n-300 px-4 h-9 text-sm font-medium hover:bg-n-50 transition-colors rounded-sm">
           Changer de période <ChevronDown className="w-3.5 h-3.5" />
         </button>
       </div>
@@ -151,6 +152,49 @@ function PayrollPage() {
       </div>
       <PaySalariesModal open={payOpen} onClose={() => setPayOpen(false)} total={Math.round(totals.net)} count={active.length} />
       <ExportAuditModal open={exportOpen} onClose={() => setExportOpen(false)} />
+      <PeriodPickerModal open={periodOpen} current={month} onClose={() => setPeriodOpen(false)} onPick={(m) => { setMonth(m); store.toast(`Période active : ${m}`, 'success'); setPeriodOpen(false) }} />
+    </div>
+  )
+}
+
+function PeriodPickerModal({ open, current, onClose, onPick }: { open: boolean; current: string; onClose: () => void; onPick: (m: string) => void }) {
+  if (!open) return null
+  const MOIS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
+  const periods = [
+    { year: 2027, future: true },
+    { year: 2026, future: false },
+    { year: 2025, future: false },
+  ]
+  return (
+    <div className="fixed inset-0 z-[85] bg-ink/50 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-white w-full max-w-md rounded-sm shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="px-5 py-4 border-b border-n-200 flex items-center justify-between">
+          <h3 className="font-serif text-lg font-semibold tracking-tight">Sélectionner la période</h3>
+          <button onClick={onClose} className="w-8 h-8 hover:bg-n-100 rounded-sm flex items-center justify-center"><X className="w-4 h-4" /></button>
+        </div>
+        <div className="p-5 max-h-[60vh] overflow-y-auto space-y-5">
+          {periods.map(({ year, future }) => (
+            <div key={year}>
+              <p className="text-[10px] uppercase tracking-[0.22em] text-n-500 font-semibold mb-2">{year}{future && <span className="ml-2 text-orange">à venir</span>}</p>
+              <div className="grid grid-cols-3 gap-1.5">
+                {MOIS.map((m) => {
+                  const label = `${m} ${year}`
+                  const isCurrent = label === current
+                  const isFuture = year === 2027 && MOIS.indexOf(m) > 0
+                  return (
+                    <button key={m} disabled={isFuture} onClick={() => onPick(label)} className={`px-2 py-2 text-xs font-medium rounded-sm border transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${isCurrent ? 'border-orange bg-orange text-white font-semibold' : 'border-n-200 hover:bg-orange-tint hover:border-orange'}`}>
+                      {m}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="px-5 py-3 border-t border-n-200 bg-n-50 text-[11px] text-n-500">
+          La période active détermine les bulletins générés et les déclarations CNPS/DGI à soumettre.
+        </div>
+      </div>
     </div>
   )
 }

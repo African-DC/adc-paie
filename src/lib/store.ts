@@ -13,6 +13,7 @@ type State = {
   spotlightOpen: boolean
   notifOpen: boolean
   chatOpen: boolean
+  hireOpen: boolean
   onboardingDone: boolean
   toast: { id: string; msg: string; type: 'success' | 'info' | 'warning' } | null
   notifs: Notif[]
@@ -22,6 +23,7 @@ let state: State = {
   spotlightOpen: false,
   notifOpen: false,
   chatOpen: false,
+  hireOpen: false,
   onboardingDone: false,
   toast: null,
   notifs: NOTIFS_INITIAL,
@@ -52,6 +54,8 @@ export const store = {
   closeNotif: () => setState({ notifOpen: false }),
   toggleChat: () => setState({ chatOpen: !state.chatOpen, notifOpen: false }),
   closeChat: () => setState({ chatOpen: false }),
+  openHire: () => setState({ hireOpen: true }),
+  closeHire: () => setState({ hireOpen: false }),
   markAllRead: () => setState({ notifs: state.notifs.map((n) => ({ ...n, read: true })) }),
   markRead: (id: string) => setState({ notifs: state.notifs.map((n) => n.id === id ? { ...n, read: true } : n) }),
   toast: (msg: string, type: 'success' | 'info' | 'warning' = 'success') => {

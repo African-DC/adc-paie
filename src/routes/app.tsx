@@ -6,6 +6,7 @@ import { Spotlight } from '../components/spotlight'
 import { NotificationsPanel, Toast } from '../components/notifications'
 import { ADCAChat, ChatFAB } from '../components/adca-chat'
 import { HelpModal, OnboardingWizard } from '../components/extras'
+import { HireWizard } from '../components/hire-wizard'
 import { useStore, store } from '../lib/store'
 
 export const Route = createFileRoute('/app')({ component: AppLayout })
@@ -191,6 +192,12 @@ function AppLayout() {
       <Toast />
       <HelpModal />
       {!isEmployeeMode && <OnboardingWizard />}
+      {!isEmployeeMode && <GlobalHireWizard />}
     </div>
   )
+}
+
+function GlobalHireWizard() {
+  const open = useStore((s) => s.hireOpen)
+  return <HireWizard open={open} onClose={() => store.closeHire()} />
 }

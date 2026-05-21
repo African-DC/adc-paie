@@ -29,7 +29,7 @@ function Dashboard() {
           <QuickAction to="/app/payroll"      label="Lancer la paie"        sub="Novembre 2026"        icon={Calculator} primary />
           <QuickAction to="/app/declarations" label="Soumettre CNPS"        sub="Échéance 15 déc."     icon={Send} />
           <QuickAction to="/app/advances"     label="Valider les avances"   sub="2 demandes"           icon={Wallet} />
-          <QuickAction onClick={() => store.toast('Wizard d\'embauche disponible en tier Pro', 'info')} label="Embaucher" sub="Nouveau contrat" icon={UserPlus} />
+          <QuickAction onClick={() => store.openHire()} label="Embaucher" sub="Wizard 5 étapes · contrat signé" icon={UserPlus} />
         </div>
       </div>
 

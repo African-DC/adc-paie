@@ -1,0 +1,184 @@
+import { createFileRoute, Link } from '@tanstack/react-router'
+import { useState, useMemo } from 'react'
+import { Calculator, ArrowRight, ArrowLeftRight, Sparkles, ShieldCheck, Mail, BookOpen } from 'lucide-react'
+import { fcfa, computePayslip } from '../lib/mock'
+import { MarketingFooter } from '../components/marketing-footer'
+
+export const Route = createFileRoute('/calculatrice')({ component: CalculatricePage })
+
+function CalculatricePage() {
+  const [mode, setMode] = useState<'brut-net' | 'net-brut'>('brut-net')
+  const [brut, setBrut] = useState(350000)
+  const [net, setNet] = useState(285000)
+  const [married, setMarried] = useState(false)
+  const [kids, setKids] = useState(0)
+  const [showEmail, setShowEmail] = useState(false)
+
+  const computed = useMemo(() => {
+    if (mode === 'brut-net') return computePayslip(brut, kids, married)
+    // mode net→brut : recherche dichotomique
+    let lo = 50000, hi = 5_000_000
+    for (let i = 0; i < 35; i++) {
+      const mid = (lo + hi) / 2
+      const r = computePayslip(mid, kids, married)
+      if (r.net < net) lo = mid; else hi = mid
+    }
+    const result = computePayslip(hi, kids, married)
+    return result
+  }, [mode, brut, net, married, kids])
+
+  const display = {
+    brut: Math.round(computed.brut),
+    net: Math.round(computed.net),
+    cnps: Math.round(computed.cnps),
+    its: Math.round(computed.its),
+    igr: Math.round(computed.igr),
+    cn: Math.round(computed.cn),
+    patron: Math.round(computed.patron),
+    total: Math.round(computed.total),
+  }
+  const parts = 1 + (married ? 0.5 : 0) + kids * 0.5
+
+  return (
+    <div className="min-h-screen bg-n-50 flex flex-col">
+      <header className="bg-white border-b border-n-200">
+        <div className="max-w-6xl mx-auto px-6 lg:px-8 h-16 flex items-center justify-between">
+          <Link to="/" className="font-serif text-xl font-semibold tracking-tight">ADC <span className="em-serif">Paie</span></Link>
+          <nav className="hidden md:flex items-center gap-6 text-sm">
+            <Link to="/" className="hover:text-orange">Accueil</Link>
+            <Link to="/aide" className="hover:text-orange">Aide & barèmes</Link>
+            <Link to="/app" className="bg-orange text-white px-4 h-9 inline-flex items-center text-xs font-semibold uppercase tracking-wider hover:bg-orange-deep">Tester la démo</Link>
+          </nav>
+        </div>
+      </header>
+
+      <main className="flex-1 max-w-6xl w-full mx-auto px-6 lg:px-8 py-10 lg:py-16">
+        <div className="text-center mb-10">
+          <p className="text-[11px] tracking-[0.28em] uppercase text-n-500 font-semibold mb-2">Outil gratuit</p>
+          <h1 className="font-serif text-4xl lg:text-5xl font-semibold tracking-tight">Calculatrice <span className="em-serif">paie</span> Côte d'Ivoire</h1>
+          <p className="mt-3 text-n-700 max-w-2xl mx-auto">Calculez en temps réel le salaire net depuis un brut, ou inversement le brut à proposer pour un net cible. Barèmes CNPS, ITS, IGR et CN 2026.</p>
+        </div>
+
+        <div className="grid lg:grid-cols-5 gap-6">
+          <div className="lg:col-span-2 bg-white border border-n-200 rounded-sm p-6 lg:p-7">
+            <div className="flex items-center bg-n-100 rounded-sm p-1 mb-5">
+              <button onClick={() => setMode('brut-net')} className={`flex-1 px-3 h-9 text-xs font-semibold uppercase tracking-wider rounded-sm transition-colors ${mode === 'brut-net' ? 'bg-white shadow-sm text-ink' : 'text-n-600'}`}>Brut → Net</button>
+              <button onClick={() => setMode('net-brut')} className={`flex-1 px-3 h-9 text-xs font-semibold uppercase tracking-wider rounded-sm transition-colors ${mode === 'net-brut' ? 'bg-white shadow-sm text-ink' : 'text-n-600'}`}>Net → Brut</button>
+            </div>
+
+            {mode === 'brut-net' ? (
+              <label className="block">
+                <span className="text-[10px] uppercase tracking-[0.22em] text-n-500 font-semibold mb-1 block">Salaire brut mensuel (XOF)</span>
+                <input type="number" value={brut} onChange={(e) => setBrut(parseInt(e.target.value) || 0)} className="w-full h-14 px-4 border-2 border-n-300 rounded-sm text-2xl font-mono font-semibold focus:outline-none focus:border-orange" />
+                <input type="range" min="60000" max="3000000" step="10000" value={brut} onChange={(e) => setBrut(parseInt(e.target.value))} className="w-full mt-2 accent-orange" />
+                <div className="flex justify-between text-[10px] text-n-500 mt-1"><span>60 000</span><span>3 000 000</span></div>
+              </label>
+            ) : (
+              <label className="block">
+                <span className="text-[10px] uppercase tracking-[0.22em] text-n-500 font-semibold mb-1 block">Net à payer souhaité (XOF)</span>
+                <input type="number" value={net} onChange={(e) => setNet(parseInt(e.target.value) || 0)} className="w-full h-14 px-4 border-2 border-n-300 rounded-sm text-2xl font-mono font-semibold focus:outline-none focus:border-orange" />
+                <input type="range" min="40000" max="2500000" step="5000" value={net} onChange={(e) => setNet(parseInt(e.target.value))} className="w-full mt-2 accent-orange" />
+                <div className="flex justify-between text-[10px] text-n-500 mt-1"><span>40 000</span><span>2 500 000</span></div>
+              </label>
+            )}
+
+            <div className="mt-6 space-y-4">
+              <label className="flex items-center justify-between cursor-pointer">
+                <span className="text-sm font-medium">Marié(e)</span>
+                <input type="checkbox" checked={married} onChange={(e) => setMarried(e.target.checked)} className="w-5 h-5 accent-orange" />
+              </label>
+              <label className="block">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-medium">Enfants à charge</span>
+                  <span className="font-mono text-sm text-orange-deep font-semibold">{kids}</span>
+                </div>
+                <input type="range" min="0" max="6" value={kids} onChange={(e) => setKids(parseInt(e.target.value))} className="w-full accent-orange" />
+              </label>
+              <div className="text-xs text-n-600 bg-orange-tint/40 border-l-2 border-orange p-3 rounded-sm">
+                <strong>{parts}</strong> part{parts > 1 ? 's' : ''} fiscale{parts > 1 ? 's' : ''} · barème ITS appliqué par part
+              </div>
+            </div>
+          </div>
+
+          <div className="lg:col-span-3 space-y-4">
+            <div className="bg-ink text-white rounded-sm p-6 lg:p-8">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-[10px] tracking-[0.28em] uppercase text-orange font-semibold inline-flex items-center gap-1.5"><ArrowLeftRight className="w-3 h-3" /> Résultat</p>
+                <p className="text-[10px] uppercase tracking-wider text-n-400">{new Date().getFullYear()} · Barèmes 2026</p>
+              </div>
+              <p className="text-[11px] uppercase tracking-wider text-n-400">Net à payer mensuel</p>
+              <p className="font-serif text-5xl lg:text-6xl font-semibold tracking-tight mt-1">{fcfa(display.net)}</p>
+              <p className="text-sm text-n-300 mt-2">Pour un brut de <strong className="text-white">{fcfa(display.brut)}</strong>{' '}· soit <strong className="text-orange">{Math.round((display.net / display.brut) * 100)} %</strong> de taux net</p>
+
+              <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-2 text-sm border-t border-white/15 pt-5">
+                <p className="text-n-400">CNPS salariale (6,3 %)</p><p className="font-mono text-right">- {fcfa(display.cnps)}</p>
+                <p className="text-n-400">ITS (quotient familial)</p><p className="font-mono text-right">- {fcfa(display.its)}</p>
+                <p className="text-n-400">IGR (1,5 %)</p><p className="font-mono text-right">- {fcfa(display.igr)}</p>
+                <p className="text-n-400">CN (1,5 %)</p><p className="font-mono text-right">- {fcfa(display.cn)}</p>
+              </div>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="bg-white border border-n-200 rounded-sm p-5">
+                <p className="text-[10px] uppercase tracking-[0.22em] text-n-500 font-semibold">Charges patronales</p>
+                <p className="font-serif text-2xl font-semibold mt-1">{fcfa(display.patron)}</p>
+                <p className="text-[11px] text-n-500 mt-1">Retraite + AT + Prest. familiales (~17 %)</p>
+              </div>
+              <div className="bg-orange-tint border border-orange/30 rounded-sm p-5">
+                <p className="text-[10px] uppercase tracking-[0.22em] text-orange-deep font-semibold">Coût total employeur</p>
+                <p className="font-serif text-2xl font-semibold mt-1 text-orange-deep">{fcfa(display.total)}</p>
+                <p className="text-[11px] text-n-700 mt-1">Brut + charges patronales</p>
+              </div>
+            </div>
+
+            {!showEmail ? (
+              <button onClick={() => setShowEmail(true)} className="w-full bg-white border-2 border-orange/30 hover:border-orange text-ink rounded-sm p-5 text-left transition-colors group">
+                <p className="font-semibold inline-flex items-center gap-2"><Sparkles className="w-4 h-4 text-orange" /> Recevez ce calcul en PDF par e-mail</p>
+                <p className="text-xs text-n-600 mt-1">Avec le détail complet du bulletin et l'attestation barème 2026 signée ADC.</p>
+              </button>
+            ) : (
+              <form onSubmit={(e) => { e.preventDefault(); setShowEmail(false); alert('Calcul envoyé par e-mail. Vérifiez votre boîte de réception.') }} className="bg-white border border-n-200 rounded-sm p-5">
+                <p className="text-[10px] uppercase tracking-[0.22em] text-n-500 font-semibold mb-2 inline-flex items-center gap-1.5"><Mail className="w-3 h-3" /> Recevoir le PDF</p>
+                <div className="flex items-center gap-2">
+                  <input required type="email" placeholder="votre@email.ci" className="flex-1 h-11 px-3 border border-n-300 rounded-sm text-sm focus:outline-none focus:border-orange" />
+                  <button type="submit" className="px-4 h-11 text-xs font-semibold uppercase tracking-wider bg-orange text-white rounded-sm hover:bg-orange-deep inline-flex items-center gap-1.5">
+                    Envoyer <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <p className="text-[10px] text-n-500 mt-2">Aucun spam. Vous pouvez vous désabonner en un clic.</p>
+              </form>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-12 bg-gradient-to-br from-ink to-ink-2 text-white rounded-sm p-8 lg:p-10 flex items-center justify-between gap-6 flex-wrap">
+          <div>
+            <p className="text-[10px] tracking-[0.28em] uppercase text-orange font-semibold mb-2">Aller plus loin</p>
+            <h2 className="font-serif text-2xl lg:text-3xl font-semibold">Générez le bulletin officiel en 3 clics</h2>
+            <p className="mt-2 text-n-300 text-sm">ADC Paie ne se contente pas de calculer : nous éditons le bulletin conforme art. 32.5, déclarons CNPS et DGI, payons via Wave / Orange Money / MTN.</p>
+          </div>
+          <Link to="/app" className="bg-orange text-white px-6 h-12 inline-flex items-center text-sm font-semibold uppercase tracking-wider hover:bg-orange-deep rounded-sm gap-2">
+            <Calculator className="w-4 h-4" /> Tester la démo gratuite <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+
+        <div className="mt-10 grid md:grid-cols-3 gap-4">
+          <Info icon={ShieldCheck} title="Calculs conformes 2026" desc="Barèmes CNPS, ITS progressif, IGR et CN à jour de la DGI." />
+          <Info icon={BookOpen} title="Quotient familial inclus" desc="L'ITS tient compte de votre situation familiale et nombre d'enfants à charge." />
+          <Info icon={Sparkles} title="Réversible en 1 clic" desc="Donnez un net cible, ADC Paie déduit le brut à proposer dans le contrat." />
+        </div>
+      </main>
+      <MarketingFooter />
+    </div>
+  )
+}
+
+function Info({ icon: Icon, title, desc }: { icon: any; title: string; desc: string }) {
+  return (
+    <div className="bg-white border border-n-200 rounded-sm p-5">
+      <Icon className="w-5 h-5 text-orange mb-2" />
+      <p className="font-semibold text-sm">{title}</p>
+      <p className="text-xs text-n-600 mt-1 leading-relaxed">{desc}</p>
+    </div>
+  )
+}
