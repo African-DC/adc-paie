@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
 import { Route as AppPayrollRouteImport } from './routes/app.payroll'
+import { Route as AppMeRouteImport } from './routes/app.me'
 import { Route as AppLeaveRouteImport } from './routes/app.leave'
 import { Route as AppEmployeesRouteImport } from './routes/app.employees'
 import { Route as AppDeclarationsRouteImport } from './routes/app.declarations'
@@ -51,6 +52,11 @@ const AppPayrollRoute = AppPayrollRouteImport.update({
   path: '/payroll',
   getParentRoute: () => AppRoute,
 } as any)
+const AppMeRoute = AppMeRouteImport.update({
+  id: '/me',
+  path: '/me',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppLeaveRoute = AppLeaveRouteImport.update({
   id: '/leave',
   path: '/leave',
@@ -84,6 +90,7 @@ export interface FileRoutesByFullPath {
   '/app/declarations': typeof AppDeclarationsRoute
   '/app/employees': typeof AppEmployeesRouteWithChildren
   '/app/leave': typeof AppLeaveRoute
+  '/app/me': typeof AppMeRoute
   '/app/payroll': typeof AppPayrollRouteWithChildren
   '/app/settings': typeof AppSettingsRoute
   '/app/': typeof AppIndexRoute
@@ -96,6 +103,7 @@ export interface FileRoutesByTo {
   '/app/declarations': typeof AppDeclarationsRoute
   '/app/employees': typeof AppEmployeesRouteWithChildren
   '/app/leave': typeof AppLeaveRoute
+  '/app/me': typeof AppMeRoute
   '/app/payroll': typeof AppPayrollRouteWithChildren
   '/app/settings': typeof AppSettingsRoute
   '/app': typeof AppIndexRoute
@@ -110,6 +118,7 @@ export interface FileRoutesById {
   '/app/declarations': typeof AppDeclarationsRoute
   '/app/employees': typeof AppEmployeesRouteWithChildren
   '/app/leave': typeof AppLeaveRoute
+  '/app/me': typeof AppMeRoute
   '/app/payroll': typeof AppPayrollRouteWithChildren
   '/app/settings': typeof AppSettingsRoute
   '/app/': typeof AppIndexRoute
@@ -125,6 +134,7 @@ export interface FileRouteTypes {
     | '/app/declarations'
     | '/app/employees'
     | '/app/leave'
+    | '/app/me'
     | '/app/payroll'
     | '/app/settings'
     | '/app/'
@@ -137,6 +147,7 @@ export interface FileRouteTypes {
     | '/app/declarations'
     | '/app/employees'
     | '/app/leave'
+    | '/app/me'
     | '/app/payroll'
     | '/app/settings'
     | '/app'
@@ -150,6 +161,7 @@ export interface FileRouteTypes {
     | '/app/declarations'
     | '/app/employees'
     | '/app/leave'
+    | '/app/me'
     | '/app/payroll'
     | '/app/settings'
     | '/app/'
@@ -205,6 +217,13 @@ declare module '@tanstack/react-router' {
       path: '/payroll'
       fullPath: '/app/payroll'
       preLoaderRoute: typeof AppPayrollRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/me': {
+      id: '/app/me'
+      path: '/me'
+      fullPath: '/app/me'
+      preLoaderRoute: typeof AppMeRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/leave': {
@@ -273,6 +292,7 @@ interface AppRouteChildren {
   AppDeclarationsRoute: typeof AppDeclarationsRoute
   AppEmployeesRoute: typeof AppEmployeesRouteWithChildren
   AppLeaveRoute: typeof AppLeaveRoute
+  AppMeRoute: typeof AppMeRoute
   AppPayrollRoute: typeof AppPayrollRouteWithChildren
   AppSettingsRoute: typeof AppSettingsRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -282,6 +302,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppDeclarationsRoute: AppDeclarationsRoute,
   AppEmployeesRoute: AppEmployeesRouteWithChildren,
   AppLeaveRoute: AppLeaveRoute,
+  AppMeRoute: AppMeRoute,
   AppPayrollRoute: AppPayrollRouteWithChildren,
   AppSettingsRoute: AppSettingsRoute,
   AppIndexRoute: AppIndexRoute,

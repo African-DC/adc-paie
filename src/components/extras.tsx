@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
+import { Link } from '@tanstack/react-router'
 import { X, Keyboard, Sparkles, AlertTriangle, TrendingDown, TrendingUp, ChevronRight } from 'lucide-react'
-import { EMPLOYEES, fcfa } from '../lib/mock'
+import { EMPLOYEES } from '../lib/mock'
 
 const TIPS = [
   { k: ['⌘', 'K'], label: 'Ouvrir la recherche globale (Spotlight)' },
@@ -119,7 +120,7 @@ export function AnomaliesBanner() {
                   <p className="text-sm font-medium">{emp.firstName} {emp.lastName} · {a.kind}</p>
                   <p className="text-xs text-n-600 mt-0.5">{a.detail}</p>
                 </div>
-                <a href={`/app/employees/${emp.id}`} className="text-xs font-semibold text-orange hover:text-orange-deep">Voir →</a>
+                <Link to="/app/employees/$id" params={{ id: emp.id }} className="text-xs font-semibold text-orange hover:text-orange-deep">Voir →</Link>
               </li>
             )
           })}

@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useLocation } from '@tanstack/react-router'
-import { LayoutDashboard, Users, Calculator, FileCheck2, Settings, Search, Bell, ChevronRight, Sparkles, CalendarDays } from 'lucide-react'
+import { LayoutDashboard, Users, Calculator, FileCheck2, Settings, Search, Bell, ChevronRight, Sparkles, CalendarDays, UserCircle2 } from 'lucide-react'
 import { CURRENT_USER, TENANT } from '../lib/mock'
 import { Spotlight } from '../components/spotlight'
 import { NotificationsPanel, Toast } from '../components/notifications'
@@ -47,6 +47,13 @@ function AppLayout() {
         <button onClick={() => store.toggleChat()} className="mx-3 mb-3 px-3 py-2.5 bg-orange/10 border border-orange/30 text-orange hover:bg-orange/20 rounded-sm flex items-center gap-2 text-sm font-medium transition-colors">
           <Sparkles className="w-4 h-4" /> Demander à ADCA
         </button>
+        <div className="px-3 pb-3">
+          <Link to="/app/me" className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-n-300 hover:bg-white/5 hover:text-white rounded-sm transition-colors border border-white/10">
+            <UserCircle2 className="w-4 h-4 shrink-0" />
+            <span>Mode salarié</span>
+            <span className="ml-auto text-[9px] uppercase tracking-wider text-orange font-semibold">démo</span>
+          </Link>
+        </div>
         <div className="px-6 py-4 border-t border-white/10 flex items-center gap-3">
           <div className="w-9 h-9 bg-orange text-white font-semibold text-sm rounded-full flex items-center justify-center shrink-0">{CURRENT_USER.initials}</div>
           <div className="min-w-0">

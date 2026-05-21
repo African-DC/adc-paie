@@ -1,5 +1,6 @@
 import { createFileRoute, Link, notFound } from '@tanstack/react-router'
-import { ChevronLeft, Download, Mail, Printer } from 'lucide-react'
+import { useState } from 'react'
+import { ChevronLeft, Download, Mail, Printer, Info, BookOpen, Eye, EyeOff } from 'lucide-react'
 import { EMPLOYEES, TENANT, fcfa, computePayslip } from '../lib/mock'
 import { store } from '../lib/store'
 
@@ -16,6 +17,67 @@ export const Route = createFileRoute('/app/payroll/payslip/$id')({
 function PayslipPage() {
   const { e } = Route.useLoaderData()
   const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
+  const [explainAll, setExplainAll] = useState(false)
+  const parts = 1 + (e.family.situation === 'marié(e)' ? 0.5 : 0) + e.family.kids * 0.5
+
+  const lines = [
+    {
+      key: 'base',
+      label: 'Salaire de base',
+      base: '22 j',
+      rate: '—',
+      due: fcfa(e.brut),
+      retain: '',
+      isPay: true,
+      explainer: `Salaire mensuel brut contractuel de ${e.firstName} ${e.lastName}. Base 22 jours ouvrables × taux journalier ${fcfa(Math.round(e.brut / 22))}.`,
+    },
+    {
+      key: 'brut',
+      label: 'Salaire brut',
+      base: '',
+      rate: '',
+      due: fcfa(e.brut),
+      retain: '',
+      isBold: true,
+      explainer: 'Total brut avant retenues sociales et fiscales. Sert d\'assiette à toutes les cotisations CNPS et impôts ITS, IGR, CN.',
+    },
+    {
+      key: 'cnps',
+      label: 'CNPS · retraite + CMU + famille + AT',
+      base: fcfa(e.brut),
+      rate: '6,3 %',
+      due: '',
+      retain: fcfa(Math.round(p.cnps)),
+      explainer: 'Caisse Nationale de Prévoyance Sociale. Part salariale fixe 6,3 % du brut (retraite 6,3 % uniquement côté salarié — CMU, prestations familiales et accidents du travail sont à 100 % patronaux). Plafonné à 70 000 XOF de retenue par mois (45 fois le SMIG).',
+    },
+    {
+      key: 'its',
+      label: 'ITS · barème progressif quotient familial',
+      base: fcfa(e.brut),
+      rate: 'progressif',
+      due: '',
+      retain: fcfa(Math.round(p.its)),
+      explainer: `Impôt sur les Traitements et Salaires. Calculé par parts (quotient familial) : ${parts} part${parts > 1 ? 's' : ''} (1 + ${e.family.situation === 'marié(e)' ? '0,5 conjoint' : 'célibataire'} + ${e.family.kids} × 0,5 enfant). Tranches 2026 : 0-600k = 0 %, 600k-1,2M = 10 %, 1,2M-2M = 20 %, >2M = 25 % (annuel par part).`,
+    },
+    {
+      key: 'igr',
+      label: 'IGR · Impôt Général sur le Revenu',
+      base: fcfa(e.brut),
+      rate: '1,5 %',
+      due: '',
+      retain: fcfa(Math.round(p.igr)),
+      explainer: 'Impôt Général sur le Revenu — taxe complémentaire perçue par la DGI sur l\'ensemble des revenus salariaux. Taux unique 1,5 % du brut, retenu à la source.',
+    },
+    {
+      key: 'cn',
+      label: 'CN · Contribution Nationale',
+      base: fcfa(e.brut),
+      rate: '1,5 %',
+      due: '',
+      retain: fcfa(Math.round(p.cn)),
+      explainer: 'Contribution Nationale au développement économique et social (Loi 2003-308). Taux 1,5 % du brut, prélevé à la source. Reversée mensuellement avec l\'État 301.',
+    },
+  ]
 
   return (
     <div className="space-y-4">
@@ -23,7 +85,17 @@ function PayslipPage() {
         <Link to="/app/payroll" className="inline-flex items-center gap-1.5 text-sm text-n-600 hover:text-orange">
           <ChevronLeft className="w-3.5 h-3.5" /> Retour au cycle de paie
         </Link>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 print:hidden">
+          <button
+            onClick={() => setExplainAll((v) => !v)}
+            className={`inline-flex items-center gap-2 px-4 h-9 text-xs font-medium uppercase tracking-wider transition-colors rounded-sm border ${
+              explainAll ? 'bg-orange text-white border-orange' : 'bg-white text-ink border-n-300 hover:bg-n-50'
+            }`}
+            title="Active les explications pédagogiques de chaque ligne"
+          >
+            {explainAll ? <EyeOff className="w-3.5 h-3.5" /> : <BookOpen className="w-3.5 h-3.5" />}
+            {explainAll ? 'Masquer expli.' : 'Expliquer'}
+          </button>
           <button onClick={() => window.print()} className="inline-flex items-center gap-2 border border-n-300 px-4 h-9 text-xs font-medium hover:bg-n-50 transition-colors rounded-sm">
             <Printer className="w-3.5 h-3.5" /> Imprimer
           </button>
@@ -35,6 +107,13 @@ function PayslipPage() {
           </button>
         </div>
       </div>
+
+      {explainAll && (
+        <div className="bg-orange-tint border-l-4 border-orange p-4 rounded-sm text-sm text-n-700 max-w-[210mm] mx-auto print:hidden">
+          <p className="font-semibold text-ink inline-flex items-center gap-2"><BookOpen className="w-4 h-4 text-orange" /> Mode pédagogique actif</p>
+          <p className="mt-1 text-xs">Chaque ligne du bulletin est désormais accompagnée d'une explication détaillée. Survolez aussi individuellement les lignes en mode normal pour faire apparaître l'explication.</p>
+        </div>
+      )}
 
       <div className="bg-white border border-n-200 max-w-[210mm] mx-auto p-10 shadow-sm" style={{ minHeight: '297mm' }}>
         <div className="flex items-start justify-between border-b-2 border-ink pb-4 mb-6">
@@ -63,7 +142,7 @@ function PayslipPage() {
             <p className="font-semibold">{e.firstName} {e.lastName}</p>
             <p className="text-xs text-n-600 mt-1">{e.role} · {e.contract}</p>
             <p className="font-mono text-[11px] text-n-600 mt-2">Mat. CNPS · {e.matricule}</p>
-            <p className="text-[11px] text-n-600">{e.family.situation} · {e.family.kids} enfant{e.family.kids > 1 ? 's' : ''}</p>
+            <p className="text-[11px] text-n-600">{e.family.situation} · {e.family.kids} enfant{e.family.kids > 1 ? 's' : ''} · {parts} part{parts > 1 ? 's' : ''}</p>
           </div>
         </div>
 
@@ -78,13 +157,16 @@ function PayslipPage() {
             </tr>
           </thead>
           <tbody>
-            <tr className="border-b border-n-100"><td className="px-3 py-2 font-medium">Salaire de base</td><td className="text-right px-3 py-2 font-mono">22 j</td><td className="text-right px-3 py-2 text-n-500">—</td><td className="text-right px-3 py-2 font-mono">{fcfa(e.brut)}</td><td className="px-3 py-2"></td></tr>
-            <tr className="bg-n-50 border-b border-n-100"><td className="px-3 py-2 font-semibold">Salaire brut</td><td className="px-3 py-2"></td><td className="px-3 py-2"></td><td className="text-right px-3 py-2 font-mono font-semibold">{fcfa(e.brut)}</td><td className="px-3 py-2"></td></tr>
-            <tr className="border-b border-n-100"><td className="px-3 py-2 text-n-700">CNPS · retraite + CMU + famille + AT</td><td className="text-right px-3 py-2 font-mono">{fcfa(e.brut)}</td><td className="text-right px-3 py-2 font-mono">6,3 %</td><td className="px-3 py-2"></td><td className="text-right px-3 py-2 font-mono text-orange-deep">{fcfa(Math.round(p.cnps))}</td></tr>
-            <tr className="border-b border-n-100"><td className="px-3 py-2 text-n-700">ITS · barème progressif quotient familial</td><td className="text-right px-3 py-2 font-mono">{fcfa(e.brut)}</td><td className="text-right px-3 py-2 text-n-500">progressif</td><td className="px-3 py-2"></td><td className="text-right px-3 py-2 font-mono text-orange-deep">{fcfa(Math.round(p.its))}</td></tr>
-            <tr className="border-b border-n-100"><td className="px-3 py-2 text-n-700">IGR · Impôt Général sur le Revenu</td><td className="text-right px-3 py-2 font-mono">{fcfa(e.brut)}</td><td className="text-right px-3 py-2 font-mono">1,5 %</td><td className="px-3 py-2"></td><td className="text-right px-3 py-2 font-mono text-orange-deep">{fcfa(Math.round(p.igr))}</td></tr>
-            <tr className="border-b border-n-100"><td className="px-3 py-2 text-n-700">CN · Contribution Nationale</td><td className="text-right px-3 py-2 font-mono">{fcfa(e.brut)}</td><td className="text-right px-3 py-2 font-mono">1,5 %</td><td className="px-3 py-2"></td><td className="text-right px-3 py-2 font-mono text-orange-deep">{fcfa(Math.round(p.cn))}</td></tr>
-            <tr className="bg-orange-tint border-t-2 border-orange"><td className="px-3 py-3 font-semibold text-ink">NET À PAYER</td><td className="px-3 py-3"></td><td className="px-3 py-3"></td><td className="px-3 py-3"></td><td className="text-right px-3 py-3 font-serif text-xl font-semibold text-orange-deep">{fcfa(Math.round(p.net))}</td></tr>
+            {lines.map((l) => (
+              <PayslipLine key={l.key} line={l} explainAll={explainAll} />
+            ))}
+            <tr className="bg-orange-tint border-t-2 border-orange">
+              <td className="px-3 py-3 font-semibold text-ink">NET À PAYER</td>
+              <td className="px-3 py-3"></td>
+              <td className="px-3 py-3"></td>
+              <td className="px-3 py-3"></td>
+              <td className="text-right px-3 py-3 font-serif text-xl font-semibold text-orange-deep">{fcfa(Math.round(p.net))}</td>
+            </tr>
           </tbody>
         </table>
 
@@ -112,5 +194,54 @@ function PayslipPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+type Line = {
+  key: string
+  label: string
+  base: string
+  rate: string
+  due: string
+  retain: string
+  isBold?: boolean
+  isPay?: boolean
+  explainer: string
+}
+
+function PayslipLine({ line, explainAll }: { line: Line; explainAll: boolean }) {
+  const [hover, setHover] = useState(false)
+  const show = hover || explainAll
+  const isSubtotal = line.isBold
+
+  return (
+    <>
+      <tr
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+        className={`border-b border-n-100 transition-colors cursor-help ${show && !isSubtotal ? 'bg-orange-tint/30' : ''} ${isSubtotal ? 'bg-n-50' : ''}`}
+      >
+        <td className={`px-3 py-2 ${isSubtotal ? 'font-semibold' : 'text-n-700'}`}>
+          <span className="inline-flex items-center gap-1.5">
+            {line.label}
+            {!isSubtotal && <Info className={`w-3 h-3 transition-colors ${show ? 'text-orange' : 'text-n-300'}`} />}
+          </span>
+        </td>
+        <td className={`text-right px-3 py-2 font-mono ${line.base ? '' : 'text-n-300'}`}>{line.base || ''}</td>
+        <td className={`text-right px-3 py-2 ${line.rate === 'progressif' ? 'text-n-500' : line.rate ? 'font-mono' : 'text-n-300'}`}>{line.rate || ''}</td>
+        <td className={`text-right px-3 py-2 font-mono ${isSubtotal ? 'font-semibold' : ''}`}>{line.due}</td>
+        <td className={`text-right px-3 py-2 font-mono ${line.retain ? 'text-orange-deep' : ''}`}>{line.retain || ''}</td>
+      </tr>
+      {show && !isSubtotal && (
+        <tr className="border-b border-n-100 bg-orange-tint/15">
+          <td colSpan={5} className="px-3 py-2 text-[11px] text-n-700 italic leading-relaxed">
+            <span className="inline-flex items-start gap-1.5">
+              <Info className="w-3 h-3 text-orange mt-0.5 shrink-0" />
+              {line.explainer}
+            </span>
+          </td>
+        </tr>
+      )}
+    </>
   )
 }
