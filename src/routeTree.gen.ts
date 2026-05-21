@@ -9,25 +9,45 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as MentionsLegalesRouteImport } from './routes/mentions-legales'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ConfidentialiteRouteImport } from './routes/confidentialite'
+import { Route as CgvRouteImport } from './routes/cgv'
 import { Route as CalculatriceRouteImport } from './routes/calculatrice'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as AideRouteImport } from './routes/aide'
+import { Route as AProposRouteImport } from './routes/a-propos'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
 import { Route as AppMeRouteImport } from './routes/app.me'
 import { Route as AppLeaveRouteImport } from './routes/app.leave'
 import { Route as AppDeclarationsRouteImport } from './routes/app.declarations'
+import { Route as AppAttendanceRouteImport } from './routes/app.attendance'
 import { Route as AppAdvancesRouteImport } from './routes/app.advances'
 import { Route as AppPayrollIndexRouteImport } from './routes/app.payroll.index'
 import { Route as AppEmployeesIndexRouteImport } from './routes/app.employees.index'
 import { Route as AppEmployeesIdRouteImport } from './routes/app.employees.$id'
 import { Route as AppPayrollPayslipIdRouteImport } from './routes/app.payroll.payslip.$id'
 
+const MentionsLegalesRoute = MentionsLegalesRouteImport.update({
+  id: '/mentions-legales',
+  path: '/mentions-legales',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfidentialiteRoute = ConfidentialiteRouteImport.update({
+  id: '/confidentialite',
+  path: '/confidentialite',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CgvRoute = CgvRouteImport.update({
+  id: '/cgv',
+  path: '/cgv',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CalculatriceRoute = CalculatriceRouteImport.update({
@@ -43,6 +63,11 @@ const AppRoute = AppRouteImport.update({
 const AideRoute = AideRouteImport.update({
   id: '/aide',
   path: '/aide',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AProposRoute = AProposRouteImport.update({
+  id: '/a-propos',
+  path: '/a-propos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -75,6 +100,11 @@ const AppDeclarationsRoute = AppDeclarationsRouteImport.update({
   path: '/declarations',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAttendanceRoute = AppAttendanceRouteImport.update({
+  id: '/attendance',
+  path: '/attendance',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAdvancesRoute = AppAdvancesRouteImport.update({
   id: '/advances',
   path: '/advances',
@@ -103,11 +133,16 @@ const AppPayrollPayslipIdRoute = AppPayrollPayslipIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/a-propos': typeof AProposRoute
   '/aide': typeof AideRoute
   '/app': typeof AppRouteWithChildren
   '/calculatrice': typeof CalculatriceRoute
+  '/cgv': typeof CgvRoute
+  '/confidentialite': typeof ConfidentialiteRoute
   '/login': typeof LoginRoute
+  '/mentions-legales': typeof MentionsLegalesRoute
   '/app/advances': typeof AppAdvancesRoute
+  '/app/attendance': typeof AppAttendanceRoute
   '/app/declarations': typeof AppDeclarationsRoute
   '/app/leave': typeof AppLeaveRoute
   '/app/me': typeof AppMeRoute
@@ -120,10 +155,15 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/a-propos': typeof AProposRoute
   '/aide': typeof AideRoute
   '/calculatrice': typeof CalculatriceRoute
+  '/cgv': typeof CgvRoute
+  '/confidentialite': typeof ConfidentialiteRoute
   '/login': typeof LoginRoute
+  '/mentions-legales': typeof MentionsLegalesRoute
   '/app/advances': typeof AppAdvancesRoute
+  '/app/attendance': typeof AppAttendanceRoute
   '/app/declarations': typeof AppDeclarationsRoute
   '/app/leave': typeof AppLeaveRoute
   '/app/me': typeof AppMeRoute
@@ -137,11 +177,16 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/a-propos': typeof AProposRoute
   '/aide': typeof AideRoute
   '/app': typeof AppRouteWithChildren
   '/calculatrice': typeof CalculatriceRoute
+  '/cgv': typeof CgvRoute
+  '/confidentialite': typeof ConfidentialiteRoute
   '/login': typeof LoginRoute
+  '/mentions-legales': typeof MentionsLegalesRoute
   '/app/advances': typeof AppAdvancesRoute
+  '/app/attendance': typeof AppAttendanceRoute
   '/app/declarations': typeof AppDeclarationsRoute
   '/app/leave': typeof AppLeaveRoute
   '/app/me': typeof AppMeRoute
@@ -156,11 +201,16 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/a-propos'
     | '/aide'
     | '/app'
     | '/calculatrice'
+    | '/cgv'
+    | '/confidentialite'
     | '/login'
+    | '/mentions-legales'
     | '/app/advances'
+    | '/app/attendance'
     | '/app/declarations'
     | '/app/leave'
     | '/app/me'
@@ -173,10 +223,15 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/a-propos'
     | '/aide'
     | '/calculatrice'
+    | '/cgv'
+    | '/confidentialite'
     | '/login'
+    | '/mentions-legales'
     | '/app/advances'
+    | '/app/attendance'
     | '/app/declarations'
     | '/app/leave'
     | '/app/me'
@@ -189,11 +244,16 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/a-propos'
     | '/aide'
     | '/app'
     | '/calculatrice'
+    | '/cgv'
+    | '/confidentialite'
     | '/login'
+    | '/mentions-legales'
     | '/app/advances'
+    | '/app/attendance'
     | '/app/declarations'
     | '/app/leave'
     | '/app/me'
@@ -207,19 +267,44 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AProposRoute: typeof AProposRoute
   AideRoute: typeof AideRoute
   AppRoute: typeof AppRouteWithChildren
   CalculatriceRoute: typeof CalculatriceRoute
+  CgvRoute: typeof CgvRoute
+  ConfidentialiteRoute: typeof ConfidentialiteRoute
   LoginRoute: typeof LoginRoute
+  MentionsLegalesRoute: typeof MentionsLegalesRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/mentions-legales': {
+      id: '/mentions-legales'
+      path: '/mentions-legales'
+      fullPath: '/mentions-legales'
+      preLoaderRoute: typeof MentionsLegalesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/confidentialite': {
+      id: '/confidentialite'
+      path: '/confidentialite'
+      fullPath: '/confidentialite'
+      preLoaderRoute: typeof ConfidentialiteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cgv': {
+      id: '/cgv'
+      path: '/cgv'
+      fullPath: '/cgv'
+      preLoaderRoute: typeof CgvRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/calculatrice': {
@@ -241,6 +326,13 @@ declare module '@tanstack/react-router' {
       path: '/aide'
       fullPath: '/aide'
       preLoaderRoute: typeof AideRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/a-propos': {
+      id: '/a-propos'
+      path: '/a-propos'
+      fullPath: '/a-propos'
+      preLoaderRoute: typeof AProposRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -285,6 +377,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDeclarationsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/attendance': {
+      id: '/app/attendance'
+      path: '/attendance'
+      fullPath: '/app/attendance'
+      preLoaderRoute: typeof AppAttendanceRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/advances': {
       id: '/app/advances'
       path: '/advances'
@@ -325,6 +424,7 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppAdvancesRoute: typeof AppAdvancesRoute
+  AppAttendanceRoute: typeof AppAttendanceRoute
   AppDeclarationsRoute: typeof AppDeclarationsRoute
   AppLeaveRoute: typeof AppLeaveRoute
   AppMeRoute: typeof AppMeRoute
@@ -338,6 +438,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppAdvancesRoute: AppAdvancesRoute,
+  AppAttendanceRoute: AppAttendanceRoute,
   AppDeclarationsRoute: AppDeclarationsRoute,
   AppLeaveRoute: AppLeaveRoute,
   AppMeRoute: AppMeRoute,
@@ -353,10 +454,14 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AProposRoute: AProposRoute,
   AideRoute: AideRoute,
   AppRoute: AppRouteWithChildren,
   CalculatriceRoute: CalculatriceRoute,
+  CgvRoute: CgvRoute,
+  ConfidentialiteRoute: ConfidentialiteRoute,
   LoginRoute: LoginRoute,
+  MentionsLegalesRoute: MentionsLegalesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

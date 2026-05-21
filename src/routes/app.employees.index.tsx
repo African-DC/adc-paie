@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { Plus, Filter, Download, MoreHorizontal, Search, ArrowUpDown, ArrowUp, ArrowDown, X, Upload } from 'lucide-react'
+import { Plus, Filter, Download, MoreHorizontal, Search, ArrowUpDown, ArrowUp, ArrowDown, X, Upload, LayoutGrid, List, Mail, Phone } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import { EMPLOYEES, fcfa } from '../lib/mock'
 import { store } from '../lib/store'
@@ -19,6 +19,7 @@ function EmployeesPage() {
   const [dir, setDir] = useState<SortDir>('asc')
   const [hireOpen, setHireOpen] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
+  const [view, setView] = useState<'table' | 'grid'>('table')
 
   const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '')
 
@@ -94,8 +95,51 @@ function EmployeesPage() {
             </button>
           ))}
         </div>
+        <div className="flex items-center bg-n-100 rounded-sm p-0.5 border border-n-200">
+          <button onClick={() => setView('table')} title="Vue liste" className={`w-8 h-7 inline-flex items-center justify-center rounded-sm transition-colors ${view === 'table' ? 'bg-white shadow-sm text-orange' : 'text-n-500 hover:text-ink'}`}>
+            <List className="w-3.5 h-3.5" />
+          </button>
+          <button onClick={() => setView('grid')} title="Trombinoscope" className={`w-8 h-7 inline-flex items-center justify-center rounded-sm transition-colors ${view === 'grid' ? 'bg-white shadow-sm text-orange' : 'text-n-500 hover:text-ink'}`}>
+            <LayoutGrid className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
 
+      {view === 'grid' ? (
+        list.length === 0 ? (
+          <div className="bg-white border border-n-200 rounded-sm p-12 text-center">
+            <Search className="w-8 h-8 text-n-300 mx-auto mb-2" />
+            <p className="text-sm font-medium text-n-700">Aucun salarié trouvé</p>
+            <button onClick={() => { setQuery(''); setFilter('all') }} className="mt-3 text-xs font-semibold text-orange hover:text-orange-deep uppercase tracking-wider">Réinitialiser</button>
+          </div>
+        ) : (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {list.map((e) => (
+              <Link key={e.id} to="/app/employees/$id" params={{ id: e.id }} className="bg-white border border-n-200 hover:border-orange rounded-sm p-5 group transition-all hover:shadow-sm">
+                <div className="flex items-start gap-3 mb-3">
+                  <div className="relative shrink-0">
+                    <div className="w-14 h-14 bg-orange/10 group-hover:bg-orange group-hover:text-white text-orange-deep font-serif font-semibold text-xl rounded-full flex items-center justify-center transition-colors">{e.firstName[0]}{e.lastName[0]}</div>
+                    <span className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white ${e.status === 'active' ? 'bg-green-500' : 'bg-n-400'}`} title={e.status === 'active' ? 'Actif' : 'En congé'} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm group-hover:text-orange transition-colors truncate">{e.firstName} {e.lastName}</p>
+                    <p className="text-[11px] text-n-500 truncate">{e.role}</p>
+                    <span className={`mt-1.5 inline-block px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider rounded-sm ${e.contract === 'CDI' ? 'bg-ink-2 text-white' : 'bg-orange-tint text-orange-deep'}`}>{e.contract}</span>
+                  </div>
+                </div>
+                <div className="space-y-1.5 text-[11px] text-n-600 border-t border-n-100 pt-3">
+                  <div className="inline-flex items-center gap-1.5"><Mail className="w-3 h-3" /><span className="truncate">{e.firstName.toLowerCase()}.{e.lastName.toLowerCase()}@example.ci</span></div>
+                  <div className="inline-flex items-center gap-1.5"><Phone className="w-3 h-3" /> +225 07 ** ** ** **</div>
+                  <div className="flex items-center justify-between pt-1.5">
+                    <span className="font-mono text-[10px] text-n-500">{e.matricule}</span>
+                    <span className="font-mono font-semibold text-orange-deep">{fcfa(e.brut)}</span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )
+      ) : (
       <div className="bg-white border border-n-200 rounded-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -168,6 +212,7 @@ function EmployeesPage() {
           </div>
         </div>
       </div>
+      )}
       <HireWizard open={hireOpen} onClose={() => setHireOpen(false)} />
       <ImportEmployeesModal open={importOpen} onClose={() => setImportOpen(false)} />
     </div>

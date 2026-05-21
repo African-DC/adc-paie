@@ -28,15 +28,17 @@ export function MarketingFooter() {
                 <li><Link to="/" hash="features" className="text-white hover:text-orange transition-colors">Fonctionnalités</Link></li>
                 <li><Link to="/" hash="pricing" className="text-white hover:text-orange transition-colors">Tarifs</Link></li>
                 <li><Link to="/app" className="text-white hover:text-orange transition-colors">Démo</Link></li>
+                <li><Link to="/a-propos" className="text-white hover:text-orange transition-colors">À propos</Link></li>
               </ul>
             </div>
             <div>
-              <p className="text-[10px] tracking-[0.22em] uppercase text-n-400 mb-4 font-semibold">Outils gratuits</p>
+              <p className="text-[10px] tracking-[0.22em] uppercase text-n-400 mb-4 font-semibold">Outils & légal</p>
               <ul className="space-y-3 text-sm">
                 <li><Link to="/calculatrice" className="text-white hover:text-orange transition-colors">Calculatrice paie</Link></li>
                 <li><Link to="/aide" className="text-white hover:text-orange transition-colors">Aide & barèmes</Link></li>
-                <li><span className="text-white/80">CNPS · barèmes 2026</span></li>
-                <li><span className="text-white/80">Code du travail · art. 32.5</span></li>
+                <li><Link to="/mentions-legales" className="text-white hover:text-orange transition-colors">Mentions légales</Link></li>
+                <li><Link to="/cgv" className="text-white hover:text-orange transition-colors">CGV</Link></li>
+                <li><Link to="/confidentialite" className="text-white hover:text-orange transition-colors">Confidentialité</Link></li>
               </ul>
             </div>
             <div>

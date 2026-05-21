@@ -1,13 +1,15 @@
 import { createFileRoute, Link, Outlet, useLocation } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
-import { LayoutDashboard, Users, Calculator, FileCheck2, Settings, Search, Bell, ChevronRight, Sparkles, CalendarDays, UserCircle2, Wallet, Menu, X, FileText, BadgeCheck, ShieldCheck, ArrowLeftRight, LogOut } from 'lucide-react'
+import { LayoutDashboard, Users, Calculator, FileCheck2, Settings, Search, Bell, ChevronRight, Sparkles, CalendarDays, UserCircle2, Wallet, Menu, X, FileText, BadgeCheck, ShieldCheck, ArrowLeftRight, LogOut, Clock } from 'lucide-react'
 import { CURRENT_USER, TENANT, EMPLOYEES } from '../lib/mock'
 import { Spotlight } from '../components/spotlight'
 import { NotificationsPanel, Toast } from '../components/notifications'
 import { ADCAChat, ChatFAB } from '../components/adca-chat'
 import { HelpModal, OnboardingWizard } from '../components/extras'
 import { HireWizard } from '../components/hire-wizard'
+import { ConfirmDialog } from '../components/confirm-dialog'
 import { useStore, store } from '../lib/store'
+import { useNavigate } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/app')({ component: AppLayout })
 
@@ -16,6 +18,7 @@ const ADMIN_NAV = [
   { to: '/app/employees',    label: 'Salariés',            icon: Users },
   { to: '/app/payroll',      label: 'Paie mensuelle',      icon: Calculator },
   { to: '/app/advances',     label: 'Avances sur salaire', icon: Wallet },
+  { to: '/app/attendance',   label: 'Pointage & présences', icon: Clock },
   { to: '/app/leave',        label: 'Congés & absences',   icon: CalendarDays },
   { to: '/app/declarations', label: 'Déclarations',        icon: FileCheck2 },
   { to: '/app/settings',     label: 'Réglages',            icon: Settings },
@@ -32,9 +35,11 @@ const ME = EMPLOYEES.find((e) => e.id === '4')!
 
 function AppLayout() {
   const loc = useLocation()
+  const navigate = useNavigate()
   const unread = useStore((s) => s.notifs.filter((n) => !n.read).length)
   const isMac = typeof navigator !== 'undefined' && navigator.platform.toLowerCase().includes('mac')
   const [drawer, setDrawer] = useState(false)
+  const [confirmLogout, setConfirmLogout] = useState(false)
   useEffect(() => { setDrawer(false) }, [loc.pathname])
 
   const search = (loc as any).searchStr || (typeof window !== 'undefined' ? window.location.search : '') || ''
@@ -140,9 +145,9 @@ function AppLayout() {
               </div>
             </>
           )}
-          <Link to="/" onClick={() => store.toast('Déconnexion réussie', 'success')} title="Se déconnecter" className="w-9 h-9 hover:bg-red-500/20 hover:text-red-400 text-n-400 rounded-sm flex items-center justify-center shrink-0 transition-colors">
+          <button onClick={() => setConfirmLogout(true)} title="Se déconnecter" className="w-9 h-9 hover:bg-red-500/20 hover:text-red-400 text-n-400 rounded-sm flex items-center justify-center shrink-0 transition-colors">
             <LogOut className="w-4 h-4" />
-          </Link>
+          </button>
         </div>
       </aside>
 
@@ -200,6 +205,16 @@ function AppLayout() {
       <HelpModal />
       {!isEmployeeMode && <OnboardingWizard />}
       {!isEmployeeMode && <GlobalHireWizard />}
+      <ConfirmDialog
+        open={confirmLogout}
+        title="Se déconnecter ?"
+        message={<>Toute action non enregistrée sera perdue. Vous reviendrez à la page d'accueil. Vous pourrez vous reconnecter à tout moment depuis <strong>/login</strong>.</>}
+        confirmLabel="Se déconnecter"
+        cancelLabel="Annuler"
+        variant="danger"
+        onCancel={() => setConfirmLogout(false)}
+        onConfirm={() => { setConfirmLogout(false); store.toast('Déconnexion réussie', 'success'); navigate({ to: '/' }) }}
+      />
     </div>
   )
 }
