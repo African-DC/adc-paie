@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import { EMPLOYEES, fcfa } from '../lib/mock'
 import { store } from '../lib/store'
 import { HireWizard } from '../components/hire-wizard'
+import { downloadEmployeesExcel, downloadImportTemplateExcel } from '../lib/downloads'
 
 export const Route = createFileRoute('/app/employees/')({
   component: EmployeesPage,
@@ -61,7 +62,7 @@ function EmployeesPage() {
           <button onClick={() => setImportOpen(true)} className="inline-flex items-center gap-2 border border-n-300 text-n-700 px-3 h-9 text-xs font-medium hover:bg-n-50 transition-colors rounded-sm uppercase tracking-wider" title="Importer depuis Excel">
             <Upload className="w-3.5 h-3.5" /> Importer
           </button>
-          <button onClick={() => store.toast('Annuaire salariés exporté au format Excel', 'success')} className="inline-flex items-center gap-2 border border-n-300 text-n-700 px-3 h-9 text-xs font-medium hover:bg-n-50 transition-colors rounded-sm uppercase tracking-wider" title="Exporter au format Excel">
+          <button onClick={() => { downloadEmployeesExcel(list); store.toast('Annuaire Excel téléchargé', 'success') }} className="inline-flex items-center gap-2 border border-n-300 text-n-700 px-3 h-9 text-xs font-medium hover:bg-n-50 transition-colors rounded-sm uppercase tracking-wider" title="Exporter au format Excel">
             <Download className="w-3.5 h-3.5" /> Exporter
           </button>
           <button onClick={() => setHireOpen(true)} className="inline-flex items-center gap-2 bg-orange text-white px-4 h-9 text-sm font-semibold uppercase tracking-wider hover:bg-orange-deep transition-colors rounded-sm">
@@ -249,7 +250,7 @@ function ImportEmployeesModal({ open, onClose }: { open: boolean; onClose: () =>
             <div className="mt-4 p-3 bg-n-50 border border-n-200 rounded-sm text-xs text-n-700">
               <p className="font-semibold text-ink mb-1">Modèle attendu</p>
               <p>Colonnes : Prénom, Nom, Matricule CNPS, Fonction, Type contrat (CDI/CDD), Salaire brut, Date embauche, E-mail.</p>
-              <button onClick={() => store.toast('Modèle Excel téléchargé', 'success')} className="mt-2 text-orange font-semibold hover:underline">Télécharger le modèle</button>
+              <button onClick={() => { downloadImportTemplateExcel(); store.toast('Modèle Excel téléchargé', 'success') }} className="mt-2 text-orange font-semibold hover:underline">Télécharger le modèle</button>
             </div>
           </div>
         )}

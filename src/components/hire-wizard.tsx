@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { X, ChevronRight, ChevronLeft, Check, FileSignature, User, Briefcase, Phone, Wallet, ShieldCheck, Sparkles } from 'lucide-react'
 import { fcfa, computePayslip } from '../lib/mock'
 import { store } from '../lib/store'
+import { downloadContratPDF } from '../lib/downloads'
 
 type Form = {
   firstName: string; lastName: string; gender: 'F' | 'M' | ''; birthDate: string; nationality: string
@@ -45,7 +46,11 @@ export function HireWizard({ open, onClose }: { open: boolean; onClose: () => vo
 
   const finalize = () => {
     setSigning(true)
-    setTimeout(() => { setSigning(false); setDone(true) }, 1800)
+    setTimeout(() => {
+      downloadContratPDF(form)
+      setSigning(false)
+      setDone(true)
+    }, 1800)
   }
 
   const close = () => {

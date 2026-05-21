@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { Download, FileText, Calendar, Mail, Phone, MapPin, ShieldCheck, Sparkles, Plus, ChevronRight, CheckCircle2, Clock } from 'lucide-react'
 import { EMPLOYEES, fcfa, computePayslip } from '../lib/mock'
 import { store } from '../lib/store'
+import { downloadPayslipPDF, downloadAttestationPDF, downloadPayslipsZip } from '../lib/downloads'
 
 export const Route = createFileRoute('/app/me')({
   component: MePage,
@@ -123,7 +124,7 @@ function MePage() {
         <div className="bg-white border border-n-200 rounded-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-n-200 flex items-center justify-between">
             <h2 className="font-serif text-lg font-semibold tracking-tight">Bulletins de paie · 12 derniers mois</h2>
-            <button onClick={() => store.toast('Archive ZIP de tous les bulletins préparée', 'success')} className="text-xs font-semibold text-orange hover:text-orange-deep uppercase tracking-wider inline-flex items-center gap-1.5">
+            <button onClick={async () => { store.toast('Archive ZIP en préparation…', 'info'); await downloadPayslipsZip([me], MONTHS); store.toast('Archive ZIP téléchargée', 'success') }} className="text-xs font-semibold text-orange hover:text-orange-deep uppercase tracking-wider inline-flex items-center gap-1.5">
               <Download className="w-3.5 h-3.5" /> Tout télécharger
             </button>
           </div>
@@ -150,7 +151,7 @@ function MePage() {
                         {i === 0 && (
                           <Link to="/app/payroll/payslip/$id" params={{ id: me.id }} search={{ from: 'me' } as any} className="text-xs font-semibold text-orange hover:underline">Voir</Link>
                         )}
-                        <button onClick={() => store.toast(`Bulletin ${m} téléchargé`, 'success')} className="text-xs text-n-600 hover:text-orange inline-flex items-center gap-1">
+                        <button onClick={() => { downloadPayslipPDF(me, m); store.toast(`Bulletin ${m} téléchargé`, 'success') }} className="text-xs text-n-600 hover:text-orange inline-flex items-center gap-1">
                           <Download className="w-3 h-3" /> PDF
                         </button>
                       </div>
@@ -213,7 +214,14 @@ function MePage() {
               <button
                 key={d.name}
                 disabled={d.locked}
-                onClick={() => d.name === 'Attestation de travail' ? setShowDocReq(true) : store.toast(`${d.name} téléchargé`, 'success')}
+                onClick={() => {
+                  if (d.locked) return
+                  if (d.name === 'Attestation de travail') setShowDocReq(true)
+                  else if (d.name === 'Attestation CNPS') { downloadAttestationPDF(me, 'cnps'); store.toast('Attestation CNPS téléchargée', 'success') }
+                  else if (d.name === 'Reçu fiscal annuel 2025') { downloadAttestationPDF(me, 'fiscal'); store.toast('Reçu fiscal téléchargé', 'success') }
+                  else if (d.name === 'Avenant salaire 2026') { downloadAttestationPDF(me, 'avenant'); store.toast('Avenant téléchargé', 'success') }
+                  else { downloadAttestationPDF(me, 'travail'); store.toast(`${d.name} téléchargé`, 'success') }
+                }}
                 className={`flex items-center gap-3 p-4 bg-white border border-n-200 rounded-sm text-left transition-colors ${d.locked ? 'opacity-50 cursor-not-allowed' : 'hover:border-orange hover:bg-orange-tint/30'}`}
               >
                 <d.icon className="w-5 h-5 text-orange shrink-0" />
@@ -312,9 +320,11 @@ function LeaveRequestModal({ onClose }: { onClose: () => void }) {
 
 function DocRequestModal({ onClose }: { onClose: () => void }) {
   const [reason, setReason] = useState('Demande de visa')
+  const me = EMPLOYEES.find((x) => x.id === ME_ID)!
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
-    store.toast('Attestation générée et envoyée par e-mail', 'success')
+    downloadAttestationPDF(me, 'travail')
+    store.toast('Attestation générée et téléchargée · copie envoyée par e-mail', 'success')
     onClose()
   }
   return (

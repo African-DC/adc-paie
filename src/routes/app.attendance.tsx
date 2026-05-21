@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react'
 import { Clock, UserCheck, UserX, AlertCircle, Search, X, ChevronLeft, ChevronRight, CheckCircle2, Coffee, LogIn, LogOut as LogOutIcon } from 'lucide-react'
 import { EMPLOYEES } from '../lib/mock'
 import { store } from '../lib/store'
+import { downloadAttendanceSheetPDF } from '../lib/downloads'
 
 export const Route = createFileRoute('/app/attendance')({ component: AttendancePage })
 
@@ -97,7 +98,7 @@ function AttendancePage() {
           <h1 className="font-serif text-3xl lg:text-4xl font-semibold tracking-tight">Présences & <span className="em-serif">absences</span></h1>
           <p className="mt-2 text-n-700 capitalize">{today}</p>
         </div>
-        <button onClick={() => store.toast('Export feuille de présence PDF généré', 'success')} className="inline-flex items-center gap-2 border border-n-300 text-n-700 px-4 h-9 text-xs font-semibold uppercase tracking-wider hover:bg-n-50 transition-colors rounded-sm">
+        <button onClick={() => { downloadAttendanceSheetPDF(active, punches); store.toast('Feuille de présence PDF téléchargée', 'success') }} className="inline-flex items-center gap-2 border border-n-300 text-n-700 px-4 h-9 text-xs font-semibold uppercase tracking-wider hover:bg-n-50 transition-colors rounded-sm">
           <CheckCircle2 className="w-3.5 h-3.5" /> Feuille du jour (PDF)
         </button>
       </div>

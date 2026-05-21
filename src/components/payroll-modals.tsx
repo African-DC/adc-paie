@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { X, Send, CheckCircle2, Loader2, Smartphone, Building2, Archive, FileSpreadsheet, FileText, ShieldCheck, Clock } from 'lucide-react'
 import { EMPLOYEES, computePayslip, fcfa } from '../lib/mock'
 import { store } from '../lib/store'
+import { downloadAuditArchiveZip } from '../lib/downloads'
 
 type Provider = 'wave' | 'orange' | 'mtn' | 'bank'
 
@@ -173,13 +174,19 @@ export function ExportAuditModal({ open, onClose }: { open: boolean; onClose: ()
     setSel((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]))
   }
 
-  const build = () => {
+  const build = async () => {
     setPhase('building')
-    setTimeout(() => setPhase('ready'), 1800)
+    try {
+      await downloadAuditArchiveZip(EMPLOYEES, 'Novembre 2026', sel)
+      setPhase('ready')
+    } catch {
+      store.toast('Erreur de génération', 'warning')
+      setPhase('select')
+    }
   }
 
   const download = () => {
-    store.toast('Archive audit-paie-nov2026.zip téléchargée', 'success')
+    store.toast('Archive ZIP téléchargée', 'success')
     setPhase('select')
     onClose()
   }

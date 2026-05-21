@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { ChevronLeft, ChevronRight, Download, Mail, Printer, Info, BookOpen, EyeOff } from 'lucide-react'
 import { EMPLOYEES, TENANT, fcfa, computePayslip } from '../lib/mock'
 import { store } from '../lib/store'
+import { downloadPayslipPDF } from '../lib/downloads'
 
 export const Route = createFileRoute('/app/payroll/payslip/$id')({
   loader: ({ params }) => {
@@ -154,7 +155,7 @@ function PayslipPage() {
               <Mail className="w-3.5 h-3.5" /> Envoyer par e-mail
             </button>
           )}
-          <button onClick={() => store.toast('Bulletin PDF téléchargé', 'success')} className="inline-flex items-center gap-2 bg-orange text-white px-4 h-9 text-xs font-semibold uppercase tracking-wider hover:bg-orange-deep transition-colors rounded-sm">
+          <button onClick={() => { downloadPayslipPDF(e); store.toast('Bulletin PDF téléchargé', 'success') }} className="inline-flex items-center gap-2 bg-orange text-white px-4 h-9 text-xs font-semibold uppercase tracking-wider hover:bg-orange-deep transition-colors rounded-sm">
             <Download className="w-3.5 h-3.5" /> Télécharger PDF
           </button>
         </div>

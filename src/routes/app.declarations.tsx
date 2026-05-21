@@ -1,7 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Download, Upload, ExternalLink } from 'lucide-react'
-import { DECLARATIONS, fcfa } from '../lib/mock'
+import { DECLARATIONS, EMPLOYEES, fcfa } from '../lib/mock'
 import { store } from '../lib/store'
+import { downloadDeclarationExcel } from '../lib/downloads'
 
 export const Route = createFileRoute('/app/declarations')({ component: DeclarationsPage })
 
@@ -58,11 +59,11 @@ function DeclarationsPage() {
                   <td className="px-4 py-3 text-center"><StatusBadge status={d.status} /></td>
                   <td className="px-4 py-3 text-right">
                     {d.status === 'À soumettre' || d.status === 'En cours' ? (
-                      <button onClick={() => store.toast(`${d.type} soumise sur ${d.type.includes('CNPS') ? 'e-CNPS' : 'e-impots'}`, 'success')} className="inline-flex items-center gap-1.5 bg-orange text-white px-3 h-8 text-[11px] font-semibold uppercase tracking-wider hover:bg-orange-deep transition-colors rounded-sm">
-                        <Upload className="w-3 h-3" /> Soumettre
+                      <button onClick={() => { downloadDeclarationExcel(d.type.includes('CNPS') ? 'cnps' : 'dgi', d.period, EMPLOYEES); store.toast(`${d.type} générée · prête à soumettre sur ${d.type.includes('CNPS') ? 'e-CNPS' : 'e-impots'}`, 'success') }} className="inline-flex items-center gap-1.5 bg-orange text-white px-3 h-8 text-[11px] font-semibold uppercase tracking-wider hover:bg-orange-deep transition-colors rounded-sm">
+                        <Upload className="w-3 h-3" /> Générer & soumettre
                       </button>
                     ) : (
-                      <button onClick={() => store.toast(`${d.type} téléchargée au format Excel`, 'success')} className="inline-flex items-center gap-1.5 border border-n-300 text-n-700 px-3 h-8 text-[11px] font-medium hover:bg-n-50 transition-colors rounded-sm">
+                      <button onClick={() => { downloadDeclarationExcel(d.type.includes('CNPS') ? 'cnps' : 'dgi', d.period, EMPLOYEES); store.toast(`${d.type} téléchargée au format Excel`, 'success') }} className="inline-flex items-center gap-1.5 border border-n-300 text-n-700 px-3 h-8 text-[11px] font-medium hover:bg-n-50 transition-colors rounded-sm">
                         <Download className="w-3 h-3" /> Télécharger
                       </button>
                     )}

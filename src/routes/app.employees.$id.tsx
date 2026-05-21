@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { ChevronLeft, Mail, Phone, MapPin, Calendar, FileText, Download } from 'lucide-react'
 import { EMPLOYEES, fcfa, computePayslip } from '../lib/mock'
 import { store } from '../lib/store'
+import { downloadPayslipPDF, downloadAttestationPDF } from '../lib/downloads'
 
 export const Route = createFileRoute('/app/employees/$id')({
   loader: ({ params }) => {
@@ -44,7 +45,7 @@ function EmployeeDetail() {
             </div>
           </div>
           <div className="flex flex-col gap-2">
-            <button onClick={() => store.toast('Bulletin du mois en cours téléchargé', 'success')} className="inline-flex items-center gap-2 bg-orange text-white px-4 h-9 text-xs font-semibold uppercase tracking-wider hover:bg-orange-deep transition-colors rounded-sm">
+            <button onClick={() => { downloadPayslipPDF(e); store.toast('Bulletin Novembre 2026 téléchargé', 'success') }} className="inline-flex items-center gap-2 bg-orange text-white px-4 h-9 text-xs font-semibold uppercase tracking-wider hover:bg-orange-deep transition-colors rounded-sm">
               <Download className="w-3.5 h-3.5" /> Bulletin du mois
             </button>
             <Link to="/app/payroll/payslip/$id" params={{ id: e.id }} className="inline-flex items-center gap-2 border border-n-300 px-4 h-9 text-xs font-medium hover:bg-n-50 transition-colors rounded-sm">
@@ -115,7 +116,7 @@ function EmployeeDetail() {
                       {i === 0 ? (
                         <Link to="/app/payroll/payslip/$id" params={{ id: e.id }} className="text-xs font-semibold text-orange hover:underline">Voir</Link>
                       ) : (
-                        <button onClick={() => store.toast(`Bulletin ${m} téléchargé`, 'success')} className="text-xs text-n-600 hover:text-orange">PDF</button>
+                        <button onClick={() => { downloadPayslipPDF(e, m); store.toast(`Bulletin ${m} téléchargé`, 'success') }} className="text-xs text-n-600 hover:text-orange">PDF</button>
                       )}
                     </td>
                   </tr>
@@ -130,7 +131,7 @@ function EmployeeDetail() {
         <div className="bg-white border border-n-200 rounded-sm p-6">
           <div className="grid sm:grid-cols-2 gap-3">
             {['Contrat de travail signé', 'CNI / Passeport', 'Diplôme(s)', 'Justificatif de domicile', 'Attestation CNPS', 'RIB Wave Business'].map((d) => (
-              <button key={d} onClick={() => store.toast(`${d} téléchargé`, 'success')} className="flex items-center gap-3 p-3 bg-n-50 hover:bg-orange-tint border border-n-200 rounded-sm text-left transition-colors">
+              <button key={d} onClick={() => { downloadAttestationPDF(e, d.includes('CNPS') ? 'cnps' : 'travail'); store.toast(`${d} téléchargé`, 'success') }} className="flex items-center gap-3 p-3 bg-n-50 hover:bg-orange-tint border border-n-200 rounded-sm text-left transition-colors">
                 <FileText className="w-4 h-4 text-orange shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{d}</p>

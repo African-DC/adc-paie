@@ -1,8 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import { Building2, Users, Shield, Bell, History, X, Edit3, Check, CheckCircle2, AlertCircle, LogIn, FileSignature, Send, Wallet, Trash2 } from 'lucide-react'
-import { TENANT } from '../lib/mock'
+import { TENANT, EMPLOYEES } from '../lib/mock'
 import { store } from '../lib/store'
+import { downloadAuditLogCSV, downloadEmployeesExcel } from '../lib/downloads'
 
 export const Route = createFileRoute('/app/settings')({ component: SettingsPage })
 
@@ -79,7 +80,7 @@ function SettingsPage() {
               </li>
             ))}
           </ul>
-          <button onClick={() => store.toast('Export audit log au format CSV téléchargé', 'success')} className="mt-4 text-xs font-semibold text-orange hover:text-orange-deep uppercase tracking-wider">Exporter le journal complet (CSV)</button>
+          <button onClick={() => { downloadAuditLogCSV(AUDIT_LOG); store.toast('Audit log CSV téléchargé', 'success') }} className="mt-4 text-xs font-semibold text-orange hover:text-orange-deep uppercase tracking-wider">Exporter le journal complet (CSV)</button>
         </Card>
 
         <Card title="Zone dangereuse" icon={AlertCircle}>
@@ -89,7 +90,7 @@ function SettingsPage() {
                 <p className="text-sm font-semibold">Exporter toutes les données</p>
                 <p className="text-[11px] text-n-600">Archive ZIP RGPD-compatible · 12 mois de données</p>
               </div>
-              <button onClick={() => store.toast('Export RGPD lancé · vous recevrez un lien sous 24 h', 'success')} className="px-3 h-8 text-xs font-semibold border border-orange text-orange-deep hover:bg-orange-tint rounded-sm">Exporter</button>
+              <button onClick={() => { downloadEmployeesExcel(EMPLOYEES); store.toast('Export annuaire RGPD téléchargé · audit log CSV en bonus', 'success'); setTimeout(() => downloadAuditLogCSV(AUDIT_LOG), 600) }} className="px-3 h-8 text-xs font-semibold border border-orange text-orange-deep hover:bg-orange-tint rounded-sm">Exporter</button>
             </div>
             <div className="flex items-center justify-between p-3 bg-red-50 border border-red-200 rounded-sm">
               <div>
