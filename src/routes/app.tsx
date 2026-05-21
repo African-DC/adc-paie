@@ -1,0 +1,78 @@
+import { createFileRoute, Link, Outlet, useLocation } from '@tanstack/react-router'
+import { LayoutDashboard, Users, Calculator, FileCheck2, Settings, Search, Bell, ChevronRight } from 'lucide-react'
+import { CURRENT_USER, TENANT } from '../lib/mock'
+
+export const Route = createFileRoute('/app')({
+  component: AppLayout,
+})
+
+const NAV = [
+  { to: '/app', label: 'Tableau de bord', icon: LayoutDashboard, exact: true },
+  { to: '/app/employees', label: 'Salariés', icon: Users },
+  { to: '/app/payroll', label: 'Paie mensuelle', icon: Calculator },
+  { to: '/app/declarations', label: 'Déclarations', icon: FileCheck2 },
+  { to: '/app/settings', label: 'Réglages', icon: Settings },
+]
+
+function AppLayout() {
+  const loc = useLocation()
+  return (
+    <div className="min-h-screen flex bg-n-50">
+      <aside className="hidden lg:flex flex-col w-64 bg-ink-2 text-white shrink-0">
+        <Link to="/" className="px-6 py-5 border-b border-white/10 block">
+          <span className="font-serif text-xl font-semibold">ADC <span style={{color:'var(--color-orange)',fontStyle:'italic',fontWeight:500}}>Paie</span></span>
+        </Link>
+        <div className="px-6 py-4 border-b border-white/10">
+          <p className="text-[10px] tracking-[0.22em] uppercase text-n-400 font-semibold mb-1">Espace</p>
+          <p className="text-sm font-semibold truncate">{TENANT.name}</p>
+          <p className="text-[11px] text-n-400 mt-0.5">IFU · {TENANT.ifu}</p>
+        </div>
+        <nav className="flex-1 px-3 py-4 space-y-0.5">
+          {NAV.map((item) => {
+            const active = item.exact ? loc.pathname === item.to : loc.pathname.startsWith(item.to)
+            return (
+              <Link key={item.to} to={item.to} className={`flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-colors rounded-sm ${active ? 'bg-orange text-white' : 'text-n-300 hover:bg-white/5 hover:text-white'}`}>
+                <item.icon className="w-4 h-4 shrink-0" />
+                <span>{item.label}</span>
+              </Link>
+            )
+          })}
+        </nav>
+        <div className="px-6 py-4 border-t border-white/10 flex items-center gap-3">
+          <div className="w-9 h-9 bg-orange text-white font-semibold text-sm rounded-full flex items-center justify-center shrink-0">{CURRENT_USER.initials}</div>
+          <div className="min-w-0">
+            <p className="text-sm font-medium truncate">{CURRENT_USER.name}</p>
+            <p className="text-[11px] text-n-400 truncate">{CURRENT_USER.role}</p>
+          </div>
+        </div>
+      </aside>
+
+      <div className="flex-1 flex flex-col min-w-0">
+        <header className="bg-white border-b border-n-200 sticky top-0 z-30">
+          <div className="px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
+            <Link to="/app" className="lg:hidden font-serif text-base font-semibold">ADC <span className="em-serif">Paie</span></Link>
+            <div className="hidden md:flex items-center gap-2 text-[13px] text-n-500">
+              <Link to="/app" className="hover:text-orange">Espace</Link>
+              <ChevronRight className="w-3.5 h-3.5" />
+              <span className="text-ink font-medium">{NAV.find(n => n.exact ? loc.pathname === n.to : loc.pathname.startsWith(n.to))?.label || 'Tableau de bord'}</span>
+            </div>
+            <div className="flex items-center gap-2 ml-auto">
+              <div className="hidden md:flex items-center gap-2 bg-n-50 px-3 py-1.5 rounded-sm border border-n-200 w-64">
+                <Search className="w-3.5 h-3.5 text-n-500" />
+                <input className="bg-transparent outline-none text-sm flex-1" placeholder="Rechercher un salarié…" />
+              </div>
+              <button className="w-9 h-9 flex items-center justify-center hover:bg-n-100 rounded-sm relative">
+                <Bell className="w-4 h-4 text-n-700" />
+                <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-orange rounded-full" />
+              </button>
+              <div className="lg:hidden w-9 h-9 bg-orange text-white font-semibold text-xs rounded-full flex items-center justify-center">{CURRENT_USER.initials}</div>
+            </div>
+          </div>
+        </header>
+        <main className="flex-1 p-6 lg:p-8 max-w-full overflow-x-hidden">
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  )
+}
