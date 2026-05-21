@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { Search, ArrowRight, Users, LayoutDashboard, Calculator, FileCheck2, Settings, FileText, Sparkles } from 'lucide-react'
+import { Search, ArrowRight, Users, LayoutDashboard, Calculator, FileCheck2, Settings, FileText, Sparkles, CalendarDays } from 'lucide-react'
 import { useStore, store } from '../lib/store'
 import { EMPLOYEES } from '../lib/mock'
 
@@ -9,6 +9,7 @@ const ACTIONS = [
   { id: 'a2', label: 'Voir les salariés', icon: Users, to: '/app/employees', tag: 'navigation' },
   { id: 'a3', label: 'Lancer la paie mensuelle', icon: Calculator, to: '/app/payroll', tag: 'action' },
   { id: 'a4', label: 'Soumettre une déclaration CNPS', icon: FileCheck2, to: '/app/declarations', tag: 'action' },
+  { id: 'a8', label: 'Valider une demande de congé', icon: CalendarDays, to: '/app/leave', tag: 'action' },
   { id: 'a5', label: 'Réglages de l\'espace', icon: Settings, to: '/app/settings', tag: 'navigation' },
   { id: 'a6', label: 'Ouvrir l\'assistant IA ADCA', icon: Sparkles, to: '', tag: 'ia', action: () => { store.closeSpotlight(); store.toggleChat() } },
   { id: 'a7', label: 'Voir l\'aperçu d\'un bulletin', icon: FileText, to: '/app/payroll/payslip/1', tag: 'action' },
