@@ -10,7 +10,7 @@ const PROVIDERS: Array<{ id: Provider; name: string; fees: string; speed: string
   { id: 'wave',   name: 'Wave',            fees: '0 %',          speed: '< 30 s',  logo: '/providers/wave.png',         color: '#1DCBEF', bg: '#1DCBEF' },
   { id: 'orange', name: 'Orange Money',    fees: '1,0 %',        speed: '< 1 min', logo: '/providers/orange-money.svg', color: '#FF6600', bg: '#000000' },
   { id: 'mtn',    name: 'MTN MoMo',        fees: '1,2 %',        speed: '< 1 min', logo: '/providers/mtn-momo.png',     color: '#FFCC00', bg: '#FFCC00' },
-  { id: 'bank',   name: 'Virement bancaire', fees: '500 XOF/op.', speed: 'J+1',     fallback: '🏦', color: '#0a0a0a', bg: '#0a0a0a' },
+  { id: 'bank',   name: 'Virement bancaire', fees: '500 FCFA/op.', speed: 'J+1',     fallback: '🏦', color: '#0a0a0a', bg: '#0a0a0a' },
 ]
 
 export function PaySalariesModal({ open, onClose, total, count }: { open: boolean; onClose: () => void; total: number; count: number }) {

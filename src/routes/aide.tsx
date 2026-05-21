@@ -9,11 +9,11 @@ export const Route = createFileRoute('/aide')({ component: AidePage })
 const FAQ = [
   {
     q: 'Quel est le barème ITS 2026 en Côte d\'Ivoire ?',
-    a: `L'ITS (Impôt sur les Traitements et Salaires) est progressif sur quatre tranches annuelles, calculées par part fiscale (quotient familial) :\n\n· 0 à 600 000 XOF : 0 %\n· 600 001 à 1 200 000 XOF : 10 %\n· 1 200 001 à 2 000 000 XOF : 20 %\n· Au-delà de 2 000 000 XOF : 25 %\n\nLa base imposable est le brut moins la CNPS salariale (6,3 %) moins un abattement de 15 % pour frais professionnels.`,
+    a: `L'ITS (Impôt sur les Traitements et Salaires) est progressif sur quatre tranches annuelles, calculées par part fiscale (quotient familial) :\n\n· 0 à 600 000 FCFA : 0 %\n· 600 001 à 1 200 000 FCFA : 10 %\n· 1 200 001 à 2 000 000 FCFA : 20 %\n· Au-delà de 2 000 000 FCFA : 25 %\n\nLa base imposable est le brut moins la CNPS salariale (6,3 %) moins un abattement de 15 % pour frais professionnels.`,
   },
   {
     q: 'Quels sont les taux CNPS salarié et patronal ?',
-    a: `Cotisations salariales (à retenir sur le bulletin) :\n· Retraite : 6,3 % du brut plafonné à 70 000 XOF/mois (45 fois le SMIG)\n\nCotisations patronales (à la charge de l'employeur) :\n· Retraite : 7,7 %\n· Prestations familiales : 5,75 %\n· Accidents du travail : 2 à 5 % selon le secteur (3,5 % par défaut)\n\nTotal patronal moyen : 16 à 18 % du brut.`,
+    a: `Cotisations salariales (à retenir sur le bulletin) :\n· Retraite : 6,3 % du brut plafonné à 70 000 FCFA/mois (45 fois le SMIG)\n\nCotisations patronales (à la charge de l'employeur) :\n· Retraite : 7,7 %\n· Prestations familiales : 5,75 %\n· Accidents du travail : 2 à 5 % selon le secteur (3,5 % par défaut)\n\nTotal patronal moyen : 16 à 18 % du brut.`,
   },
   {
     q: 'Quand soumettre l\'État 301 et le Bordereau CNPS ?',
@@ -21,7 +21,7 @@ const FAQ = [
   },
   {
     q: 'Quelle est la sanction en cas de retard de cotisation CNPS ou DGI ?',
-    a: `CNPS : pénalité de 0,05 % par jour de retard sur les cotisations impayées.\n\nDGI : majoration de 10 % le premier mois de retard, puis 3 % par mois suivant.\n\nUne PME de 30 salariés qui paie en retard de 30 jours peut subir 50 000 à 200 000 XOF de pénalités évitables. ADC Paie évite ce coût.`,
+    a: `CNPS : pénalité de 0,05 % par jour de retard sur les cotisations impayées.\n\nDGI : majoration de 10 % le premier mois de retard, puis 3 % par mois suivant.\n\nUne PME de 30 salariés qui paie en retard de 30 jours peut subir 50 000 à 200 000 FCFA de pénalités évitables. ADC Paie évite ce coût.`,
   },
   {
     q: 'Comment calculer l\'IGR et la CN ?',
@@ -66,7 +66,7 @@ const GLOSSAIRE = [
   ['Bordereau CNPS', 'Document mensuel détaillant les cotisations sociales du mois'],
   ['État 301', 'Déclaration mensuelle DGI des salaires versés et impôts retenus'],
   ['DAS', 'Déclaration Annuelle des Salaires · récap fiscal et social en janvier N+1'],
-  ['SMIG', 'Salaire Minimum Interprofessionnel Garanti · 75 000 XOF/mois en Côte d\'Ivoire (2026)'],
+  ['SMIG', 'Salaire Minimum Interprofessionnel Garanti · 75 000 FCFA/mois en Côte d\'Ivoire (2026)'],
 ]
 
 function AidePage() {

@@ -5,17 +5,17 @@ import { useStore, store } from '../lib/store'
 type Msg = { id: string; from: 'me' | 'adca'; text: string; streaming?: boolean }
 
 const SUGGESTIONS = [
-  'Calcule le net d\'un brut de 350 000 XOF marié 2 enfants',
+  'Calcule le net d\'un brut de 350 000 FCFA marié 2 enfants',
   'Quel est le barème ITS 2026 ?',
   'Génère le bordereau CNPS de novembre',
   'Quels sont mes prochaines échéances ?',
-  'Combien me coûte un salarié à 500 000 XOF brut ?',
+  'Combien me coûte un salarié à 500 000 FCFA brut ?',
 ]
 
 function aiReply(q: string): string {
   const lower = q.toLowerCase()
   if (lower.includes('its') || lower.includes('barème')) {
-    return `Le barème ITS 2026 est progressif sur quatre tranches annuelles :\n\n· 0 à 600 000 XOF : 0 %\n· 600 001 à 1 200 000 XOF : 10 %\n· 1 200 001 à 2 000 000 XOF : 20 %\n· au-delà de 2 000 000 XOF : 25 %\n\nLa base imposable est le brut moins la CNPS salariale (6,3 %) et l'abattement de frais professionnels (15 %), divisée par le quotient familial.`
+    return `Le barème ITS 2026 est progressif sur quatre tranches annuelles :\n\n· 0 à 600 000 FCFA : 0 %\n· 600 001 à 1 200 000 FCFA : 10 %\n· 1 200 001 à 2 000 000 FCFA : 20 %\n· au-delà de 2 000 000 FCFA : 25 %\n\nLa base imposable est le brut moins la CNPS salariale (6,3 %) et l'abattement de frais professionnels (15 %), divisée par le quotient familial.`
   }
   if (lower.includes('net') && (lower.includes('brut') || lower.includes('xof'))) {
     const m = q.match(/(\d{2,3}[\s.]?\d{3})/)
@@ -27,17 +27,17 @@ function aiReply(q: string): string {
       const cn = brut * 0.015
       const net = brut - cnps - its - igr - cn
       const patron = brut * 0.17
-      return `Pour un brut de ${brut.toLocaleString('fr-FR')} XOF, marié avec deux enfants à charge :\n\n· Net à payer : environ ${Math.round(net).toLocaleString('fr-FR')} XOF\n· CNPS salariale : ${Math.round(cnps).toLocaleString('fr-FR')} XOF\n· ITS estimé : ${Math.round(its).toLocaleString('fr-FR')} XOF\n· IGR : ${Math.round(igr).toLocaleString('fr-FR')} XOF\n· CN : ${Math.round(cn).toLocaleString('fr-FR')} XOF\n\nCoût total employeur : ${Math.round(brut + patron).toLocaleString('fr-FR')} XOF (charges patronales 17 %).`
+      return `Pour un brut de ${brut.toLocaleString('fr-FR')} FCFA, marié avec deux enfants à charge :\n\n· Net à payer : environ ${Math.round(net).toLocaleString('fr-FR')} FCFA\n· CNPS salariale : ${Math.round(cnps).toLocaleString('fr-FR')} FCFA\n· ITS estimé : ${Math.round(its).toLocaleString('fr-FR')} FCFA\n· IGR : ${Math.round(igr).toLocaleString('fr-FR')} FCFA\n· CN : ${Math.round(cn).toLocaleString('fr-FR')} FCFA\n\nCoût total employeur : ${Math.round(brut + patron).toLocaleString('fr-FR')} FCFA (charges patronales 17 %).`
     }
   }
   if (lower.includes('cnps') && (lower.includes('bordereau') || lower.includes('génère'))) {
-    return `Le bordereau CNPS de novembre 2026 est généré. Voici la synthèse :\n\n· 14 salariés affiliés\n· Cotisations salariales : 387 240 XOF\n· Cotisations patronales : 1 044 360 XOF\n· Total à verser : 1 431 600 XOF\n· Échéance : 15 décembre 2026\n\nVous pouvez le télécharger au format Excel depuis l'écran Déclarations ou le soumettre directement à e-CNPS via l'intégration.`
+    return `Le bordereau CNPS de novembre 2026 est généré. Voici la synthèse :\n\n· 14 salariés affiliés\n· Cotisations salariales : 387 240 FCFA\n· Cotisations patronales : 1 044 360 FCFA\n· Total à verser : 1 431 600 FCFA\n· Échéance : 15 décembre 2026\n\nVous pouvez le télécharger au format Excel depuis l'écran Déclarations ou le soumettre directement à e-CNPS via l'intégration.`
   }
   if (lower.includes('échéance') || lower.includes('prochain')) {
-    return `Vos trois prochaines échéances légales :\n\n1. 15 décembre 2026 · Bordereau CNPS novembre (1 857 200 XOF)\n2. 15 décembre 2026 · État 301 DGI novembre (1 248 500 XOF)\n3. 31 janvier 2027 · DAS annuelle CNPS et DGI\n\nADC Paie déclenche une alerte cinq jours avant chaque date limite.`
+    return `Vos trois prochaines échéances légales :\n\n1. 15 décembre 2026 · Bordereau CNPS novembre (1 857 200 FCFA)\n2. 15 décembre 2026 · État 301 DGI novembre (1 248 500 FCFA)\n3. 31 janvier 2027 · DAS annuelle CNPS et DGI\n\nADC Paie déclenche une alerte cinq jours avant chaque date limite.`
   }
   if (lower.includes('coûte') || lower.includes('coute') || lower.includes('coût total')) {
-    return `Un salarié à 500 000 XOF brut vous coûte au total environ 585 000 XOF par mois :\n\n· Salaire brut : 500 000 XOF\n· Charges patronales (retraite, famille, AT) : ~85 000 XOF\n\nDont ce qui reste au salarié : ~412 500 XOF net après CNPS, ITS, IGR et CN. Soit environ 82,5 % du brut.`
+    return `Un salarié à 500 000 FCFA brut vous coûte au total environ 585 000 FCFA par mois :\n\n· Salaire brut : 500 000 FCFA\n· Charges patronales (retraite, famille, AT) : ~85 000 FCFA\n\nDont ce qui reste au salarié : ~412 500 FCFA net après CNPS, ITS, IGR et CN. Soit environ 82,5 % du brut.`
   }
   if (lower.includes('congé')) {
     return `Au regard de la Loi 2015-532, un salarié acquiert 2,2 jours ouvrables de congé par mois travaillé, soit 26,4 jours par an. Bonifications ancienneté : +1 jour à 5 ans, +2 à 10 ans, +3 à 15 ans, +5 à 20 ans. Les congés se posent dans le module Salariés depuis la fiche individuelle.`

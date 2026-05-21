@@ -187,7 +187,7 @@ function NewAdvanceModal({ onClose, onCreate }: { onClose: () => void; onCreate:
               ))}
             </select>
           </Field>
-          <Field label="Montant (XOF)">
+          <Field label="Montant (FCFA)">
             <input required type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="50 000" className="w-full h-10 px-3 border border-n-300 rounded-sm text-sm font-mono" />
           </Field>
           <Field label="Motif">

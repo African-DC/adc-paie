@@ -70,7 +70,7 @@ function PayslipPage() {
       rate: '6,3 %',
       due: '',
       retain: fcfa(Math.round(p.cnps)),
-      explainer: 'Caisse Nationale de Prévoyance Sociale. Part salariale fixe 6,3 % du brut (retraite 6,3 % uniquement côté salarié — CMU, prestations familiales et accidents du travail sont à 100 % patronaux). Plafonné à 70 000 XOF de retenue par mois (45 fois le SMIG).',
+      explainer: 'Caisse Nationale de Prévoyance Sociale. Part salariale fixe 6,3 % du brut (retraite 6,3 % uniquement côté salarié — CMU, prestations familiales et accidents du travail sont à 100 % patronaux). Plafonné à 70 000 FCFA de retenue par mois (45 fois le SMIG).',
     },
     {
       key: 'its',

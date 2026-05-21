@@ -110,10 +110,10 @@ function SettingsPage() {
 }
 
 const AUDIT_LOG: Array<{ action: string; actor: string; ip: string; when: string; severity: 'normal' | 'high' | 'success'; icon: any }> = [
-  { action: 'Paiement de 14 bulletins via Wave (4 375 871 XOF)', actor: 'Marcel Djedje-li', ip: '154.0.20.84', when: 'Aujourd\'hui · 16:42', severity: 'success', icon: Send },
-  { action: 'Modification du salaire de Kouassi Brou (520 000 → 550 000 XOF)', actor: 'Aïcha Koné · DRH', ip: '154.0.20.91', when: 'Aujourd\'hui · 14:18', severity: 'high', icon: Edit3 },
-  { action: 'Avance de 75 000 XOF approuvée pour Sékou Touré', actor: 'Marcel Djedje-li', ip: '154.0.20.84', when: 'Hier · 17:05', severity: 'normal', icon: Wallet },
-  { action: 'Soumission Bordereau CNPS Octobre 2026 (1 812 400 XOF)', actor: 'Mamadou Diabaté · Comptable', ip: '154.0.20.77', when: '15 nov. 2026 · 09:30', severity: 'success', icon: CheckCircle2 },
+  { action: 'Paiement de 14 bulletins via Wave (4 375 871 FCFA)', actor: 'Marcel Djedje-li', ip: '154.0.20.84', when: 'Aujourd\'hui · 16:42', severity: 'success', icon: Send },
+  { action: 'Modification du salaire de Kouassi Brou (520 000 → 550 000 FCFA)', actor: 'Aïcha Koné · DRH', ip: '154.0.20.91', when: 'Aujourd\'hui · 14:18', severity: 'high', icon: Edit3 },
+  { action: 'Avance de 75 000 FCFA approuvée pour Sékou Touré', actor: 'Marcel Djedje-li', ip: '154.0.20.84', when: 'Hier · 17:05', severity: 'normal', icon: Wallet },
+  { action: 'Soumission Bordereau CNPS Octobre 2026 (1 812 400 FCFA)', actor: 'Mamadou Diabaté · Comptable', ip: '154.0.20.77', when: '15 nov. 2026 · 09:30', severity: 'success', icon: CheckCircle2 },
   { action: 'Connexion depuis nouvel appareil (Chrome · Abidjan)', actor: 'Marcel Djedje-li', ip: '154.0.20.84', when: '14 nov. 2026 · 08:12', severity: 'normal', icon: LogIn },
   { action: 'Signature contrat CDI · Ousmane Coulibaly', actor: 'Aïcha Koné · DRH', ip: '154.0.20.91', when: '15 sept. 2026 · 11:00', severity: 'success', icon: FileSignature },
 ]

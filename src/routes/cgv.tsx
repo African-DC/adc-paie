@@ -18,7 +18,7 @@ function CGVPage() {
             <p>Les présentes CGV définissent les conditions d'accès et d'usage de la plateforme SaaS « ADC Paie », logiciel en ligne de gestion de la paie et des ressources humaines, exploité par African Digit Consulting.</p>
           </Section>
           <Section title="2. Souscription et tarification">
-            <p>L'accès au service est conditionné à la souscription d'un abonnement mensuel ou annuel selon les tarifs en vigueur (Starter 49 000, Pro 149 000, Business 299 000 XOF/mois, Enterprise sur devis).</p>
+            <p>L'accès au service est conditionné à la souscription d'un abonnement mensuel ou annuel selon les tarifs en vigueur (Starter 49 000, Pro 149 000, Business 299 000 FCFA/mois, Enterprise sur devis).</p>
             <p>Le paiement s'effectue par virement bancaire ou Mobile Money (Wave, Orange Money, MTN MoMo).</p>
           </Section>
           <Section title="3. Engagements ADC Paie">

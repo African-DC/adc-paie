@@ -262,7 +262,7 @@ function ImportEmployeesModal({ open, onClose }: { open: boolean; onClose: () =>
             </div>
             <p className="text-[10px] uppercase tracking-[0.22em] text-n-500 font-semibold mb-2">Aperçu (3 premières lignes)</p>
             <div className="border border-n-200 rounded-sm overflow-hidden text-xs">
-              {['Aminata Touré · Comptable · CDI · 380 000 XOF', 'Yacouba Sanogo · Commercial · CDD · 220 000 XOF', 'Mariam Bamba · Designer · CDI · 410 000 XOF'].map((l, i) => (
+              {['Aminata Touré · Comptable · CDI · 380 000 FCFA', 'Yacouba Sanogo · Commercial · CDD · 220 000 FCFA', 'Mariam Bamba · Designer · CDI · 410 000 FCFA'].map((l, i) => (
                 <div key={i} className="px-3 py-2 border-b border-n-100 last:border-0 font-mono text-[11px]">{l}</div>
               ))}
             </div>

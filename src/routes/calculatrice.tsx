@@ -67,14 +67,14 @@ function CalculatricePage() {
 
             {isBrutToNet ? (
               <label className="block">
-                <span className="text-[10px] uppercase tracking-[0.22em] text-n-500 font-semibold mb-1 block">Salaire brut mensuel (XOF)</span>
+                <span className="text-[10px] uppercase tracking-[0.22em] text-n-500 font-semibold mb-1 block">Salaire brut mensuel (FCFA)</span>
                 <input type="number" value={brut} onChange={(e) => setBrut(parseInt(e.target.value) || 0)} className="w-full h-14 px-4 border-2 border-n-300 rounded-sm text-2xl font-mono font-semibold focus:outline-none focus:border-orange" />
                 <input type="range" min="60000" max="3000000" step="10000" value={brut} onChange={(e) => setBrut(parseInt(e.target.value))} className="w-full mt-2 accent-orange" />
                 <div className="flex justify-between text-[10px] text-n-500 mt-1"><span>60 000</span><span>3 000 000</span></div>
               </label>
             ) : (
               <label className="block">
-                <span className="text-[10px] uppercase tracking-[0.22em] text-n-500 font-semibold mb-1 block">Net souhaité par le salarié (XOF)</span>
+                <span className="text-[10px] uppercase tracking-[0.22em] text-n-500 font-semibold mb-1 block">Net souhaité par le salarié (FCFA)</span>
                 <input type="number" value={net} onChange={(e) => setNet(parseInt(e.target.value) || 0)} className="w-full h-14 px-4 border-2 border-n-300 rounded-sm text-2xl font-mono font-semibold focus:outline-none focus:border-orange" />
                 <input type="range" min="40000" max="2500000" step="5000" value={net} onChange={(e) => setNet(parseInt(e.target.value))} className="w-full mt-2 accent-orange" />
                 <div className="flex justify-between text-[10px] text-n-500 mt-1"><span>40 000</span><span>2 500 000</span></div>

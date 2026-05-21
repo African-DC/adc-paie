@@ -41,7 +41,7 @@ function DeclarationsPage() {
                 <th className="text-left px-4 py-3 text-[10px] tracking-[0.18em] uppercase font-semibold text-n-700">Type</th>
                 <th className="text-left px-4 py-3 text-[10px] tracking-[0.18em] uppercase font-semibold text-n-700">Période</th>
                 <th className="text-left px-4 py-3 text-[10px] tracking-[0.18em] uppercase font-semibold text-n-700">Échéance</th>
-                <th className="text-right px-4 py-3 text-[10px] tracking-[0.18em] uppercase font-semibold text-n-700">Montant XOF</th>
+                <th className="text-right px-4 py-3 text-[10px] tracking-[0.18em] uppercase font-semibold text-n-700">Montant FCFA</th>
                 <th className="text-center px-4 py-3 text-[10px] tracking-[0.18em] uppercase font-semibold text-n-700">Statut</th>
                 <th className="text-right px-4 py-3 text-[10px] tracking-[0.18em] uppercase font-semibold text-n-700">Actions</th>
               </tr>

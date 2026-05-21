@@ -52,7 +52,7 @@ export const TENANT = {
 export const CURRENT_USER = { name: 'Marcel Djedje-li', role: 'Administrateur', initials: 'MD' }
 
 export function fcfa(n: number): string {
-  return n.toLocaleString('fr-FR').replace(/,/g, ' ') + ' XOF'
+  return n.toLocaleString('fr-FR').replace(/,/g, ' ') + ' FCFA'
 }
 
 export function fcfaShort(n: number): string {

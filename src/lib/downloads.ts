@@ -346,7 +346,7 @@ export function downloadAttestationPDF(e: Employee, type: 'travail' | 'cnps' | '
     const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
     autoTable(doc, {
       startY: y,
-      head: [['Cotisation', 'Base XOF', 'Taux', 'Montant XOF']],
+      head: [['Cotisation', 'Base FCFA', 'Taux', 'Montant FCFA']],
       body: [
         ['Retraite salariale', fmtXOF(e.brut), '6,3 %', fmtXOF(p.cnps)],
         ['Retraite patronale', fmtXOF(e.brut), '7,7 %', fmtXOF(e.brut * 0.077)],
@@ -365,7 +365,7 @@ export function downloadAttestationPDF(e: Employee, type: 'travail' | 'cnps' | '
     const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
     autoTable(doc, {
       startY: y,
-      head: [['Élément', 'Cumul 2025 XOF']],
+      head: [['Élément', 'Cumul 2025 FCFA']],
       body: [
         ['Salaire brut total', fmtXOF(e.brut * 12)],
         ['CNPS salariale retenue', fmtXOF(p.cnps * 12)],
@@ -414,7 +414,7 @@ function setExcelMeta(wb: XLSX.WorkBook) {
 export function downloadEmployeesExcel(employees: Employee[]) {
   const ws = XLSX.utils.json_to_sheet(employees.map((e) => {
     const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
-    return { 'Matricule CNPS': e.matricule, 'Prénom': e.firstName, 'Nom': e.lastName, 'Fonction': e.role, 'Contrat': e.contract, 'Date d\'embauche': e.joinedAt, 'Statut': e.status === 'active' ? 'Actif' : 'En congé', 'Situation': e.family.situation, 'Enfants': e.family.kids, 'Brut XOF': e.brut, 'CNPS XOF': Math.round(p.cnps), 'ITS XOF': Math.round(p.its), 'IGR+CN XOF': Math.round(p.igr + p.cn), 'Net XOF': Math.round(p.net), 'Coût employeur XOF': Math.round(p.total) }
+    return { 'Matricule CNPS': e.matricule, 'Prénom': e.firstName, 'Nom': e.lastName, 'Fonction': e.role, 'Contrat': e.contract, 'Date d\'embauche': e.joinedAt, 'Statut': e.status === 'active' ? 'Actif' : 'En congé', 'Situation': e.family.situation, 'Enfants': e.family.kids, 'Brut FCFA': e.brut, 'CNPS FCFA': Math.round(p.cnps), 'ITS FCFA': Math.round(p.its), 'IGR+CN FCFA': Math.round(p.igr + p.cn), 'Net FCFA': Math.round(p.net), 'Coût employeur FCFA': Math.round(p.total) }
   }))
   ws['!cols'] = [{ wch: 14 }, { wch: 12 }, { wch: 14 }, { wch: 26 }, { wch: 9 }, { wch: 14 }, { wch: 10 }, { wch: 14 }, { wch: 8 }, { wch: 14 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 14 }, { wch: 16 }]
   const wb = XLSX.utils.book_new()
@@ -425,7 +425,7 @@ export function downloadEmployeesExcel(employees: Employee[]) {
 
 export function downloadImportTemplateExcel() {
   const ws = XLSX.utils.aoa_to_sheet([
-    ['Prénom', 'Nom', 'Matricule CNPS', 'Fonction', 'Type contrat', 'Salaire brut XOF', 'Date embauche AAAA-MM-JJ', 'E-mail'],
+    ['Prénom', 'Nom', 'Matricule CNPS', 'Fonction', 'Type contrat', 'Salaire brut FCFA', 'Date embauche AAAA-MM-JJ', 'E-mail'],
     ['Aminata', 'Touré', 'CI-XXXXXXXX', 'Comptable', 'CDI', 380000, '2026-01-15', 'aminata.toure@example.ci'],
     ['Yacouba', 'Sanogo', 'CI-XXXXXXXX', 'Commercial', 'CDD', 220000, '2026-02-01', 'yacouba.sanogo@example.ci'],
   ])
@@ -539,7 +539,7 @@ export async function downloadAuditArchiveZip(employees: Employee[], period = 'N
     }, { brut: 0, cnps: 0, its: 0, igr: 0, cn: 0, net: 0, patron: 0 })
     autoTable(doc, {
       startY: 46,
-      head: [['Poste', 'Montant XOF']],
+      head: [['Poste', 'Montant FCFA']],
       body: [['Total brut', fmtXOF(t.brut)], ['CNPS salariales', fmtXOF(t.cnps)], ['ITS', fmtXOF(t.its)], ['IGR', fmtXOF(t.igr)], ['CN', fmtXOF(t.cn)], ['Net total à verser', fmtXOF(t.net)], ['Charges patronales', fmtXOF(t.patron)]],
       foot: [[{ content: 'COÛT TOTAL EMPLOYEUR', styles: { fontStyle: 'bold' } as any }, { content: fmtXOF(t.brut + t.patron), styles: { fontStyle: 'bold', textColor: ORANGE as any } as any }]],
       headStyles: { fillColor: INK as any, textColor: [255, 255, 255] as any },

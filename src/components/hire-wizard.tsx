@@ -175,7 +175,7 @@ export function HireWizard({ open, onClose }: { open: boolean; onClose: () => vo
 
               {step === 4 && (
                 <div className="space-y-4">
-                  <Field label="Salaire brut mensuel (XOF) *"><input required type="number" value={form.brut || ''} onChange={(e) => set('brut', parseInt(e.target.value) || 0)} className={inputCls} placeholder="250 000" /></Field>
+                  <Field label="Salaire brut mensuel (FCFA) *"><input required type="number" value={form.brut || ''} onChange={(e) => set('brut', parseInt(e.target.value) || 0)} className={inputCls} placeholder="250 000" /></Field>
                   <Field label="Matricule CNPS *"><input required value={form.cnpsMat} onChange={(e) => set('cnpsMat', e.target.value)} className={inputCls + ' font-mono'} placeholder="CI-XXXXXXXX" /></Field>
                   <div className="grid sm:grid-cols-2 gap-4">
                     <Field label="Situation familiale">

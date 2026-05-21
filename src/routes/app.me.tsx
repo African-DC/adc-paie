@@ -102,7 +102,7 @@ function MePage() {
                 <Sparkles className="w-4 h-4 text-orange shrink-0 mt-0.5" />
                 <div>
                   <p className="font-semibold text-ink text-sm">Astuce IA</p>
-                  <p className="text-xs text-n-700 mt-1 leading-relaxed">Votre net devrait augmenter de <strong>+18 000 XOF</strong> en janvier 2027 grâce à la révision automatique du quotient familial.</p>
+                  <p className="text-xs text-n-700 mt-1 leading-relaxed">Votre net devrait augmenter de <strong>+18 000 FCFA</strong> en janvier 2027 grâce à la révision automatique du quotient familial.</p>
                 </div>
               </div>
             </div>

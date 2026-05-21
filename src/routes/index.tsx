@@ -128,9 +128,9 @@ function LandingPage() {
             <div className="bg-ink text-white rounded-sm p-7 lg:p-8 shadow-2xl relative">
               <div className="absolute -top-3 left-7 bg-orange text-white text-[10px] uppercase tracking-[0.22em] font-semibold px-3 py-1">Aperçu calcul</div>
               <p className="text-[11px] uppercase tracking-wider text-n-400 mt-2">Pour un brut de</p>
-              <p className="font-serif text-3xl font-semibold">350 000 XOF</p>
+              <p className="font-serif text-3xl font-semibold">350 000 FCFA</p>
               <p className="text-[11px] uppercase tracking-wider text-n-400 mt-4">Net mensuel à payer</p>
-              <p className="font-serif text-5xl font-semibold text-orange leading-none">271 921 XOF</p>
+              <p className="font-serif text-5xl font-semibold text-orange leading-none">271 921 FCFA</p>
               <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-1.5 text-sm border-t border-white/15 pt-4">
                 <p className="text-n-400">CNPS 6,3 %</p><p className="font-mono text-right">- 22 050</p>
                 <p className="text-n-400">ITS progressif</p><p className="font-mono text-right">- 45 529</p>
@@ -169,7 +169,7 @@ function LandingPage() {
                 {t.popular && <span className="absolute -top-3 left-6 bg-orange text-white text-[10px] tracking-widest uppercase font-bold px-2.5 py-1">Recommandé</span>}
                 <p className="text-[10px] tracking-[0.22em] uppercase font-semibold text-n-600">{t.name}</p>
                 <p className="mt-3 font-serif font-semibold text-3xl tracking-tight">
-                  {t.price === 'sur devis' ? <span className="text-2xl">Sur devis</span> : <>{t.price} <span className="text-sm text-orange font-medium">XOF / mois</span></>}
+                  {t.price === 'sur devis' ? <span className="text-2xl">Sur devis</span> : <>{t.price} <span className="text-sm text-orange font-medium">FCFA / mois</span></>}
                 </p>
                 <p className="font-serif italic text-sm text-n-600 mt-1">{t.target}</p>
                 <ul className="mt-5 space-y-2 flex-1">
@@ -187,7 +187,7 @@ function LandingPage() {
           </div>
           <div className="mt-12 bg-orange-tint border-l-4 border-orange p-6">
             <p className="text-ink">
-              Soit <strong>8 000 à 20 000 XOF par salarié et par mois</strong> selon le tier, contre 20 000 à 50 000 XOF chez un cabinet d'expertise comptable. <span className="em-serif">Le ROI est immédiat dès le premier mois.</span>
+              Soit <strong>8 000 à 20 000 FCFA par salarié et par mois</strong> selon le tier, contre 20 000 à 50 000 FCFA chez un cabinet d'expertise comptable. <span className="em-serif">Le ROI est immédiat dès le premier mois.</span>
             </p>
           </div>
         </div>
