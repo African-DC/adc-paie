@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
+import { useEffect } from 'react'
 import { TrendingUp, Users, CalendarClock, Wallet, ArrowRight, AlertCircle, Calculator, Send, UserPlus } from 'lucide-react'
 import { TOTALS, EMPLOYEES, DECLARATIONS, fcfa } from '../lib/mock'
 import { AnomaliesBanner } from '../components/extras'
@@ -11,6 +12,12 @@ export const Route = createFileRoute('/app/')({
 function Dashboard() {
   const next = DECLARATIONS.find(d => d.status === 'À soumettre' || d.status === 'En cours')
   const recentHires = EMPLOYEES.filter(e => e.status === 'active').slice(-3).reverse()
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hash === '#hire') {
+      store.openHire()
+      window.history.replaceState(null, '', window.location.pathname + window.location.search)
+    }
+  }, [])
   return (
     <div className="space-y-6">
       <div>
