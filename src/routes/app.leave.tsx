@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState } from 'react'
-import { CalendarDays, Plus, Check, X, Clock, CalendarCheck } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { CalendarDays, Plus, Check, X, Clock, CalendarCheck, Search } from 'lucide-react'
 import { EMPLOYEES } from '../lib/mock'
 import { store } from '../lib/store'
 
@@ -29,7 +29,18 @@ function LeavePage() {
     store.toast(decision === 'Validé' ? 'Demande validée · répercutée sur la paie' : 'Demande refusée · salarié notifié', decision === 'Validé' ? 'success' : 'warning')
   }
 
-  const filtered = tab === 'pending' ? reqs.filter((r) => r.status === 'En attente') : reqs
+  const [query, setQuery] = useState('')
+  const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '')
+  const base = tab === 'pending' ? reqs.filter((r) => r.status === 'En attente') : reqs
+  const filtered = useMemo(() => {
+    const nq = norm(query)
+    if (!nq) return base
+    return base.filter((r) => {
+      const e = EMPLOYEES.find((x) => x.id === r.empId)
+      if (!e) return false
+      return norm(`${e.firstName} ${e.lastName} ${r.type}`).includes(nq)
+    })
+  }, [query, base])
   const stats = {
     pending: reqs.filter((r) => r.status === 'En attente').length,
     validated: reqs.filter((r) => r.status === 'Validé').length,
@@ -84,6 +95,14 @@ function LeavePage() {
 
       {tab !== 'calendar' && (
         <div className="bg-white border border-n-200 rounded-sm overflow-hidden">
+          <div className="px-4 py-3 border-b border-n-200 bg-n-50 flex items-center justify-between gap-3 flex-wrap">
+            <p className="text-sm font-semibold">{filtered.length} demande{filtered.length > 1 ? 's' : ''}{query && ` · recherche « ${query} »`}</p>
+            <div className="relative w-64">
+              <Search className="w-3.5 h-3.5 text-n-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Rechercher un salarié ou un motif…" className="w-full h-8 pl-8 pr-7 border border-n-300 rounded-sm text-xs bg-white focus:outline-none focus:border-orange focus:ring-2 focus:ring-orange/20" />
+              {query && <button onClick={() => setQuery('')} className="absolute right-1.5 top-1/2 -translate-y-1/2 w-5 h-5 hover:bg-n-100 rounded-sm inline-flex items-center justify-center" aria-label="Effacer"><X className="w-3 h-3 text-n-500" /></button>}
+            </div>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-n-50 border-b border-n-200">

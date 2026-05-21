@@ -1,6 +1,6 @@
-import { createFileRoute, Link, notFound } from '@tanstack/react-router'
-import { useState } from 'react'
-import { ChevronLeft, Download, Mail, Printer, Info, BookOpen, Eye, EyeOff } from 'lucide-react'
+import { createFileRoute, Link, notFound, useNavigate } from '@tanstack/react-router'
+import { useEffect, useState } from 'react'
+import { ChevronLeft, ChevronRight, Download, Mail, Printer, Info, BookOpen, EyeOff } from 'lucide-react'
 import { EMPLOYEES, TENANT, fcfa, computePayslip } from '../lib/mock'
 import { store } from '../lib/store'
 
@@ -16,9 +16,26 @@ export const Route = createFileRoute('/app/payroll/payslip/$id')({
 
 function PayslipPage() {
   const { e } = Route.useLoaderData()
+  const navigate = useNavigate()
   const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
   const [explainAll, setExplainAll] = useState(false)
   const parts = 1 + (e.family.situation === 'marié(e)' ? 0.5 : 0) + e.family.kids * 0.5
+
+  const active = EMPLOYEES.filter((x) => x.status === 'active')
+  const idx = active.findIndex((x) => x.id === e.id)
+  const prev = idx > 0 ? active[idx - 1] : null
+  const next = idx >= 0 && idx < active.length - 1 ? active[idx + 1] : null
+
+  useEffect(() => {
+    const h = (ev: KeyboardEvent) => {
+      const tag = (ev.target as HTMLElement)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return
+      if (ev.key === 'ArrowLeft' && prev) navigate({ to: '/app/payroll/payslip/$id', params: { id: prev.id } })
+      if (ev.key === 'ArrowRight' && next) navigate({ to: '/app/payroll/payslip/$id', params: { id: next.id } })
+    }
+    window.addEventListener('keydown', h)
+    return () => window.removeEventListener('keydown', h)
+  }, [prev, next, navigate])
 
   const lines = [
     {
@@ -82,9 +99,30 @@ function PayslipPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <Link to="/app/payroll" className="inline-flex items-center gap-1.5 text-sm text-n-600 hover:text-orange">
-          <ChevronLeft className="w-3.5 h-3.5" /> Retour au cycle de paie
-        </Link>
+        <div className="flex items-center gap-3 flex-wrap">
+          <Link to="/app/payroll" className="inline-flex items-center gap-1.5 text-sm text-n-600 hover:text-orange">
+            <ChevronLeft className="w-3.5 h-3.5" /> Retour au cycle
+          </Link>
+          <div className="inline-flex items-center border border-n-200 rounded-sm overflow-hidden bg-white">
+            <button
+              onClick={() => prev && navigate({ to: '/app/payroll/payslip/$id', params: { id: prev.id } })}
+              disabled={!prev}
+              title={prev ? `${prev.firstName} ${prev.lastName} (← flèche gauche)` : 'Premier bulletin du cycle'}
+              className="w-9 h-9 hover:bg-n-50 disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center border-r border-n-200"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <span className="px-3 text-[11px] font-mono text-n-600">{idx + 1} / {active.length}</span>
+            <button
+              onClick={() => next && navigate({ to: '/app/payroll/payslip/$id', params: { id: next.id } })}
+              disabled={!next}
+              title={next ? `${next.firstName} ${next.lastName} (→ flèche droite)` : 'Dernier bulletin du cycle'}
+              className="w-9 h-9 hover:bg-n-50 disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center border-l border-n-200"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
         <div className="flex items-center gap-2 print:hidden">
           <button
             onClick={() => setExplainAll((v) => !v)}

@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useState } from 'react'
-import { Plus, X, CheckCircle2, Clock, AlertCircle, ChevronRight, Wallet, TrendingDown } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { Plus, X, CheckCircle2, Clock, AlertCircle, ChevronRight, Wallet, TrendingDown, Search } from 'lucide-react'
 import { EMPLOYEES, fcfa } from '../lib/mock'
 import { store } from '../lib/store'
 
@@ -22,6 +22,7 @@ export function AdvancesPage() {
   const [advances, setAdvances] = useState<Advance[]>(INIT)
   const [filter, setFilter] = useState<'all' | Status>('all')
   const [showNew, setShowNew] = useState(false)
+  const [query, setQuery] = useState('')
 
   const stats = {
     pending: advances.filter((a) => a.status === 'pending').length,
@@ -30,7 +31,17 @@ export function AdvancesPage() {
     countActive: advances.filter((a) => a.status === 'approved').length,
   }
 
-  const visible = filter === 'all' ? advances : advances.filter((a) => a.status === filter)
+  const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '')
+  const visible = useMemo(() => {
+    const filtered = filter === 'all' ? advances : advances.filter((a) => a.status === filter)
+    const nq = norm(query)
+    if (!nq) return filtered
+    return filtered.filter((a) => {
+      const e = EMPLOYEES.find((x) => x.id === a.empId)
+      if (!e) return false
+      return norm(`${e.firstName} ${e.lastName} ${a.reason}`).includes(nq)
+    })
+  }, [advances, filter, query])
 
   const handleAction = (id: string, status: Status, msg: string) => {
     setAdvances((a) => a.map((x) => (x.id === id ? { ...x, status } : x)))
@@ -57,18 +68,25 @@ export function AdvancesPage() {
         <Stat label="Déduit ce mois" value={fcfa(stats.deductedM)} icon={CheckCircle2} />
       </div>
 
-      <div className="flex items-center gap-1 border-b border-n-200 overflow-x-auto">
-        {([
-          { v: 'all', l: 'Toutes' },
-          { v: 'pending', l: 'À valider' },
-          { v: 'approved', l: 'En cours' },
-          { v: 'deducted', l: 'Soldées' },
-          { v: 'rejected', l: 'Refusées' },
-        ] as const).map((t) => (
-          <button key={t.v} onClick={() => setFilter(t.v)} className={`px-4 h-10 text-sm font-medium border-b-2 -mb-px transition-colors ${filter === t.v ? 'border-orange text-orange' : 'border-transparent text-n-600 hover:text-ink'}`}>
-            {t.l}
-          </button>
-        ))}
+      <div className="flex items-center justify-between gap-3 flex-wrap border-b border-n-200">
+        <div className="flex items-center gap-1 overflow-x-auto">
+          {([
+            { v: 'all', l: 'Toutes' },
+            { v: 'pending', l: 'À valider', count: stats.pending },
+            { v: 'approved', l: 'En cours', count: stats.countActive },
+            { v: 'deducted', l: 'Soldées' },
+            { v: 'rejected', l: 'Refusées' },
+          ] as const).map((t) => (
+            <button key={t.v} onClick={() => setFilter(t.v)} className={`px-4 h-10 text-sm font-medium border-b-2 -mb-px transition-colors ${filter === t.v ? 'border-orange text-orange' : 'border-transparent text-n-600 hover:text-ink'}`}>
+              {t.l}{('count' in t && t.count !== undefined) && <span className="ml-1.5 text-[10px] font-mono">({t.count})</span>}
+            </button>
+          ))}
+        </div>
+        <div className="relative w-64 mb-2">
+          <Search className="w-3.5 h-3.5 text-n-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Rechercher un salarié ou un motif…" className="w-full h-8 pl-8 pr-7 border border-n-300 rounded-sm text-xs bg-white focus:outline-none focus:border-orange focus:ring-2 focus:ring-orange/20" />
+          {query && <button onClick={() => setQuery('')} className="absolute right-1.5 top-1/2 -translate-y-1/2 w-5 h-5 hover:bg-n-100 rounded-sm inline-flex items-center justify-center" aria-label="Effacer"><X className="w-3 h-3 text-n-500" /></button>}
+        </div>
       </div>
 
       <div className="bg-white border border-n-200 rounded-sm overflow-hidden">

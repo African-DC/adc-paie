@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useState } from 'react'
-import { Calculator, FileText, ChevronDown, Calendar, Eye, Send, Archive } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { Calculator, FileText, ChevronDown, Calendar, Eye, Send, Archive, Search, X, RotateCcw, Sparkles } from 'lucide-react'
 import { EMPLOYEES, computePayslip, fcfa } from '../lib/mock'
 import { store } from '../lib/store'
 import { PaySalariesModal, ExportAuditModal } from '../components/payroll-modals'
@@ -13,11 +13,20 @@ function PayrollPage() {
   const [bonus, setBonus] = useState<Record<string, string>>({})
   const [payOpen, setPayOpen] = useState(false)
   const [exportOpen, setExportOpen] = useState(false)
+  const [query, setQuery] = useState('')
   const active = EMPLOYEES.filter(e => e.status === 'active')
+  const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '')
+  const visible = useMemo(() => {
+    const nq = norm(query)
+    return nq ? active.filter((e) => norm(`${e.firstName} ${e.lastName} ${e.role}`).includes(nq)) : active
+  }, [query, active])
   const totals = active.reduce((acc, e) => {
     const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
     return { brut: acc.brut + e.brut, cnps: acc.cnps + p.cnps, its: acc.its + p.its, igr: acc.igr + p.igr, cn: acc.cn + p.cn, net: acc.net + p.net, patron: acc.patron + p.patron }
   }, { brut: 0, cnps: 0, its: 0, igr: 0, cn: 0, net: 0, patron: 0 })
+
+  const applyToAll = (val: string) => { const d: Record<string, string> = {}; active.forEach((e) => { d[e.id] = val }); setDays(d); store.toast(`${val} jours appliqués à tous les salariés`, 'success') }
+  const resetBonuses = () => { setBonus({}); store.toast('Primes réinitialisées', 'info') }
 
   return (
     <div className="space-y-6 pb-32">
@@ -33,9 +42,30 @@ function PayrollPage() {
       </div>
 
       <div className="bg-white border border-n-200 rounded-sm overflow-hidden">
-        <div className="px-4 py-3 border-b border-n-200 bg-n-50 flex items-center justify-between">
+        <div className="px-4 py-3 border-b border-n-200 bg-n-50 flex items-center justify-between gap-3 flex-wrap">
           <p className="text-sm font-semibold">Détail par salarié · {active.length} bulletins à générer</p>
-          <p className="text-[11px] text-n-500">Pré-rempli avec les contrats. Modifiez si besoin.</p>
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="relative w-56">
+              <Search className="w-3.5 h-3.5 text-n-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Rechercher un salarié…"
+                className="w-full h-8 pl-8 pr-7 border border-n-300 rounded-sm text-xs bg-white focus:outline-none focus:border-orange focus:ring-2 focus:ring-orange/20"
+              />
+              {query && (
+                <button onClick={() => setQuery('')} className="absolute right-1.5 top-1/2 -translate-y-1/2 w-5 h-5 hover:bg-n-100 rounded-sm inline-flex items-center justify-center" aria-label="Effacer">
+                  <X className="w-3 h-3 text-n-500" />
+                </button>
+              )}
+            </div>
+            <button onClick={() => applyToAll('22')} className="inline-flex items-center gap-1.5 px-2.5 h-8 text-[11px] font-medium border border-n-300 hover:bg-white rounded-sm transition-colors" title="Forcer 22 jours pour tous les salariés">
+              <Sparkles className="w-3 h-3 text-orange" /> 22j à tous
+            </button>
+            <button onClick={resetBonuses} className="inline-flex items-center gap-1.5 px-2.5 h-8 text-[11px] font-medium border border-n-300 hover:bg-white rounded-sm transition-colors" title="Vider toutes les primes">
+              <RotateCcw className="w-3 h-3" /> Reset primes
+            </button>
+          </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -52,7 +82,14 @@ function PayrollPage() {
               </tr>
             </thead>
             <tbody>
-              {active.map((e) => {
+              {visible.length === 0 && (
+                <tr><td colSpan={8} className="px-4 py-12 text-center">
+                  <Search className="w-7 h-7 text-n-300 mx-auto mb-2" />
+                  <p className="text-sm font-medium text-n-700">Aucun salarié ne correspond à « {query} »</p>
+                  <button onClick={() => setQuery('')} className="mt-2 text-xs font-semibold text-orange hover:text-orange-deep uppercase tracking-wider">Effacer la recherche</button>
+                </td></tr>
+              )}
+              {visible.map((e) => {
                 const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
                 return (
                   <tr key={e.id} className="border-b border-n-100 hover:bg-n-50/50 transition-colors">

@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { TrendingUp, Users, CalendarClock, Wallet, ArrowRight, AlertCircle, CheckCircle2 } from 'lucide-react'
-import { TOTALS, EMPLOYEES, DECLARATIONS, fcfa, fcfaShort } from '../lib/mock'
+import { TrendingUp, Users, CalendarClock, Wallet, ArrowRight, AlertCircle, Calculator, Send, UserPlus } from 'lucide-react'
+import { TOTALS, EMPLOYEES, DECLARATIONS, fcfa } from '../lib/mock'
 import { AnomaliesBanner } from '../components/extras'
+import { store } from '../lib/store'
 
 export const Route = createFileRoute('/app/')({
   component: Dashboard,
@@ -22,11 +23,21 @@ function Dashboard() {
 
       <AnomaliesBanner />
 
+      <div>
+        <p className="text-[10px] tracking-[0.22em] uppercase text-n-500 font-semibold mb-2">Actions rapides</p>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <QuickAction to="/app/payroll"      label="Lancer la paie"        sub="Novembre 2026"        icon={Calculator} primary />
+          <QuickAction to="/app/declarations" label="Soumettre CNPS"        sub="Échéance 15 déc."     icon={Send} />
+          <QuickAction to="/app/advances"     label="Valider les avances"   sub="2 demandes"           icon={Wallet} />
+          <QuickAction onClick={() => store.toast('Wizard d\'embauche disponible en tier Pro', 'info')} label="Embaucher" sub="Nouveau contrat" icon={UserPlus} />
+        </div>
+      </div>
+
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPI label="Masse salariale brute" value={fcfa(TOTALS.masseBrut)} delta="+2,3 %" icon={TrendingUp} />
-        <KPI label="Salariés actifs" value={String(TOTALS.active)} delta="2 CDD" icon={Users} />
-        <KPI label="Charges patronales" value={fcfa(TOTALS.charges)} delta="17 % du brut" icon={Wallet} />
-        <KPI label="Prochaine échéance" value={next ? next.due : '—'} delta={next?.type || ''} icon={CalendarClock} accent />
+        <KPI to="/app/payroll"      label="Masse salariale brute" value={fcfa(TOTALS.masseBrut)} delta="+2,3 % vs mois précédent" icon={TrendingUp} />
+        <KPI to="/app/employees"    label="Salariés actifs"        value={String(TOTALS.active)}   delta="2 CDD · 1 en congé" icon={Users} />
+        <KPI to="/app/payroll"      label="Charges patronales"     value={fcfa(TOTALS.charges)}    delta="17 % du brut" icon={Wallet} />
+        <KPI to="/app/declarations" label="Prochaine échéance"     value={next ? next.due : '—'}   delta={next?.type || ''} icon={CalendarClock} accent />
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
@@ -98,17 +109,43 @@ function Dashboard() {
   )
 }
 
-function KPI({ label, value, delta, icon: Icon, accent }: { label: string; value: string; delta: string; icon: any; accent?: boolean }) {
-  return (
-    <div className={`p-5 rounded-sm border ${accent ? 'bg-orange-tint border-orange/30' : 'bg-white border-n-200'}`}>
+function KPI({ to, label, value, delta, icon: Icon, accent }: { to?: string; label: string; value: string; delta: string; icon: any; accent?: boolean }) {
+  const body = (
+    <>
       <div className="flex items-center justify-between mb-3">
         <p className="text-[10px] tracking-[0.22em] uppercase text-n-500 font-semibold">{label}</p>
         <Icon className={`w-4 h-4 ${accent ? 'text-orange' : 'text-n-400'}`} />
       </div>
       <p className="font-serif font-semibold text-2xl lg:text-3xl tracking-tight leading-none">{value}</p>
-      <p className={`mt-2 text-[11px] font-medium ${accent ? 'text-orange-deep' : 'text-n-500'}`}>{delta}</p>
-    </div>
+      <div className="flex items-center justify-between mt-2">
+        <p className={`text-[11px] font-medium ${accent ? 'text-orange-deep' : 'text-n-500'}`}>{delta}</p>
+        {to && <ArrowRight className={`w-3 h-3 ${accent ? 'text-orange-deep' : 'text-n-400'} group-hover:translate-x-0.5 transition-transform`} />}
+      </div>
+    </>
   )
+  const cls = `block group p-5 rounded-sm border transition-all ${accent ? 'bg-orange-tint border-orange/30 hover:border-orange' : 'bg-white border-n-200 hover:border-n-300 hover:shadow-sm'}`
+  return to
+    ? <Link to={to} className={cls}>{body}</Link>
+    : <div className={cls}>{body}</div>
+}
+
+function QuickAction({ to, onClick, label, sub, icon: Icon, primary }: { to?: string; onClick?: () => void; label: string; sub: string; icon: any; primary?: boolean }) {
+  const body = (
+    <>
+      <div className={`w-10 h-10 rounded-sm flex items-center justify-center shrink-0 ${primary ? 'bg-orange text-white' : 'bg-n-100 text-n-700 group-hover:bg-orange-tint group-hover:text-orange'}`}>
+        <Icon className="w-4 h-4" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="font-semibold text-sm truncate group-hover:text-orange-deep transition-colors">{label}</p>
+        <p className="text-[11px] text-n-500 truncate">{sub}</p>
+      </div>
+      <ArrowRight className="w-3.5 h-3.5 text-n-400 group-hover:text-orange group-hover:translate-x-0.5 transition-all" />
+    </>
+  )
+  const cls = `group flex items-center gap-3 p-3 bg-white border border-n-200 hover:border-orange rounded-sm transition-all text-left`
+  return to
+    ? <Link to={to} className={cls}>{body}</Link>
+    : <button onClick={onClick} className={cls}>{body}</button>
 }
 
 function StatusBadge({ status }: { status: string }) {
