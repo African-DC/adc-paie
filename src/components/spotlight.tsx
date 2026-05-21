@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { Search, ArrowRight, Users, LayoutDashboard, Calculator, FileCheck2, Settings, FileText, Sparkles, CalendarDays } from 'lucide-react'
+import { Search, ArrowRight, Users, LayoutDashboard, Calculator, FileCheck2, Settings, FileText, Sparkles, CalendarDays, Wallet, UserCircle2 } from 'lucide-react'
 import { useStore, store } from '../lib/store'
 import { EMPLOYEES } from '../lib/mock'
 
@@ -8,11 +8,13 @@ const ACTIONS = [
   { id: 'a1', label: 'Aller au tableau de bord', icon: LayoutDashboard, to: '/app', tag: 'navigation' },
   { id: 'a2', label: 'Voir les salariés', icon: Users, to: '/app/employees', tag: 'navigation' },
   { id: 'a3', label: 'Lancer la paie mensuelle', icon: Calculator, to: '/app/payroll', tag: 'action' },
+  { id: 'a9', label: 'Gérer les avances sur salaire', icon: Wallet, to: '/app/advances', tag: 'action' },
   { id: 'a4', label: 'Soumettre une déclaration CNPS', icon: FileCheck2, to: '/app/declarations', tag: 'action' },
   { id: 'a8', label: 'Valider une demande de congé', icon: CalendarDays, to: '/app/leave', tag: 'action' },
   { id: 'a5', label: 'Réglages de l\'espace', icon: Settings, to: '/app/settings', tag: 'navigation' },
   { id: 'a6', label: 'Ouvrir l\'assistant IA ADCA', icon: Sparkles, to: '', tag: 'ia', action: () => { store.closeSpotlight(); store.toggleChat() } },
   { id: 'a7', label: 'Voir l\'aperçu d\'un bulletin', icon: FileText, to: '/app/payroll/payslip/1', tag: 'action' },
+  { id: 'a10', label: 'Mon espace salarié', icon: UserCircle2, to: '/app/me', tag: 'navigation' },
 ]
 
 export function Spotlight() {
@@ -39,11 +41,13 @@ export function Spotlight() {
 
   if (!open) return null
 
+  const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '')
+  const nq = norm(q)
   const employeeMatches = q.length > 0
-    ? EMPLOYEES.filter((e) => `${e.firstName} ${e.lastName} ${e.role}`.toLowerCase().includes(q.toLowerCase())).slice(0, 5)
+    ? EMPLOYEES.filter((e) => norm(`${e.firstName} ${e.lastName} ${e.role} ${e.matricule}`).includes(nq)).slice(0, 5)
     : []
   const actionMatches = q.length > 0
-    ? ACTIONS.filter((a) => a.label.toLowerCase().includes(q.toLowerCase()))
+    ? ACTIONS.filter((a) => norm(a.label).includes(nq))
     : ACTIONS
 
   const goto = (to: string, action?: () => void) => {

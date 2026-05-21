@@ -88,8 +88,8 @@ function PayrollPage() {
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 lg:left-64 right-0 bg-white border-t-2 border-orange shadow-[0_-4px_24px_rgba(0,0,0,0.06)] z-30">
-        <div className="px-6 lg:px-8 py-4 flex items-center justify-between gap-6 flex-wrap">
+      <div className="fixed bottom-0 left-0 lg:left-64 right-0 bg-white border-t-2 border-orange shadow-[0_-4px_24px_rgba(0,0,0,0.06)] z-40">
+        <div className="px-6 lg:px-8 py-4 pr-6 lg:pr-56 flex items-center justify-between gap-6 flex-wrap">
           <div className="grid grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-2 text-xs">
             <div><p className="text-[10px] uppercase tracking-wider text-n-500">Total brut</p><p className="font-mono font-semibold">{fcfa(Math.round(totals.brut))}</p></div>
             <div><p className="text-[10px] uppercase tracking-wider text-n-500">Total retenues</p><p className="font-mono font-semibold">{fcfa(Math.round(totals.cnps + totals.its + totals.igr + totals.cn))}</p></div>

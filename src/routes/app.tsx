@@ -1,5 +1,6 @@
 import { createFileRoute, Link, Outlet, useLocation } from '@tanstack/react-router'
-import { LayoutDashboard, Users, Calculator, FileCheck2, Settings, Search, Bell, ChevronRight, Sparkles, CalendarDays, UserCircle2, Wallet } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { LayoutDashboard, Users, Calculator, FileCheck2, Settings, Search, Bell, ChevronRight, Sparkles, CalendarDays, UserCircle2, Wallet, Menu, X } from 'lucide-react'
 import { CURRENT_USER, TENANT } from '../lib/mock'
 import { Spotlight } from '../components/spotlight'
 import { NotificationsPanel, Toast } from '../components/notifications'
@@ -23,12 +24,20 @@ function AppLayout() {
   const loc = useLocation()
   const unread = useStore((s) => s.notifs.filter((n) => !n.read).length)
   const isMac = typeof navigator !== 'undefined' && navigator.platform.toLowerCase().includes('mac')
+  const [drawer, setDrawer] = useState(false)
+  useEffect(() => { setDrawer(false) }, [loc.pathname])
   return (
     <div className="min-h-screen flex bg-n-50">
-      <aside className="hidden lg:flex flex-col w-64 bg-ink-2 text-white shrink-0">
-        <Link to="/" className="px-6 py-5 border-b border-white/10 block">
-          <span className="font-serif text-xl font-semibold">ADC <span style={{color:'var(--color-orange)',fontStyle:'italic',fontWeight:500}}>Paie</span></span>
-        </Link>
+      {drawer && <div className="fixed inset-0 bg-ink/60 z-40 lg:hidden" onClick={() => setDrawer(false)} />}
+      <aside className={`fixed lg:relative inset-y-0 left-0 w-72 lg:w-64 bg-ink-2 text-white shrink-0 z-50 lg:z-auto transform transition-transform duration-200 lg:transform-none flex flex-col ${drawer ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+        <div className="px-6 py-5 border-b border-white/10 flex items-center justify-between">
+          <Link to="/" className="block">
+            <span className="font-serif text-xl font-semibold">ADC <span style={{color:'var(--color-orange)',fontStyle:'italic',fontWeight:500}}>Paie</span></span>
+          </Link>
+          <button onClick={() => setDrawer(false)} className="lg:hidden w-8 h-8 rounded-sm hover:bg-white/10 flex items-center justify-center" aria-label="Fermer le menu">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
         <button onClick={() => store.toast('Multi-établissements disponible en tier Business', 'info')} className="px-6 py-4 border-b border-white/10 text-left hover:bg-white/5">
           <p className="text-[10px] tracking-[0.22em] uppercase text-n-400 font-semibold mb-1">Espace</p>
           <p className="text-sm font-semibold truncate">{TENANT.name}</p>
@@ -66,7 +75,10 @@ function AppLayout() {
 
       <div className="flex-1 flex flex-col min-w-0">
         <header className="bg-white border-b border-n-200 sticky top-0 z-30">
-          <div className="px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
+          <div className="px-4 lg:px-8 h-14 flex items-center justify-between gap-4">
+            <button onClick={() => setDrawer(true)} className="lg:hidden w-9 h-9 hover:bg-n-100 rounded-sm inline-flex items-center justify-center" aria-label="Ouvrir le menu">
+              <Menu className="w-5 h-5 text-ink" />
+            </button>
             <Link to="/app" className="lg:hidden font-serif text-base font-semibold">ADC <span className="em-serif">Paie</span></Link>
             <div className="hidden md:flex items-center gap-2 text-[13px] text-n-500">
               <Link to="/app" className="hover:text-orange">Espace</Link>
