@@ -1,17 +1,35 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
-import { useState } from 'react'
+import { createFileRoute, Link, useLocation, useNavigate } from '@tanstack/react-router'
+import { useEffect, useState } from 'react'
 import { Download, FileText, Calendar, Mail, Phone, MapPin, ShieldCheck, Sparkles, Plus, ChevronRight, CheckCircle2, Clock } from 'lucide-react'
 import { EMPLOYEES, fcfa, computePayslip } from '../lib/mock'
 import { store } from '../lib/store'
 
-export const Route = createFileRoute('/app/me')({ component: MePage })
+export const Route = createFileRoute('/app/me')({
+  component: MePage,
+  validateSearch: (s: Record<string, unknown>) => ({ tab: (s.tab as string | undefined) }),
+})
 
 const ME_ID = '4'
 const MONTHS = ['Novembre 2026', 'Octobre 2026', 'Septembre 2026', 'Août 2026', 'Juillet 2026', 'Juin 2026', 'Mai 2026', 'Avril 2026', 'Mars 2026', 'Février 2026', 'Janvier 2026', 'Décembre 2025']
 
+type Tab = 'home' | 'payslips' | 'leave' | 'docs'
+
 function MePage() {
   const me = EMPLOYEES.find((e) => e.id === ME_ID)!
-  const [tab, setTab] = useState<'home' | 'payslips' | 'leave' | 'docs'>('home')
+  const loc = useLocation()
+  const navigate = useNavigate()
+  const readTab = (): Tab => {
+    const s = (loc as any).searchStr || (typeof window !== 'undefined' ? window.location.search : '') || ''
+    const m = s.match(/tab=([^&]+)/)
+    const v = m ? decodeURIComponent(m[1]) : 'home'
+    return (['home', 'payslips', 'leave', 'docs'].includes(v) ? v : 'home') as Tab
+  }
+  const [tab, setTabState] = useState<Tab>(readTab())
+  useEffect(() => { setTabState(readTab()) }, [loc.pathname, (loc as any).searchStr])
+  const setTab = (next: Tab) => {
+    setTabState(next)
+    navigate({ to: '/app/me', search: next === 'home' ? {} : { tab: next } as any, replace: false })
+  }
   const [showLeave, setShowLeave] = useState(false)
   const [showDocReq, setShowDocReq] = useState(false)
   const p = computePayslip(me.brut, me.family.kids, me.family.situation === 'marié(e)')

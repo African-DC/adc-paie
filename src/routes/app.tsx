@@ -1,7 +1,7 @@
 import { createFileRoute, Link, Outlet, useLocation } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
-import { LayoutDashboard, Users, Calculator, FileCheck2, Settings, Search, Bell, ChevronRight, Sparkles, CalendarDays, UserCircle2, Wallet, Menu, X } from 'lucide-react'
-import { CURRENT_USER, TENANT } from '../lib/mock'
+import { LayoutDashboard, Users, Calculator, FileCheck2, Settings, Search, Bell, ChevronRight, Sparkles, CalendarDays, UserCircle2, Wallet, Menu, X, FileText, BadgeCheck, ShieldCheck, ArrowLeftRight, LogOut } from 'lucide-react'
+import { CURRENT_USER, TENANT, EMPLOYEES } from '../lib/mock'
 import { Spotlight } from '../components/spotlight'
 import { NotificationsPanel, Toast } from '../components/notifications'
 import { ADCAChat, ChatFAB } from '../components/adca-chat'
@@ -10,15 +10,24 @@ import { useStore, store } from '../lib/store'
 
 export const Route = createFileRoute('/app')({ component: AppLayout })
 
-const NAV = [
-  { to: '/app', label: 'Tableau de bord', icon: LayoutDashboard, exact: true },
-  { to: '/app/employees', label: 'Salariés', icon: Users },
-  { to: '/app/payroll', label: 'Paie mensuelle', icon: Calculator },
-  { to: '/app/advances', label: 'Avances sur salaire', icon: Wallet },
-  { to: '/app/leave', label: 'Congés & absences', icon: CalendarDays },
-  { to: '/app/declarations', label: 'Déclarations', icon: FileCheck2 },
-  { to: '/app/settings', label: 'Réglages', icon: Settings },
+const ADMIN_NAV = [
+  { to: '/app',              label: 'Tableau de bord',     icon: LayoutDashboard, exact: true },
+  { to: '/app/employees',    label: 'Salariés',            icon: Users },
+  { to: '/app/payroll',      label: 'Paie mensuelle',      icon: Calculator },
+  { to: '/app/advances',     label: 'Avances sur salaire', icon: Wallet },
+  { to: '/app/leave',        label: 'Congés & absences',   icon: CalendarDays },
+  { to: '/app/declarations', label: 'Déclarations',        icon: FileCheck2 },
+  { to: '/app/settings',     label: 'Réglages',            icon: Settings },
 ]
+
+const EMPLOYEE_NAV = [
+  { to: '/app/me',              tab: 'home',      label: 'Mon profil',     icon: UserCircle2 },
+  { to: '/app/me?tab=payslips', tab: 'payslips',  label: 'Mes bulletins',  icon: FileText },
+  { to: '/app/me?tab=leave',    tab: 'leave',     label: 'Mes congés',     icon: CalendarDays },
+  { to: '/app/me?tab=docs',     tab: 'docs',      label: 'Mes documents',  icon: BadgeCheck },
+]
+
+const ME = EMPLOYEES.find((e) => e.id === '4')!
 
 function AppLayout() {
   const loc = useLocation()
@@ -26,6 +35,16 @@ function AppLayout() {
   const isMac = typeof navigator !== 'undefined' && navigator.platform.toLowerCase().includes('mac')
   const [drawer, setDrawer] = useState(false)
   useEffect(() => { setDrawer(false) }, [loc.pathname])
+
+  const isEmployeeMode = loc.pathname.startsWith('/app/me')
+  const search = (loc as any).searchStr || (typeof window !== 'undefined' ? window.location.search : '') || ''
+  const tabMatch = search.match(/tab=([^&]+)/)
+  const currentTab = tabMatch ? decodeURIComponent(tabMatch[1]) : 'home'
+  const NAV = isEmployeeMode ? EMPLOYEE_NAV : ADMIN_NAV
+  const breadcrumb = isEmployeeMode
+    ? EMPLOYEE_NAV.find((n) => n.tab === currentTab)?.label || 'Mon espace salarié'
+    : ADMIN_NAV.find((n) => n.exact ? loc.pathname === n.to : loc.pathname.startsWith(n.to))?.label || 'Tableau de bord'
+
   return (
     <div className="min-h-screen flex bg-n-50">
       {drawer && <div className="fixed inset-0 bg-ink/60 z-40 lg:hidden" onClick={() => setDrawer(false)} />}
@@ -38,38 +57,84 @@ function AppLayout() {
             <X className="w-4 h-4" />
           </button>
         </div>
-        <button onClick={() => store.toast('Multi-établissements disponible en tier Business', 'info')} className="px-6 py-4 border-b border-white/10 text-left hover:bg-white/5">
-          <p className="text-[10px] tracking-[0.22em] uppercase text-n-400 font-semibold mb-1">Espace</p>
-          <p className="text-sm font-semibold truncate">{TENANT.name}</p>
-          <p className="text-[11px] text-n-400 mt-0.5">IFU · {TENANT.ifu}</p>
-        </button>
-        <nav className="flex-1 px-3 py-4 space-y-0.5">
-          {NAV.map((item) => {
-            const active = item.exact ? loc.pathname === item.to : loc.pathname.startsWith(item.to)
-            return (
-              <Link key={item.to} to={item.to} className={`flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-colors rounded-sm ${active ? 'bg-orange text-white' : 'text-n-300 hover:bg-white/5 hover:text-white'}`}>
-                <item.icon className="w-4 h-4 shrink-0" />
-                <span>{item.label}</span>
-              </Link>
-            )
-          })}
-        </nav>
-        <button onClick={() => store.toggleChat()} className="mx-3 mb-3 px-3 py-2.5 bg-orange/10 border border-orange/30 text-orange hover:bg-orange/20 rounded-sm flex items-center gap-2 text-sm font-medium transition-colors">
-          <Sparkles className="w-4 h-4" /> Demander à ADCA
-        </button>
-        <div className="px-3 pb-3">
-          <Link to="/app/me" className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-n-300 hover:bg-white/5 hover:text-white rounded-sm transition-colors border border-white/10">
-            <UserCircle2 className="w-4 h-4 shrink-0" />
-            <span>Mode salarié</span>
-            <span className="ml-auto text-[9px] uppercase tracking-wider text-orange font-semibold">démo</span>
-          </Link>
-        </div>
-        <div className="px-6 py-4 border-t border-white/10 flex items-center gap-3">
-          <div className="w-9 h-9 bg-orange text-white font-semibold text-sm rounded-full flex items-center justify-center shrink-0">{CURRENT_USER.initials}</div>
-          <div className="min-w-0">
-            <p className="text-sm font-medium truncate">{CURRENT_USER.name}</p>
-            <p className="text-[11px] text-n-400 truncate">{CURRENT_USER.role}</p>
+
+        {!isEmployeeMode ? (
+          <button onClick={() => store.toast('Multi-établissements disponible en tier Business', 'info')} className="px-6 py-4 border-b border-white/10 text-left hover:bg-white/5">
+            <p className="text-[10px] tracking-[0.22em] uppercase text-n-400 font-semibold mb-1">Espace administrateur</p>
+            <p className="text-sm font-semibold truncate">{TENANT.name}</p>
+            <p className="text-[11px] text-n-400 mt-0.5">IFU · {TENANT.ifu}</p>
+          </button>
+        ) : (
+          <div className="px-6 py-4 border-b border-white/10 bg-gradient-to-br from-orange/15 to-transparent">
+            <p className="text-[10px] tracking-[0.22em] uppercase text-orange font-semibold mb-1 inline-flex items-center gap-1.5"><ShieldCheck className="w-3 h-3" /> Espace salarié</p>
+            <p className="text-sm font-semibold truncate">{ME.firstName} {ME.lastName}</p>
+            <p className="text-[11px] text-n-400 mt-0.5 truncate">{ME.role} · {ME.matricule}</p>
           </div>
+        )}
+
+        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+          {!isEmployeeMode ? (
+            ADMIN_NAV.map((item) => {
+              const active = item.exact ? loc.pathname === item.to : loc.pathname.startsWith(item.to)
+              return (
+                <Link key={item.to} to={item.to} className={`flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-colors rounded-sm ${active ? 'bg-orange text-white' : 'text-n-300 hover:bg-white/5 hover:text-white'}`}>
+                  <item.icon className="w-4 h-4 shrink-0" />
+                  <span>{item.label}</span>
+                </Link>
+              )
+            })
+          ) : (
+            EMPLOYEE_NAV.map((item) => {
+              const active = currentTab === item.tab
+              return (
+                <Link key={item.to} to={item.to} className={`flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-colors rounded-sm ${active ? 'bg-orange text-white' : 'text-n-300 hover:bg-white/5 hover:text-white'}`}>
+                  <item.icon className="w-4 h-4 shrink-0" />
+                  <span>{item.label}</span>
+                </Link>
+              )
+            })
+          )}
+        </nav>
+
+        {!isEmployeeMode && (
+          <button onClick={() => store.toggleChat()} className="mx-3 mb-3 px-3 py-2.5 bg-orange/10 border border-orange/30 text-orange hover:bg-orange/20 rounded-sm flex items-center gap-2 text-sm font-medium transition-colors">
+            <Sparkles className="w-4 h-4" /> Demander à ADCA
+          </button>
+        )}
+
+        <div className="px-3 pb-3">
+          {!isEmployeeMode ? (
+            <Link to="/app/me" className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-n-300 hover:bg-white/5 hover:text-white rounded-sm transition-colors border border-white/10" title="Basculer vers l'espace salarié (démo)">
+              <ArrowLeftRight className="w-4 h-4 shrink-0" />
+              <span>Basculer en mode salarié</span>
+              <span className="ml-auto text-[9px] uppercase tracking-wider text-orange font-semibold">démo</span>
+            </Link>
+          ) : (
+            <Link to="/app" className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium bg-orange/10 border border-orange/40 text-orange hover:bg-orange/20 hover:text-white rounded-sm transition-colors" title="Retour au panneau d'administration">
+              <LogOut className="w-4 h-4 shrink-0 rotate-180" />
+              <span>Quitter le mode salarié</span>
+            </Link>
+          )}
+        </div>
+
+        <div className="px-6 py-4 border-t border-white/10 flex items-center gap-3">
+          {!isEmployeeMode ? (
+            <>
+              <div className="w-9 h-9 bg-orange text-white font-semibold text-sm rounded-full flex items-center justify-center shrink-0">{CURRENT_USER.initials}</div>
+              <div className="min-w-0">
+                <p className="text-sm font-medium truncate">{CURRENT_USER.name}</p>
+                <p className="text-[11px] text-n-400 truncate">{CURRENT_USER.role}</p>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="w-9 h-9 bg-orange text-white font-semibold text-sm rounded-full flex items-center justify-center shrink-0">{ME.firstName[0]}{ME.lastName[0]}</div>
+              <div className="min-w-0">
+                <p className="text-sm font-medium truncate">{ME.firstName} {ME.lastName}</p>
+                <p className="text-[11px] text-n-400 truncate">Connecté(e) · Salarié</p>
+              </div>
+            </>
+          )}
         </div>
       </aside>
 
@@ -79,26 +144,38 @@ function AppLayout() {
             <button onClick={() => setDrawer(true)} className="lg:hidden w-9 h-9 hover:bg-n-100 rounded-sm inline-flex items-center justify-center" aria-label="Ouvrir le menu">
               <Menu className="w-5 h-5 text-ink" />
             </button>
-            <Link to="/app" className="lg:hidden font-serif text-base font-semibold">ADC <span className="em-serif">Paie</span></Link>
+            <Link to={isEmployeeMode ? '/app/me' : '/app'} className="lg:hidden font-serif text-base font-semibold">ADC <span className="em-serif">Paie</span></Link>
             <div className="hidden md:flex items-center gap-2 text-[13px] text-n-500">
-              <Link to="/app" className="hover:text-orange">Espace</Link>
-              <ChevronRight className="w-3.5 h-3.5" />
-              <span className="text-ink font-medium">{NAV.find(n => n.exact ? loc.pathname === n.to : loc.pathname.startsWith(n.to))?.label || 'Tableau de bord'}</span>
+              {isEmployeeMode ? (
+                <>
+                  <Link to="/app/me" className="hover:text-orange">Mon espace salarié</Link>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                  <span className="text-ink font-medium">{breadcrumb}</span>
+                </>
+              ) : (
+                <>
+                  <Link to="/app" className="hover:text-orange">Espace</Link>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                  <span className="text-ink font-medium">{breadcrumb}</span>
+                </>
+              )}
             </div>
             <div className="flex items-center gap-2 ml-auto">
-              <button onClick={() => store.openSpotlight()} className="hidden md:flex items-center gap-2 bg-n-50 hover:bg-n-100 px-3 py-1.5 rounded-sm border border-n-200 w-64 transition-colors">
+              <button onClick={() => store.openSpotlight()} className="hidden md:flex items-center gap-2 bg-n-50 hover:bg-n-100 px-3 py-1.5 rounded-sm border border-n-200 w-64 transition-colors" title="Recherche globale">
                 <Search className="w-3.5 h-3.5 text-n-500" />
                 <span className="text-sm text-n-500 flex-1 text-left">Rechercher…</span>
                 <kbd className="text-[10px] bg-white border border-n-200 px-1.5 py-0.5 rounded-sm text-n-500">{isMac ? '⌘' : 'Ctrl'} K</kbd>
               </button>
-              <button onClick={() => store.openSpotlight()} className="md:hidden w-9 h-9 hover:bg-n-100 rounded-sm inline-flex items-center justify-center">
+              <button onClick={() => store.openSpotlight()} className="md:hidden w-9 h-9 hover:bg-n-100 rounded-sm inline-flex items-center justify-center" title="Rechercher">
                 <Search className="w-4 h-4 text-n-700" />
               </button>
-              <button onClick={() => store.toggleNotif()} className="w-9 h-9 flex items-center justify-center hover:bg-n-100 rounded-sm relative">
+              <button onClick={() => store.toggleNotif()} className="w-9 h-9 flex items-center justify-center hover:bg-n-100 rounded-sm relative" title="Notifications">
                 <Bell className="w-4 h-4 text-n-700" />
                 {unread > 0 && <span className="absolute top-1.5 right-1.5 min-w-[16px] h-4 px-1 bg-orange text-white text-[9px] font-bold rounded-full flex items-center justify-center">{unread}</span>}
               </button>
-              <div className="lg:hidden w-9 h-9 bg-orange text-white font-semibold text-xs rounded-full flex items-center justify-center">{CURRENT_USER.initials}</div>
+              <div className="lg:hidden w-9 h-9 bg-orange text-white font-semibold text-xs rounded-full flex items-center justify-center" title={isEmployeeMode ? `${ME.firstName} ${ME.lastName}` : CURRENT_USER.name}>
+                {isEmployeeMode ? `${ME.firstName[0]}${ME.lastName[0]}` : CURRENT_USER.initials}
+              </div>
             </div>
           </div>
         </header>
@@ -107,13 +184,13 @@ function AppLayout() {
         </main>
       </div>
 
-      <Spotlight />
+      <Spotlight isEmployeeMode={isEmployeeMode} />
       <NotificationsPanel />
       <ADCAChat />
-      <ChatFAB />
+      {!isEmployeeMode && <ChatFAB />}
       <Toast />
       <HelpModal />
-      <OnboardingWizard />
+      {!isEmployeeMode && <OnboardingWizard />}
     </div>
   )
 }

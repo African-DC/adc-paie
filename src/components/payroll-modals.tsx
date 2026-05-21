@@ -5,11 +5,11 @@ import { store } from '../lib/store'
 
 type Provider = 'wave' | 'orange' | 'mtn' | 'bank'
 
-const PROVIDERS: Array<{ id: Provider; name: string; fees: string; speed: string; logo: string; color: string }> = [
-  { id: 'wave',   name: 'Wave Business',  fees: '0 %',   speed: '< 30 s',   logo: 'W', color: '#1DCBEF' },
-  { id: 'orange', name: 'Orange Money',   fees: '1,0 %', speed: '< 1 min',  logo: 'OM', color: '#FF6600' },
-  { id: 'mtn',    name: 'MTN MoMo',       fees: '1,2 %', speed: '< 1 min',  logo: 'MTN', color: '#FFCC00' },
-  { id: 'bank',   name: 'Virement bancaire', fees: '500 XOF/op.', speed: 'J+1', logo: '🏦', color: '#0a0a0a' },
+const PROVIDERS: Array<{ id: Provider; name: string; fees: string; speed: string; logo?: string; fallback?: string; color: string; bg?: string }> = [
+  { id: 'wave',   name: 'Wave',            fees: '0 %',          speed: '< 30 s',  logo: '/providers/wave.png',         color: '#1DCBEF', bg: '#1DCBEF' },
+  { id: 'orange', name: 'Orange Money',    fees: '1,0 %',        speed: '< 1 min', logo: '/providers/orange-money.svg', color: '#FF6600', bg: '#000000' },
+  { id: 'mtn',    name: 'MTN MoMo',        fees: '1,2 %',        speed: '< 1 min', logo: '/providers/mtn-momo.png',     color: '#FFCC00', bg: '#FFCC00' },
+  { id: 'bank',   name: 'Virement bancaire', fees: '500 XOF/op.', speed: 'J+1',     fallback: '🏦', color: '#0a0a0a', bg: '#0a0a0a' },
 ]
 
 export function PaySalariesModal({ open, onClose, total, count }: { open: boolean; onClose: () => void; total: number; count: number }) {
@@ -51,12 +51,18 @@ export function PaySalariesModal({ open, onClose, total, count }: { open: boolea
             <div className="grid sm:grid-cols-2 gap-3 mb-5">
               {PROVIDERS.map((pr) => (
                 <button key={pr.id} onClick={() => setProvider(pr.id)} className={`flex items-start gap-3 p-4 rounded-sm border-2 text-left transition-all ${provider === pr.id ? 'border-orange bg-orange-tint/30' : 'border-n-200 hover:border-n-300'}`}>
-                  <div className="w-10 h-10 rounded-sm flex items-center justify-center font-bold text-white text-xs shrink-0" style={{ background: pr.color }}>{pr.logo}</div>
+                  <div className="w-11 h-11 rounded-sm flex items-center justify-center shrink-0 overflow-hidden border border-n-200" style={{ background: pr.bg }}>
+                    {pr.logo ? (
+                      <img src={pr.logo} alt={`${pr.name} logo`} className="w-full h-full object-contain p-1" />
+                    ) : (
+                      <span className="text-xl">{pr.fallback}</span>
+                    )}
+                  </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm">{pr.name}</p>
                     <p className="text-[11px] text-n-500 mt-0.5">Frais {pr.fees} · {pr.speed}</p>
                   </div>
-                  {provider === pr.id && <CheckCircle2 className="w-4 h-4 text-orange shrink-0" />}
+                  {provider === pr.id && <CheckCircle2 className="w-4 h-4 text-orange shrink-0 mt-0.5" />}
                 </button>
               ))}
             </div>

@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { Search, ArrowRight, Users, LayoutDashboard, Calculator, FileCheck2, Settings, FileText, Sparkles, CalendarDays, Wallet, UserCircle2 } from 'lucide-react'
+import { Search, ArrowRight, Users, LayoutDashboard, Calculator, FileCheck2, Settings, FileText, Sparkles, CalendarDays, Wallet, UserCircle2, LogOut, BadgeCheck } from 'lucide-react'
 import { useStore, store } from '../lib/store'
 import { EMPLOYEES } from '../lib/mock'
 
-const ACTIONS = [
+const ADMIN_ACTIONS = [
   { id: 'a1', label: 'Aller au tableau de bord', icon: LayoutDashboard, to: '/app', tag: 'navigation' },
   { id: 'a2', label: 'Voir les salariés', icon: Users, to: '/app/employees', tag: 'navigation' },
   { id: 'a3', label: 'Lancer la paie mensuelle', icon: Calculator, to: '/app/payroll', tag: 'action' },
@@ -14,10 +14,19 @@ const ACTIONS = [
   { id: 'a5', label: 'Réglages de l\'espace', icon: Settings, to: '/app/settings', tag: 'navigation' },
   { id: 'a6', label: 'Ouvrir l\'assistant IA ADCA', icon: Sparkles, to: '', tag: 'ia', action: () => { store.closeSpotlight(); store.toggleChat() } },
   { id: 'a7', label: 'Voir l\'aperçu d\'un bulletin', icon: FileText, to: '/app/payroll/payslip/1', tag: 'action' },
-  { id: 'a10', label: 'Mon espace salarié', icon: UserCircle2, to: '/app/me', tag: 'navigation' },
+  { id: 'a10', label: 'Basculer en mode salarié (démo)', icon: UserCircle2, to: '/app/me', tag: 'navigation' },
 ]
 
-export function Spotlight() {
+const EMPLOYEE_ACTIONS = [
+  { id: 'e1', label: 'Mon profil',                       icon: UserCircle2,  to: '/app/me',              tag: 'navigation' },
+  { id: 'e2', label: 'Consulter mes bulletins',          icon: FileText,     to: '/app/me?tab=payslips', tag: 'navigation' },
+  { id: 'e3', label: 'Voir et poser mes congés',         icon: CalendarDays, to: '/app/me?tab=leave',    tag: 'action' },
+  { id: 'e4', label: 'Télécharger une attestation',      icon: BadgeCheck,   to: '/app/me?tab=docs',     tag: 'action' },
+  { id: 'e5', label: 'Quitter le mode salarié',          icon: LogOut,       to: '/app',                 tag: 'navigation' },
+]
+
+export function Spotlight({ isEmployeeMode = false }: { isEmployeeMode?: boolean }) {
+  const ACTIONS = isEmployeeMode ? EMPLOYEE_ACTIONS : ADMIN_ACTIONS
   const open = useStore((s) => s.spotlightOpen)
   const [q, setQ] = useState('')
   const navigate = useNavigate()
@@ -43,7 +52,7 @@ export function Spotlight() {
 
   const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '')
   const nq = norm(q)
-  const employeeMatches = q.length > 0
+  const employeeMatches = !isEmployeeMode && q.length > 0
     ? EMPLOYEES.filter((e) => norm(`${e.firstName} ${e.lastName} ${e.role} ${e.matricule}`).includes(nq)).slice(0, 5)
     : []
   const actionMatches = q.length > 0
