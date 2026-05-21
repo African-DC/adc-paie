@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { Download, FileText, Calendar, Mail, Phone, MapPin, ShieldCheck, Sparkles, Plus, ChevronRight, CheckCircle2, Clock } from 'lucide-react'
 import { EMPLOYEES, fcfa, computePayslip } from '../lib/mock'
 import { store } from '../lib/store'
-import { downloadPayslipPDF, downloadAttestationPDF, downloadPayslipsZip } from '../lib/downloads'
+import { downloadPayslipPDF, downloadAttestationPDF, downloadPayslipsZip, downloadEmployeeDocument } from '../lib/downloads'
 
 export const Route = createFileRoute('/app/me')({
   component: MePage,
@@ -217,6 +217,7 @@ function MePage() {
                 onClick={() => {
                   if (d.locked) return
                   if (d.name === 'Attestation de travail') setShowDocReq(true)
+                  else if (d.name === 'Contrat de travail signé') { downloadEmployeeDocument(me, 'contrat'); store.toast('Contrat de travail téléchargé', 'success') }
                   else if (d.name === 'Attestation CNPS') { downloadAttestationPDF(me, 'cnps'); store.toast('Attestation CNPS téléchargée', 'success') }
                   else if (d.name === 'Reçu fiscal annuel 2025') { downloadAttestationPDF(me, 'fiscal'); store.toast('Reçu fiscal téléchargé', 'success') }
                   else if (d.name === 'Avenant salaire 2026') { downloadAttestationPDF(me, 'avenant'); store.toast('Avenant téléchargé', 'success') }
