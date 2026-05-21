@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet, useLocation } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
-import { LayoutDashboard, Users, Calculator, FileCheck2, Settings, Search, Bell, ChevronRight, Sparkles, CalendarDays, UserCircle2, Wallet, Menu, X, FileText, BadgeCheck, ShieldCheck, ArrowLeftRight, LogOut, Clock } from 'lucide-react'
+import { LayoutDashboard, Users, Calculator, FileCheck2, Settings, Search, Bell, ChevronRight, Sparkles, CalendarDays, UserCircle2, Wallet, Menu, X, FileText, BadgeCheck, ShieldCheck, ArrowLeftRight, LogOut, Clock, BarChart3 } from 'lucide-react'
 import { CURRENT_USER, EMPLOYEES } from '../lib/mock'
 import { Spotlight } from '../components/spotlight'
 import { NotificationsPanel, Toast } from '../components/notifications'
@@ -21,6 +21,7 @@ const ADMIN_NAV = [
   { to: '/app/attendance',   label: 'Pointage & présences', icon: Clock },
   { to: '/app/leave',        label: 'Congés & absences',   icon: CalendarDays },
   { to: '/app/declarations', label: 'Déclarations',        icon: FileCheck2 },
+  { to: '/app/reports',      label: 'Rapports & analytics', icon: BarChart3 },
   { to: '/app/settings',     label: 'Réglages',            icon: Settings },
 ]
 

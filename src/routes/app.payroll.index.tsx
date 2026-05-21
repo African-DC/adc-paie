@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
-import { Calculator, FileText, ChevronDown, Calendar, Eye, Send, Archive, Search, X, RotateCcw, Sparkles } from 'lucide-react'
+import { Calculator, FileText, ChevronDown, Calendar, Eye, Send, Archive, Search, X, RotateCcw, Sparkles, Gift } from 'lucide-react'
 import { EMPLOYEES, computePayslip, fcfa } from '../lib/mock'
 import { store } from '../lib/store'
 import { PaySalariesModal, ExportAuditModal } from '../components/payroll-modals'
+import { GratificationModal } from '../components/gratification-modal'
 import { downloadPayslipsZip } from '../lib/downloads'
 
 export const Route = createFileRoute('/app/payroll/')({ component: PayrollPage })
@@ -15,6 +16,7 @@ function PayrollPage() {
   const [bonus, setBonus] = useState<Record<string, string>>({})
   const [payOpen, setPayOpen] = useState(false)
   const [exportOpen, setExportOpen] = useState(false)
+  const [gratifOpen, setGratifOpen] = useState(false)
   const [query, setQuery] = useState('')
   const active = EMPLOYEES.filter(e => e.status === 'active')
   const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '')
@@ -136,6 +138,9 @@ function PayrollPage() {
             <div><p className="text-[10px] uppercase tracking-wider text-orange-deep font-semibold">Net total à payer</p><p className="font-serif font-semibold text-lg text-orange-deep">{fcfa(Math.round(totals.net))}</p></div>
           </div>
           <div className="flex items-center gap-2 ml-auto flex-wrap">
+            <button onClick={() => setGratifOpen(true)} className="inline-flex items-center gap-2 border border-orange/40 bg-orange-tint text-orange-deep px-3 h-10 text-xs font-semibold hover:bg-orange/20 transition-colors rounded-sm uppercase tracking-wider" title="Verser la gratification annuelle (13e mois)">
+              <Gift className="w-3.5 h-3.5" /> Gratification
+            </button>
             <button onClick={() => setExportOpen(true)} className="inline-flex items-center gap-2 border border-n-300 px-3 h-10 text-xs font-medium hover:bg-n-50 transition-colors rounded-sm uppercase tracking-wider" title="Archive ZIP audit CNPS/DGI">
               <Archive className="w-3.5 h-3.5" /> Export audit
             </button>
@@ -153,6 +158,7 @@ function PayrollPage() {
       </div>
       <PaySalariesModal open={payOpen} onClose={() => setPayOpen(false)} total={Math.round(totals.net)} count={active.length} />
       <ExportAuditModal open={exportOpen} onClose={() => setExportOpen(false)} />
+      <GratificationModal open={gratifOpen} onClose={() => setGratifOpen(false)} />
       <PeriodPickerModal open={periodOpen} current={month} onClose={() => setPeriodOpen(false)} onPick={(m) => { setMonth(m); store.toast(`Période active : ${m}`, 'success'); setPeriodOpen(false) }} />
     </div>
   )

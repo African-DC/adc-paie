@@ -686,3 +686,488 @@ export function downloadAttendanceSheetPDF(employees: Employee[], punches: Map<s
   drawFooter(doc)
   doc.save(`feuille-presence-${new Date().toISOString().slice(0, 10)}.pdf`)
 }
+
+// ============================================================================
+// SOLDE DE TOUT COMPTE (STC) — sortie salarié
+// Art. 16.10 Code travail CI + CC interprofessionnelle (préavis, indemnité licenciement)
+// ============================================================================
+
+export type STCMotif = 'licenciement' | 'demission' | 'retraite' | 'fin-cdd' | 'rupture-conventionnelle'
+
+export function computeSTC(e: Employee, motif: STCMotif, joursCongesNonPris: number, anciennete: { years: number; months: number }) {
+  const brutMensuel = e.brut
+  const brutJour = brutMensuel / 30
+  // Préavis (CC interpro CI Art. 34 — durée selon catégorie, simplifié)
+  const preavisMois = e.brut >= 400000 ? 3 : e.brut >= 200000 ? 2 : 1
+  const preavis = motif === 'demission' || motif === 'licenciement' ? brutMensuel * preavisMois : 0
+  // Indemnité de licenciement (Art. 39 CC interpro : 30% du brut mensuel × années pour 1-5 ans, 35% pour 6-10, 40% au-delà)
+  const totalYears = anciennete.years + anciennete.months / 12
+  let indemniteLicenciement = 0
+  if (motif === 'licenciement') {
+    if (totalYears <= 5) indemniteLicenciement = brutMensuel * 0.30 * totalYears
+    else if (totalYears <= 10) indemniteLicenciement = brutMensuel * 0.30 * 5 + brutMensuel * 0.35 * (totalYears - 5)
+    else indemniteLicenciement = brutMensuel * 0.30 * 5 + brutMensuel * 0.35 * 5 + brutMensuel * 0.40 * (totalYears - 10)
+  }
+  // Congés payés non pris
+  const indemniteConges = brutJour * joursCongesNonPris
+  // Prorata gratification (1/12 du brut × mois écoulés depuis dernier versement, présumés 11)
+  const moisDepuisDerniereGrat = 11
+  const proRataGratification = (brutMensuel * moisDepuisDerniereGrat) / 12
+  // Salaire du mois en cours (présumé complet)
+  const salaireMois = brutMensuel
+  const total = salaireMois + preavis + indemniteLicenciement + indemniteConges + proRataGratification
+  return {
+    salaireMois, preavis, preavisMois, indemniteLicenciement, indemniteConges, joursCongesNonPris,
+    proRataGratification, moisDepuisDerniereGrat, total, motif, anciennete, brutMensuel
+  }
+}
+
+export function downloadSTCPDF(e: Employee, motif: STCMotif, joursCongesNonPris: number, anciennete: { years: number; months: number }, dateSortie: string) {
+  const org = getOrg()
+  const stc = computeSTC(e, motif, joursCongesNonPris, anciennete)
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' })
+  const motifLabels: Record<STCMotif, string> = {
+    'licenciement': 'Licenciement',
+    'demission': 'Démission',
+    'retraite': 'Départ à la retraite',
+    'fin-cdd': 'Fin de contrat (CDD)',
+    'rupture-conventionnelle': 'Rupture conventionnelle',
+  }
+  drawHeader(doc, {
+    title: 'Solde de tout compte',
+    subtitle: `${e.firstName} ${e.lastName}`,
+    ref: `STC-${e.matricule}-${dateSortie.replace(/\//g, '')}`
+  })
+  let y = drawInfoBoxes(doc, 52, {
+    title: 'Employeur',
+    lines: [org.name, `IFU ${org.ifu}`, `CNPS ${org.cnps}`, `${org.city}`],
+  }, {
+    title: 'Salarié sortant',
+    lines: [`${e.firstName} ${e.lastName}`, `Mat. ${e.matricule}`, `${e.role}`, `Ancienneté · ${anciennete.years} an(s) ${anciennete.months} mois`],
+  })
+
+  // Bandeau motif
+  doc.setFillColor(...N50)
+  doc.setDrawColor(...ORANGE)
+  doc.setLineWidth(0.5)
+  doc.roundedRect(M, y, CONTENT_W, 14, 1, 1, 'FD')
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(7)
+  doc.setTextColor(...ORANGE)
+  doc.text('M O T I F   D E   S O R T I E', M + 4, y + 5)
+  doc.setFontSize(11)
+  doc.setTextColor(...INK)
+  doc.text(motifLabels[motif], M + 4, y + 11)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(9)
+  doc.setTextColor(...N700)
+  doc.text(`Date d'effet · ${dateSortie}`, PAGE_W - M - 4, y + 11, { align: 'right' })
+  y += 20
+
+  // Table détaillée des composantes du STC
+  const rows: any[] = [
+    ['Salaire du mois de sortie',                                           '', fmtXOF(stc.salaireMois)],
+  ]
+  if (stc.preavis > 0) rows.push([`Indemnité compensatrice de préavis`, `${stc.preavisMois} mois × ${fmtXOF(stc.brutMensuel)}`, fmtXOF(stc.preavis)])
+  if (stc.indemniteLicenciement > 0) rows.push([`Indemnité de licenciement (Art. 39 CC interpro)`, `${anciennete.years} an(s) ${anciennete.months} mois`, fmtXOF(stc.indemniteLicenciement)])
+  if (stc.indemniteConges > 0) rows.push([`Indemnité compensatrice de congés payés`, `${joursCongesNonPris} j non pris`, fmtXOF(stc.indemniteConges)])
+  if (stc.proRataGratification > 0) rows.push([`Prorata de gratification (13e mois)`, `${stc.moisDepuisDerniereGrat}/12`, fmtXOF(stc.proRataGratification)])
+
+  autoTable(doc, {
+    startY: y,
+    head: [['Composante', 'Base de calcul', 'Montant']],
+    body: rows,
+    foot: [['TOTAL NET DÛ', '', fmtXOF(stc.total)]],
+    headStyles: { fillColor: INK as any, textColor: [255, 255, 255] as any, fontSize: 8, halign: 'left' },
+    bodyStyles: { fontSize: 9 },
+    footStyles: { fillColor: ORANGE as any, textColor: [255, 255, 255] as any, fontSize: 11, fontStyle: 'bold', halign: 'right' },
+    columnStyles: { 2: { halign: 'right', fontStyle: 'bold' }, 1: { textColor: N500 as any, fontSize: 8 } },
+    theme: 'grid',
+    margin: { left: M, right: M },
+  })
+  y = (doc as any).lastAutoTable.finalY + 8
+
+  // Bandeau NET À VERSER
+  doc.setFillColor(...INK)
+  doc.rect(M, y, CONTENT_W, 18, 'F')
+  doc.setFillColor(...ORANGE)
+  doc.rect(M, y, 3, 18, 'F')
+  doc.setTextColor(255, 255, 255)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(7)
+  doc.text('N E T   À   V E R S E R', M + 8, y + 7)
+  doc.setFontSize(16)
+  doc.text(fmtXOF(stc.total), PAGE_W - M - 4, y + 12, { align: 'right' })
+  y += 24
+
+  // Mention légale
+  doc.setFontSize(8)
+  doc.setTextColor(...N500)
+  doc.setFont('helvetica', 'italic')
+  const mention = `Conformément à la Loi 2015-532 portant Code du travail de Côte d'Ivoire et à la convention collective interprofessionnelle, le présent solde de tout compte est dressé en deux exemplaires. La signature du salarié vaut reçu pour solde de tout compte et acquittement définitif. Le salarié dispose d'un délai de deux mois pour le dénoncer par lettre recommandée.`
+  const lines = doc.splitTextToSize(mention, CONTENT_W)
+  doc.text(lines, M, y)
+  y += lines.length * 4 + 8
+
+  // Signatures
+  const sigY = Math.max(y, 240)
+  doc.setDrawColor(...N200)
+  doc.setLineWidth(0.3)
+  doc.line(M, sigY, M + 70, sigY)
+  doc.line(PAGE_W - M - 70, sigY, PAGE_W - M, sigY)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(8)
+  doc.setTextColor(...INK)
+  doc.text(`Pour ${org.name}`, M, sigY + 5)
+  doc.text(`${e.firstName} ${e.lastName}`, PAGE_W - M - 70, sigY + 5)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(7)
+  doc.setTextColor(...N500)
+  doc.text('Date, cachet et signature', M, sigY + 10)
+  doc.text('Signature précédée de la mention « pour solde de tout compte »', PAGE_W - M - 70, sigY + 10)
+
+  drawFooter(doc)
+  doc.save(`stc-${e.firstName.toLowerCase()}-${e.lastName.toLowerCase()}.pdf`)
+}
+
+export function downloadCertificatTravailPDF(e: Employee, dateSortie: string, anciennete: { years: number; months: number }) {
+  const org = getOrg()
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' })
+  drawHeader(doc, {
+    title: 'Certificat de travail',
+    subtitle: 'Article 16.10 du Code du travail',
+    ref: `CT-${e.matricule}-${dateSortie.replace(/\//g, '')}`,
+  })
+  let y = 60
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(11)
+  doc.setTextColor(...INK)
+  const para = `Je soussigné(e), Directeur des Ressources Humaines de ${org.name} (IFU ${org.ifu}), certifie par la présente que :`
+  doc.text(doc.splitTextToSize(para, CONTENT_W), M, y); y += 14
+
+  // Bloc identité salarié
+  doc.setFillColor(...N50)
+  doc.setDrawColor(...ORANGE)
+  doc.setLineWidth(0.4)
+  doc.roundedRect(M, y, CONTENT_W, 28, 1, 1, 'FD')
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(14); doc.setTextColor(...INK)
+  doc.text(`${e.firstName} ${e.lastName}`, M + 6, y + 10)
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(...N700)
+  doc.text(`Matricule CNPS · ${e.matricule}`, M + 6, y + 17)
+  doc.text(`Fonction exercée · ${e.role}`, M + 6, y + 22)
+  doc.text(`Type de contrat · ${e.contract === 'CDI' ? 'Contrat à Durée Indéterminée' : 'Contrat à Durée Déterminée'}`, M + 6, y + 27)
+  y += 36
+
+  doc.setFontSize(11); doc.setTextColor(...INK)
+  doc.text(`A été employé(e) au sein de notre société du ${e.joinedAt} au ${dateSortie}`, M, y); y += 7
+  doc.text(`soit une durée totale de ${anciennete.years} année(s) et ${anciennete.months} mois.`, M, y); y += 14
+
+  doc.text(`Tout au long de cette période, ${e.firstName} a exercé les fonctions de ${e.role}`, M, y); y += 6
+  doc.text(`à notre entière satisfaction.`, M, y); y += 14
+
+  doc.text(`Le présent certificat est délivré à l'intéressé(e) pour servir et valoir ce que de droit.`, M, y); y += 14
+
+  doc.setFont('helvetica', 'italic'); doc.setFontSize(9); doc.setTextColor(...N500)
+  doc.text(`Conformément à l'Article 16.10 du Code du travail (Loi 2015-532), ce certificat`, M, y); y += 4
+  doc.text(`contient exclusivement la date d'entrée, la date de sortie et la nature des emplois occupés.`, M, y); y += 14
+
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(...INK)
+  doc.text(`Fait à ${org.city.split(',')[0]}, le ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}.`, M, y); y += 20
+
+  // Signature
+  doc.setDrawColor(...N200); doc.setLineWidth(0.3)
+  doc.line(PAGE_W - M - 70, y, PAGE_W - M, y); y += 5
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(...INK)
+  doc.text(`Pour ${org.name}`, PAGE_W - M - 70, y); y += 4
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(...N500)
+  doc.text('Cachet et signature de la Direction', PAGE_W - M - 70, y)
+
+  drawFooter(doc)
+  doc.save(`certificat-travail-${e.firstName.toLowerCase()}-${e.lastName.toLowerCase()}.pdf`)
+}
+
+// ============================================================================
+// BORDEREAU CNPS PDF (en plus de l'Excel actuel)
+// ============================================================================
+
+export function downloadBordereauCNPSPDF(employees: Employee[], period = 'Novembre 2026') {
+  const org = getOrg()
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' })
+  drawHeader(doc, {
+    title: 'Bordereau CNPS',
+    subtitle: `Cotisations sociales · ${period}`,
+    ref: `CNPS-${org.cnps}-${period.replace(/\s/g, '')}`,
+  })
+
+  let y = drawInfoBoxes(doc, 52, {
+    title: 'Employeur cotisant',
+    lines: [org.name, `IFU ${org.ifu}`, `CNPS ${org.cnps}`, `Secteur · ${org.sector}`],
+  }, {
+    title: 'Période déclarée',
+    lines: [period, `Taux AT · ${org.taux_at}%`, `Effectif · ${employees.length}`, `À déposer avant 15/${period.split(' ')[0].slice(0, 3).toLowerCase() === 'nov' ? '12' : '01'}`],
+  })
+
+  const active = employees.filter((e) => e.status === 'active')
+  const rows = active.map((e) => {
+    const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
+    return [
+      e.matricule,
+      `${e.firstName} ${e.lastName}`,
+      fmtXOF(e.brut),
+      fmtXOF(Math.round(p.cnps)),
+      fmtXOF(Math.round(p.brut * 0.169)),
+      fmtXOF(Math.round(p.cnps + p.brut * 0.169)),
+    ]
+  })
+  const totals = active.reduce((acc, e) => {
+    const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
+    return { brut: acc.brut + e.brut, sal: acc.sal + p.cnps, pat: acc.pat + p.brut * 0.169 }
+  }, { brut: 0, sal: 0, pat: 0 })
+
+  autoTable(doc, {
+    startY: y,
+    head: [['Matricule', 'Salarié', 'Brut', 'Cotis. sal. 6.3%', 'Cotis. pat. 16.9%', 'Total']],
+    body: rows,
+    foot: [['TOTAL', `${active.length} salariés`, fmtXOF(totals.brut), fmtXOF(Math.round(totals.sal)), fmtXOF(Math.round(totals.pat)), fmtXOF(Math.round(totals.sal + totals.pat))]],
+    headStyles: { fillColor: INK as any, textColor: [255, 255, 255] as any, fontSize: 8 },
+    bodyStyles: { fontSize: 8 },
+    footStyles: { fillColor: ORANGE as any, textColor: [255, 255, 255] as any, fontSize: 9, fontStyle: 'bold' },
+    columnStyles: { 2: { halign: 'right' }, 3: { halign: 'right' }, 4: { halign: 'right' }, 5: { halign: 'right', fontStyle: 'bold' } },
+    theme: 'grid',
+    margin: { left: M, right: M },
+  })
+  let yEnd = (doc as any).lastAutoTable.finalY + 6
+
+  // Bandeau total
+  doc.setFillColor(...INK)
+  doc.rect(M, yEnd, CONTENT_W, 18, 'F')
+  doc.setFillColor(...ORANGE)
+  doc.rect(M, yEnd, 3, 18, 'F')
+  doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(7)
+  doc.text('T O T A L   À   V E R S E R   À   L A   C N P S', M + 8, yEnd + 7)
+  doc.setFontSize(16)
+  doc.text(fmtXOF(Math.round(totals.sal + totals.pat)), PAGE_W - M - 4, yEnd + 12, { align: 'right' })
+  yEnd += 26
+
+  doc.setFont('helvetica', 'italic'); doc.setFontSize(8); doc.setTextColor(...N500)
+  doc.text(`Bordereau à déposer sur le portail e-CNPS (https://www.cnps.ci) ou en agence avec le virement bancaire.`, M, yEnd); yEnd += 5
+  doc.text(`Tout retard de plus de 15 jours après la fin du mois entraîne des majorations légales (10% + 1% par mois).`, M, yEnd)
+
+  // Signature
+  doc.setDrawColor(...N200); doc.setLineWidth(0.3)
+  doc.line(PAGE_W - M - 80, 262, PAGE_W - M, 262)
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(...INK)
+  doc.text(`Pour ${org.name}`, PAGE_W - M - 80, 267)
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(...N500)
+  doc.text('Cachet, date et signature du dirigeant', PAGE_W - M - 80, 272)
+
+  drawFooter(doc)
+  doc.save(`bordereau-cnps-${period.toLowerCase().replace(/\s/g, '-')}.pdf`)
+}
+
+// ============================================================================
+// EXPORT COMPTABLE OHADA / SYSCOHADA
+// ============================================================================
+
+export function downloadEcrituresOHADA(employees: Employee[], period = 'Novembre 2026') {
+  const active = employees.filter((e) => e.status === 'active')
+  const totals = active.reduce((acc, e) => {
+    const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
+    return {
+      brut: acc.brut + e.brut,
+      cnpsSal: acc.cnpsSal + p.cnps,
+      cnpsPat: acc.cnpsPat + e.brut * 0.169,
+      its: acc.its + p.its,
+      igr: acc.igr + p.igr,
+      cn: acc.cn + p.cn,
+      net: acc.net + p.net,
+    }
+  }, { brut: 0, cnpsSal: 0, cnpsPat: 0, its: 0, igr: 0, cn: 0, net: 0 })
+
+  const dateStr = new Date().toLocaleDateString('fr-FR')
+  const ref = `PAIE-${period.replace(/\s/g, '').toUpperCase()}`
+
+  const rows = [
+    // Charge salaires brut
+    { Date: dateStr, Journal: 'OD', Compte: '661100', Libelle: `Rémunération du personnel · ${period}`, Reference: ref, Debit: Math.round(totals.brut), Credit: 0 },
+    // Charge cotisations patronales
+    { Date: dateStr, Journal: 'OD', Compte: '664100', Libelle: `Charges sociales patronales CNPS · ${period}`, Reference: ref, Debit: Math.round(totals.cnpsPat), Credit: 0 },
+    // Dette envers le personnel (net)
+    { Date: dateStr, Journal: 'OD', Compte: '422100', Libelle: `Personnel, rémunérations dues · ${period}`, Reference: ref, Debit: 0, Credit: Math.round(totals.net) },
+    // Dette CNPS (sal + pat)
+    { Date: dateStr, Journal: 'OD', Compte: '431100', Libelle: `Sécurité sociale CNPS · ${period}`, Reference: ref, Debit: 0, Credit: Math.round(totals.cnpsSal + totals.cnpsPat) },
+    // Dette État ITS
+    { Date: dateStr, Journal: 'OD', Compte: '447100', Libelle: `État, ITS retenue à la source · ${period}`, Reference: ref, Debit: 0, Credit: Math.round(totals.its) },
+    // Dette État IGR + CN
+    { Date: dateStr, Journal: 'OD', Compte: '447200', Libelle: `État, IGR + Contribution nationale · ${period}`, Reference: ref, Debit: 0, Credit: Math.round(totals.igr + totals.cn) },
+    // Paiement banque (présumé fait)
+    { Date: dateStr, Journal: 'BQ', Compte: '521100', Libelle: `Banque, virement salaires · ${period}`, Reference: ref, Debit: 0, Credit: Math.round(totals.net) },
+    { Date: dateStr, Journal: 'BQ', Compte: '422100', Libelle: `Personnel, paiement net · ${period}`, Reference: ref, Debit: Math.round(totals.net), Credit: 0 },
+  ]
+  const totalDebit = rows.reduce((s, r) => s + r.Debit, 0)
+  const totalCredit = rows.reduce((s, r) => s + r.Credit, 0)
+  rows.push({ Date: dateStr, Journal: '---', Compte: '---', Libelle: 'TOTAUX DÉBITS = CRÉDITS', Reference: '', Debit: totalDebit, Credit: totalCredit })
+
+  const ws = XLSX.utils.json_to_sheet(rows)
+  ws['!cols'] = [{ wch: 12 }, { wch: 8 }, { wch: 10 }, { wch: 50 }, { wch: 20 }, { wch: 14 }, { wch: 14 }]
+  const wb = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb, ws, 'Écritures OHADA')
+  XLSX.writeFile(wb, `ecritures-comptables-ohada-${period.toLowerCase().replace(/\s/g, '-')}.xlsx`)
+}
+
+// ============================================================================
+// GRATIFICATION 13e MOIS — bulletins spécifiques
+// ============================================================================
+
+export async function downloadGratificationsZip(employees: Employee[], moisAcquis = 11, period = 'Décembre 2026') {
+  const zip = new JSZip()
+  const active = employees.filter((e) => e.status === 'active')
+  for (const e of active) {
+    const gratif = Math.round((e.brut * moisAcquis) / 12)
+    const doc = await buildGratificationPDF(e, gratif, moisAcquis, period)
+    const blob = doc.output('blob')
+    zip.file(`gratif-${e.firstName.toLowerCase()}-${e.lastName.toLowerCase()}.pdf`, blob)
+  }
+  // Récap bordereau
+  const recap = await buildGratificationBordereauPDF(active, moisAcquis, period)
+  zip.file('bordereau-recapitulatif.pdf', recap.output('blob'))
+  const zipBlob = await zip.generateAsync({ type: 'blob' })
+  saveAs(zipBlob, `gratifications-${period.toLowerCase().replace(/\s/g, '-')}.zip`)
+}
+
+async function buildGratificationPDF(e: Employee, gratif: number, moisAcquis: number, period: string): Promise<jsPDF> {
+  const org = getOrg()
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' })
+  drawHeader(doc, { title: 'Gratification annuelle', subtitle: `${e.firstName} ${e.lastName} · ${period}`, ref: `GRAT-${e.matricule}-${period.replace(/\s/g, '')}` })
+  let y = drawInfoBoxes(doc, 52, {
+    title: 'Employeur',
+    lines: [org.name, `IFU ${org.ifu}`, `CNPS ${org.cnps}`],
+  }, {
+    title: 'Bénéficiaire',
+    lines: [`${e.firstName} ${e.lastName}`, `Mat. ${e.matricule}`, e.role],
+  })
+  autoTable(doc, {
+    startY: y,
+    head: [['Composante', 'Base', 'Montant']],
+    body: [
+      ['Salaire brut mensuel de référence', '', fmtXOF(e.brut)],
+      ['Mois acquis depuis dernière gratification', '', `${moisAcquis} / 12`],
+      ['Gratification calculée (usage : 1 mois × prorata)', `${moisAcquis}/12`, fmtXOF(gratif)],
+    ],
+    foot: [['NET VERSÉ AU TITRE DE LA GRATIFICATION', '', fmtXOF(gratif)]],
+    headStyles: { fillColor: INK as any, textColor: [255, 255, 255] as any, fontSize: 8 },
+    bodyStyles: { fontSize: 9 },
+    footStyles: { fillColor: ORANGE as any, textColor: [255, 255, 255] as any, fontSize: 10, fontStyle: 'bold' },
+    columnStyles: { 2: { halign: 'right', fontStyle: 'bold' } },
+    theme: 'grid',
+    margin: { left: M, right: M },
+  })
+  const yEnd = (doc as any).lastAutoTable.finalY + 8
+  doc.setFillColor(...INK); doc.rect(M, yEnd, CONTENT_W, 18, 'F')
+  doc.setFillColor(...ORANGE); doc.rect(M, yEnd, 3, 18, 'F')
+  doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(7)
+  doc.text('N E T   À   V E R S E R', M + 8, yEnd + 7)
+  doc.setFontSize(16); doc.text(fmtXOF(gratif), PAGE_W - M - 4, yEnd + 12, { align: 'right' })
+  drawFooter(doc)
+  return doc
+}
+
+async function buildGratificationBordereauPDF(active: Employee[], moisAcquis: number, period: string): Promise<jsPDF> {
+  const org = getOrg()
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' })
+  drawHeader(doc, { title: 'Bordereau gratifications', subtitle: `Récapitulatif · ${period}`, ref: `GRAT-RECAP-${period.replace(/\s/g, '')}` })
+  const rows = active.map((e) => [e.matricule, `${e.firstName} ${e.lastName}`, fmtXOF(e.brut), `${moisAcquis}/12`, fmtXOF(Math.round((e.brut * moisAcquis) / 12))])
+  const total = active.reduce((s, e) => s + Math.round((e.brut * moisAcquis) / 12), 0)
+  autoTable(doc, {
+    startY: 52,
+    head: [['Matricule', 'Salarié', 'Brut mensuel', 'Acquis', 'Gratification']],
+    body: rows,
+    foot: [['TOTAL', `${active.length} salariés`, '', '', fmtXOF(total)]],
+    headStyles: { fillColor: INK as any, textColor: [255, 255, 255] as any, fontSize: 8 },
+    bodyStyles: { fontSize: 9 },
+    footStyles: { fillColor: ORANGE as any, textColor: [255, 255, 255] as any, fontSize: 10, fontStyle: 'bold' },
+    columnStyles: { 2: { halign: 'right' }, 4: { halign: 'right', fontStyle: 'bold' } },
+    theme: 'grid',
+    margin: { left: M, right: M },
+  })
+  drawFooter(doc)
+  return doc
+}
+
+// ============================================================================
+// RAPPORT ANALYTICS PDF (pour /app/reports)
+// ============================================================================
+
+export function downloadReportPDF(employees: Employee[]) {
+  const org = getOrg()
+  const active = employees.filter((e) => e.status === 'active')
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' })
+  drawHeader(doc, { title: 'Rapport analytique RH', subtitle: `${org.name} · Exercice 2026`, ref: `RAP-${new Date().toISOString().slice(0, 10)}` })
+
+  const totals = active.reduce((acc, e) => {
+    const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
+    return { brut: acc.brut + e.brut, net: acc.net + p.net, patron: acc.patron + p.patron, total: acc.total + p.total }
+  }, { brut: 0, net: 0, patron: 0, total: 0 })
+
+  let y = 52
+  // KPI grid
+  const kpis = [
+    ['Effectif actif', String(active.length)],
+    ['Masse brute mensuelle', fmtXOF(totals.brut)],
+    ['Coût employeur total', fmtXOF(Math.round(totals.total))],
+    ['Net versé total', fmtXOF(Math.round(totals.net))],
+  ]
+  kpis.forEach((kpi, i) => {
+    const col = i % 2, row = Math.floor(i / 2)
+    const x = M + col * (CONTENT_W / 2 + 4)
+    const yk = y + row * 22
+    doc.setFillColor(...N50); doc.setDrawColor(...N200)
+    doc.roundedRect(x, yk, CONTENT_W / 2 - 2, 18, 1, 1, 'FD')
+    doc.setFillColor(...ORANGE); doc.rect(x, yk, 2, 18, 'F')
+    doc.setFontSize(7); doc.setTextColor(...ORANGE); doc.setFont('helvetica', 'bold')
+    doc.text(kpi[0].toUpperCase().split('').join(' '), x + 6, yk + 6)
+    doc.setFontSize(13); doc.setTextColor(...INK); doc.setFont('helvetica', 'bold')
+    doc.text(kpi[1], x + 6, yk + 14)
+  })
+  y += 48
+
+  // Top 5 postes
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(...INK)
+  doc.text('TOP 5 POSTES PAR COÛT', M, y); y += 5
+  const top = [...active].sort((a, b) => b.brut - a.brut).slice(0, 5)
+  autoTable(doc, {
+    startY: y,
+    head: [['Salarié', 'Fonction', 'Brut', 'Coût employeur']],
+    body: top.map((e) => {
+      const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
+      return [`${e.firstName} ${e.lastName}`, e.role, fmtXOF(e.brut), fmtXOF(Math.round(p.total))]
+    }),
+    headStyles: { fillColor: INK as any, textColor: [255, 255, 255] as any, fontSize: 8 },
+    bodyStyles: { fontSize: 9 },
+    columnStyles: { 2: { halign: 'right' }, 3: { halign: 'right', fontStyle: 'bold' } },
+    theme: 'grid',
+    margin: { left: M, right: M },
+  })
+  y = (doc as any).lastAutoTable.finalY + 8
+
+  // Répartition par type de contrat
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(...INK)
+  doc.text('RÉPARTITION CONTRACTUELLE', M, y); y += 5
+  const cdi = active.filter((e) => e.contract === 'CDI').length
+  const cdd = active.filter((e) => e.contract === 'CDD').length
+  autoTable(doc, {
+    startY: y,
+    head: [['Type', 'Effectif', '%']],
+    body: [
+      ['CDI', String(cdi), `${Math.round((cdi / active.length) * 100)}%`],
+      ['CDD', String(cdd), `${Math.round((cdd / active.length) * 100)}%`],
+    ],
+    headStyles: { fillColor: INK as any, textColor: [255, 255, 255] as any, fontSize: 8 },
+    bodyStyles: { fontSize: 9 },
+    theme: 'grid',
+    margin: { left: M, right: M },
+  })
+
+  drawFooter(doc)
+  doc.save(`rapport-rh-${new Date().toISOString().slice(0, 10)}.pdf`)
+}

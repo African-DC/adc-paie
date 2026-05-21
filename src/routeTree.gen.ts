@@ -20,6 +20,7 @@ import { Route as AProposRouteImport } from './routes/a-propos'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
+import { Route as AppReportsRouteImport } from './routes/app.reports'
 import { Route as AppMeRouteImport } from './routes/app.me'
 import { Route as AppLeaveRouteImport } from './routes/app.leave'
 import { Route as AppDeclarationsRouteImport } from './routes/app.declarations'
@@ -85,6 +86,11 @@ const AppSettingsRoute = AppSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AppRoute,
 } as any)
+const AppReportsRoute = AppReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppMeRoute = AppMeRouteImport.update({
   id: '/me',
   path: '/me',
@@ -146,6 +152,7 @@ export interface FileRoutesByFullPath {
   '/app/declarations': typeof AppDeclarationsRoute
   '/app/leave': typeof AppLeaveRoute
   '/app/me': typeof AppMeRoute
+  '/app/reports': typeof AppReportsRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/': typeof AppIndexRoute
   '/app/employees/$id': typeof AppEmployeesIdRoute
@@ -167,6 +174,7 @@ export interface FileRoutesByTo {
   '/app/declarations': typeof AppDeclarationsRoute
   '/app/leave': typeof AppLeaveRoute
   '/app/me': typeof AppMeRoute
+  '/app/reports': typeof AppReportsRoute
   '/app/settings': typeof AppSettingsRoute
   '/app': typeof AppIndexRoute
   '/app/employees/$id': typeof AppEmployeesIdRoute
@@ -190,6 +198,7 @@ export interface FileRoutesById {
   '/app/declarations': typeof AppDeclarationsRoute
   '/app/leave': typeof AppLeaveRoute
   '/app/me': typeof AppMeRoute
+  '/app/reports': typeof AppReportsRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/': typeof AppIndexRoute
   '/app/employees/$id': typeof AppEmployeesIdRoute
@@ -214,6 +223,7 @@ export interface FileRouteTypes {
     | '/app/declarations'
     | '/app/leave'
     | '/app/me'
+    | '/app/reports'
     | '/app/settings'
     | '/app/'
     | '/app/employees/$id'
@@ -235,6 +245,7 @@ export interface FileRouteTypes {
     | '/app/declarations'
     | '/app/leave'
     | '/app/me'
+    | '/app/reports'
     | '/app/settings'
     | '/app'
     | '/app/employees/$id'
@@ -257,6 +268,7 @@ export interface FileRouteTypes {
     | '/app/declarations'
     | '/app/leave'
     | '/app/me'
+    | '/app/reports'
     | '/app/settings'
     | '/app/'
     | '/app/employees/$id'
@@ -356,6 +368,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/reports': {
+      id: '/app/reports'
+      path: '/reports'
+      fullPath: '/app/reports'
+      preLoaderRoute: typeof AppReportsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/me': {
       id: '/app/me'
       path: '/me'
@@ -428,6 +447,7 @@ interface AppRouteChildren {
   AppDeclarationsRoute: typeof AppDeclarationsRoute
   AppLeaveRoute: typeof AppLeaveRoute
   AppMeRoute: typeof AppMeRoute
+  AppReportsRoute: typeof AppReportsRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppIndexRoute: typeof AppIndexRoute
   AppEmployeesIdRoute: typeof AppEmployeesIdRoute
@@ -442,6 +462,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppDeclarationsRoute: AppDeclarationsRoute,
   AppLeaveRoute: AppLeaveRoute,
   AppMeRoute: AppMeRoute,
+  AppReportsRoute: AppReportsRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppIndexRoute: AppIndexRoute,
   AppEmployeesIdRoute: AppEmployeesIdRoute,

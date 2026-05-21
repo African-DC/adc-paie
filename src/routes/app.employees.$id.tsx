@@ -1,9 +1,10 @@
-import { createFileRoute, Link, useParams, notFound } from '@tanstack/react-router'
+import { createFileRoute, Link, notFound } from '@tanstack/react-router'
 import { useState } from 'react'
-import { ChevronLeft, Mail, Phone, MapPin, Calendar, FileText, Download } from 'lucide-react'
+import { ChevronLeft, Mail, Phone, MapPin, Calendar, FileText, Download, LogOut } from 'lucide-react'
 import { EMPLOYEES, fcfa, computePayslip } from '../lib/mock'
 import { store } from '../lib/store'
 import { downloadPayslipPDF, downloadEmployeeDocument } from '../lib/downloads'
+import { STCModal } from '../components/stc-modal'
 
 export const Route = createFileRoute('/app/employees/$id')({
   loader: ({ params }) => {
@@ -18,6 +19,7 @@ export const Route = createFileRoute('/app/employees/$id')({
 function EmployeeDetail() {
   const { e } = Route.useLoaderData()
   const [tab, setTab] = useState<'identity' | 'contract' | 'history' | 'docs'>('identity')
+  const [stcOpen, setStcOpen] = useState(false)
   const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
 
   return (
@@ -51,6 +53,9 @@ function EmployeeDetail() {
             <Link to="/app/payroll/payslip/$id" params={{ id: e.id }} className="inline-flex items-center gap-2 border border-n-300 px-4 h-9 text-xs font-medium hover:bg-n-50 transition-colors rounded-sm">
               <FileText className="w-3.5 h-3.5" /> Voir le bulletin
             </Link>
+            <button onClick={() => setStcOpen(true)} className="inline-flex items-center gap-2 border border-red-300 text-red-700 hover:bg-red-50 px-4 h-9 text-xs font-medium transition-colors rounded-sm" title="Calculer le solde de tout compte et générer le certificat de travail">
+              <LogOut className="w-3.5 h-3.5" /> Initier sortie / STC
+            </button>
           </div>
         </div>
       </div>
@@ -126,6 +131,8 @@ function EmployeeDetail() {
           </div>
         </div>
       )}
+
+      <STCModal open={stcOpen} employee={e} onClose={() => setStcOpen(false)} />
 
       {tab === 'docs' && (
         <div className="bg-white border border-n-200 rounded-sm p-6">
