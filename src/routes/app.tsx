@@ -4,6 +4,7 @@ import { CURRENT_USER, TENANT } from '../lib/mock'
 import { Spotlight } from '../components/spotlight'
 import { NotificationsPanel, Toast } from '../components/notifications'
 import { ADCAChat, ChatFAB } from '../components/adca-chat'
+import { HelpModal, OnboardingWizard } from '../components/extras'
 import { useStore, store } from '../lib/store'
 
 export const Route = createFileRoute('/app')({ component: AppLayout })
@@ -91,6 +92,8 @@ function AppLayout() {
       <ADCAChat />
       <ChatFAB />
       <Toast />
+      <HelpModal />
+      <OnboardingWizard />
     </div>
   )
 }

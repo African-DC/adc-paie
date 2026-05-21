@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { TrendingUp, Users, CalendarClock, Wallet, ArrowRight, AlertCircle, CheckCircle2 } from 'lucide-react'
 import { TOTALS, EMPLOYEES, DECLARATIONS, fcfa, fcfaShort } from '../lib/mock'
+import { AnomaliesBanner } from '../components/extras'
 
 export const Route = createFileRoute('/app/')({
   component: Dashboard,
@@ -18,6 +19,8 @@ function Dashboard() {
         </h1>
         <p className="mt-2 text-n-700">Voici un aperçu de votre paie pour la période en cours.</p>
       </div>
+
+      <AnomaliesBanner />
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPI label="Masse salariale brute" value={fcfa(TOTALS.masseBrut)} delta="+2,3 %" icon={TrendingUp} />
