@@ -148,7 +148,7 @@ function MePage() {
                     <td className="px-4 py-3 text-right">
                       <div className="inline-flex items-center gap-2">
                         {i === 0 && (
-                          <Link to="/app/payroll/payslip/$id" params={{ id: me.id }} className="text-xs font-semibold text-orange hover:underline">Voir</Link>
+                          <Link to="/app/payroll/payslip/$id" params={{ id: me.id }} search={{ from: 'me' } as any} className="text-xs font-semibold text-orange hover:underline">Voir</Link>
                         )}
                         <button onClick={() => store.toast(`Bulletin ${m} téléchargé`, 'success')} className="text-xs text-n-600 hover:text-orange inline-flex items-center gap-1">
                           <Download className="w-3 h-3" /> PDF

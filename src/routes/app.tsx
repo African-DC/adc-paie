@@ -36,8 +36,8 @@ function AppLayout() {
   const [drawer, setDrawer] = useState(false)
   useEffect(() => { setDrawer(false) }, [loc.pathname])
 
-  const isEmployeeMode = loc.pathname.startsWith('/app/me')
   const search = (loc as any).searchStr || (typeof window !== 'undefined' ? window.location.search : '') || ''
+  const isEmployeeMode = loc.pathname.startsWith('/app/me') || search.includes('from=me')
   const tabMatch = search.match(/tab=([^&]+)/)
   const currentTab = tabMatch ? decodeURIComponent(tabMatch[1]) : 'home'
   const NAV = isEmployeeMode ? EMPLOYEE_NAV : ADMIN_NAV

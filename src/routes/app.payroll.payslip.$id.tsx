@@ -1,4 +1,4 @@
-import { createFileRoute, Link, notFound, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link, notFound, useLocation, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { ChevronLeft, ChevronRight, Download, Mail, Printer, Info, BookOpen, EyeOff } from 'lucide-react'
 import { EMPLOYEES, TENANT, fcfa, computePayslip } from '../lib/mock'
@@ -12,21 +12,25 @@ export const Route = createFileRoute('/app/payroll/payslip/$id')({
   },
   component: PayslipPage,
   notFoundComponent: () => <p className="p-6">Bulletin introuvable.</p>,
+  validateSearch: (s: Record<string, unknown>) => ({ from: s.from as string | undefined }),
 })
 
 function PayslipPage() {
   const { e } = Route.useLoaderData()
   const navigate = useNavigate()
+  const loc = useLocation()
+  const fromMe = ((loc as any).searchStr || (typeof window !== 'undefined' ? window.location.search : '') || '').includes('from=me')
   const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
   const [explainAll, setExplainAll] = useState(false)
   const parts = 1 + (e.family.situation === 'marié(e)' ? 0.5 : 0) + e.family.kids * 0.5
 
   const active = EMPLOYEES.filter((x) => x.status === 'active')
   const idx = active.findIndex((x) => x.id === e.id)
-  const prev = idx > 0 ? active[idx - 1] : null
-  const next = idx >= 0 && idx < active.length - 1 ? active[idx + 1] : null
+  const prev = !fromMe && idx > 0 ? active[idx - 1] : null
+  const next = !fromMe && idx >= 0 && idx < active.length - 1 ? active[idx + 1] : null
 
   useEffect(() => {
+    if (fromMe) return
     const h = (ev: KeyboardEvent) => {
       const tag = (ev.target as HTMLElement)?.tagName
       if (tag === 'INPUT' || tag === 'TEXTAREA') return
@@ -35,7 +39,7 @@ function PayslipPage() {
     }
     window.addEventListener('keydown', h)
     return () => window.removeEventListener('keydown', h)
-  }, [prev, next, navigate])
+  }, [prev, next, navigate, fromMe])
 
   const lines = [
     {
@@ -100,28 +104,36 @@ function PayslipPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3 flex-wrap">
-          <Link to="/app/payroll" className="inline-flex items-center gap-1.5 text-sm text-n-600 hover:text-orange">
-            <ChevronLeft className="w-3.5 h-3.5" /> Retour au cycle
-          </Link>
-          <div className="inline-flex items-center border border-n-200 rounded-sm overflow-hidden bg-white">
-            <button
-              onClick={() => prev && navigate({ to: '/app/payroll/payslip/$id', params: { id: prev.id } })}
-              disabled={!prev}
-              title={prev ? `${prev.firstName} ${prev.lastName} (← flèche gauche)` : 'Premier bulletin du cycle'}
-              className="w-9 h-9 hover:bg-n-50 disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center border-r border-n-200"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <span className="px-3 text-[11px] font-mono text-n-600">{idx + 1} / {active.length}</span>
-            <button
-              onClick={() => next && navigate({ to: '/app/payroll/payslip/$id', params: { id: next.id } })}
-              disabled={!next}
-              title={next ? `${next.firstName} ${next.lastName} (→ flèche droite)` : 'Dernier bulletin du cycle'}
-              className="w-9 h-9 hover:bg-n-50 disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center border-l border-n-200"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
+          {fromMe ? (
+            <Link to="/app/me" search={{ tab: 'payslips' } as any} className="inline-flex items-center gap-1.5 text-sm text-n-600 hover:text-orange">
+              <ChevronLeft className="w-3.5 h-3.5" /> Retour à mes bulletins
+            </Link>
+          ) : (
+            <>
+              <Link to="/app/payroll" className="inline-flex items-center gap-1.5 text-sm text-n-600 hover:text-orange">
+                <ChevronLeft className="w-3.5 h-3.5" /> Retour au cycle
+              </Link>
+              <div className="inline-flex items-center border border-n-200 rounded-sm overflow-hidden bg-white">
+                <button
+                  onClick={() => prev && navigate({ to: '/app/payroll/payslip/$id', params: { id: prev.id } })}
+                  disabled={!prev}
+                  title={prev ? `${prev.firstName} ${prev.lastName} (← flèche gauche)` : 'Premier bulletin du cycle'}
+                  className="w-9 h-9 hover:bg-n-50 disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center border-r border-n-200"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <span className="px-3 text-[11px] font-mono text-n-600">{idx + 1} / {active.length}</span>
+                <button
+                  onClick={() => next && navigate({ to: '/app/payroll/payslip/$id', params: { id: next.id } })}
+                  disabled={!next}
+                  title={next ? `${next.firstName} ${next.lastName} (→ flèche droite)` : 'Dernier bulletin du cycle'}
+                  className="w-9 h-9 hover:bg-n-50 disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center border-l border-n-200"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </>
+          )}
         </div>
         <div className="flex items-center gap-2 print:hidden">
           <button
@@ -137,9 +149,11 @@ function PayslipPage() {
           <button onClick={() => window.print()} className="inline-flex items-center gap-2 border border-n-300 px-4 h-9 text-xs font-medium hover:bg-n-50 transition-colors rounded-sm">
             <Printer className="w-3.5 h-3.5" /> Imprimer
           </button>
-          <button onClick={() => store.toast('Bulletin envoyé par e-mail au salarié', 'success')} className="inline-flex items-center gap-2 border border-n-300 px-4 h-9 text-xs font-medium hover:bg-n-50 transition-colors rounded-sm">
-            <Mail className="w-3.5 h-3.5" /> Envoyer par e-mail
-          </button>
+          {!fromMe && (
+            <button onClick={() => store.toast('Bulletin envoyé par e-mail au salarié', 'success')} className="inline-flex items-center gap-2 border border-n-300 px-4 h-9 text-xs font-medium hover:bg-n-50 transition-colors rounded-sm">
+              <Mail className="w-3.5 h-3.5" /> Envoyer par e-mail
+            </button>
+          )}
           <button onClick={() => store.toast('Bulletin PDF téléchargé', 'success')} className="inline-flex items-center gap-2 bg-orange text-white px-4 h-9 text-xs font-semibold uppercase tracking-wider hover:bg-orange-deep transition-colors rounded-sm">
             <Download className="w-3.5 h-3.5" /> Télécharger PDF
           </button>
