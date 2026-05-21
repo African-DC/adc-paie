@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useLocation } from '@tanstack/react-router'
-import { LayoutDashboard, Users, Calculator, FileCheck2, Settings, Search, Bell, ChevronRight, Sparkles, CalendarDays, UserCircle2 } from 'lucide-react'
+import { LayoutDashboard, Users, Calculator, FileCheck2, Settings, Search, Bell, ChevronRight, Sparkles, CalendarDays, UserCircle2, Wallet } from 'lucide-react'
 import { CURRENT_USER, TENANT } from '../lib/mock'
 import { Spotlight } from '../components/spotlight'
 import { NotificationsPanel, Toast } from '../components/notifications'
@@ -13,6 +13,7 @@ const NAV = [
   { to: '/app', label: 'Tableau de bord', icon: LayoutDashboard, exact: true },
   { to: '/app/employees', label: 'Salariés', icon: Users },
   { to: '/app/payroll', label: 'Paie mensuelle', icon: Calculator },
+  { to: '/app/advances', label: 'Avances sur salaire', icon: Wallet },
   { to: '/app/leave', label: 'Congés & absences', icon: CalendarDays },
   { to: '/app/declarations', label: 'Déclarations', icon: FileCheck2 },
   { to: '/app/settings', label: 'Réglages', icon: Settings },

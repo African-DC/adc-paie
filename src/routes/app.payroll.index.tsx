@@ -1,15 +1,18 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
-import { Calculator, FileText, ChevronDown, Calendar, Eye } from 'lucide-react'
+import { Calculator, FileText, ChevronDown, Calendar, Eye, Send, Archive } from 'lucide-react'
 import { EMPLOYEES, computePayslip, fcfa } from '../lib/mock'
 import { store } from '../lib/store'
+import { PaySalariesModal, ExportAuditModal } from '../components/payroll-modals'
 
-export const Route = createFileRoute('/app/payroll')({ component: PayrollPage })
+export const Route = createFileRoute('/app/payroll/')({ component: PayrollPage })
 
 function PayrollPage() {
   const [month] = useState('Novembre 2026')
   const [days, setDays] = useState<Record<string, string>>({})
   const [bonus, setBonus] = useState<Record<string, string>>({})
+  const [payOpen, setPayOpen] = useState(false)
+  const [exportOpen, setExportOpen] = useState(false)
   const active = EMPLOYEES.filter(e => e.status === 'active')
   const totals = active.reduce((acc, e) => {
     const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
@@ -93,16 +96,24 @@ function PayrollPage() {
             <div><p className="text-[10px] uppercase tracking-wider text-n-500">Charges patronales</p><p className="font-mono font-semibold">{fcfa(Math.round(totals.patron))}</p></div>
             <div><p className="text-[10px] uppercase tracking-wider text-orange-deep font-semibold">Net total à payer</p><p className="font-serif font-semibold text-lg text-orange-deep">{fcfa(Math.round(totals.net))}</p></div>
           </div>
-          <div className="flex items-center gap-2 ml-auto">
-            <button onClick={() => store.toast('Brouillon enregistré localement', 'info')} className="inline-flex items-center gap-2 border border-n-300 px-4 h-10 text-sm font-medium hover:bg-n-50 transition-colors rounded-sm">
-              <FileText className="w-4 h-4" /> Enregistrer brouillon
+          <div className="flex items-center gap-2 ml-auto flex-wrap">
+            <button onClick={() => setExportOpen(true)} className="inline-flex items-center gap-2 border border-n-300 px-3 h-10 text-xs font-medium hover:bg-n-50 transition-colors rounded-sm uppercase tracking-wider" title="Archive ZIP audit CNPS/DGI">
+              <Archive className="w-3.5 h-3.5" /> Export audit
             </button>
-            <button onClick={() => store.toast(`${active.length} bulletins générés. Téléchargement en cours…`, 'success')} className="inline-flex items-center gap-2 bg-orange text-white px-5 h-10 text-sm font-semibold uppercase tracking-wider hover:bg-orange-deep transition-colors">
-              <Calculator className="w-4 h-4" /> Calculer et générer
+            <button onClick={() => store.toast('Brouillon enregistré localement', 'info')} className="inline-flex items-center gap-2 border border-n-300 px-3 h-10 text-xs font-medium hover:bg-n-50 transition-colors rounded-sm uppercase tracking-wider">
+              <FileText className="w-3.5 h-3.5" /> Brouillon
+            </button>
+            <button onClick={() => store.toast(`${active.length} bulletins générés. Téléchargement en cours…`, 'success')} className="inline-flex items-center gap-2 border-2 border-orange text-orange-deep px-4 h-10 text-xs font-semibold uppercase tracking-wider hover:bg-orange-tint transition-colors rounded-sm">
+              <Calculator className="w-3.5 h-3.5" /> Calculer
+            </button>
+            <button onClick={() => setPayOpen(true)} className="inline-flex items-center gap-2 bg-orange text-white px-5 h-10 text-xs font-semibold uppercase tracking-wider hover:bg-orange-deep transition-colors rounded-sm">
+              <Send className="w-3.5 h-3.5" /> Payer les salaires
             </button>
           </div>
         </div>
       </div>
+      <PaySalariesModal open={payOpen} onClose={() => setPayOpen(false)} total={Math.round(totals.net)} count={active.length} />
+      <ExportAuditModal open={exportOpen} onClose={() => setExportOpen(false)} />
     </div>
   )
 }

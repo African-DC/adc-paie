@@ -3,7 +3,7 @@ import { Plus, Filter, Download, MoreHorizontal } from 'lucide-react'
 import { useState } from 'react'
 import { EMPLOYEES, fcfa } from '../lib/mock'
 
-export const Route = createFileRoute('/app/employees')({
+export const Route = createFileRoute('/app/employees/')({
   component: EmployeesPage,
 })
 
