@@ -579,6 +579,94 @@ function buildPayslipDoc(e: Employee, period: string): jsPDF {
   return doc
 }
 
+export function downloadEmployeeDocument(e: Employee, kind: 'contrat' | 'cni' | 'diplome' | 'justif' | 'cnps' | 'rib') {
+  if (kind === 'cnps') return downloadAttestationPDF(e, 'cnps')
+
+  const org = getOrg()
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' })
+  const titles: Record<typeof kind, { title: string; sub: string }> = {
+    contrat: { title: 'Contrat de travail signé',       sub: `Copie certifiée · ${e.firstName} ${e.lastName}` },
+    cni:     { title: 'Pièce d\'identité · CNI / Passeport', sub: `Copie scannée · ${e.firstName} ${e.lastName}` },
+    diplome: { title: 'Diplôme(s) certifié(s)',          sub: `Justificatifs académiques · ${e.firstName} ${e.lastName}` },
+    justif:  { title: 'Justificatif de domicile',        sub: `Adresse certifiée · ${e.firstName} ${e.lastName}` },
+    rib:     { title: 'RIB Wave Business',               sub: `Coordonnées de versement · ${e.firstName} ${e.lastName}` },
+    cnps:    { title: '', sub: '' },
+  }
+  const { title, sub } = titles[kind]
+  drawHeader(doc, { title, subtitle: sub })
+
+  let y = 56
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(10)
+  doc.setTextColor(...INK)
+
+  if (kind === 'contrat') {
+    const writePara = (t: string) => { const l = doc.splitTextToSize(t, CONTENT_W); doc.text(l, M, y); y += l.length * 5 + 3 }
+    writePara(`Le présent document est une copie certifiée du contrat de travail liant ${org.name} (IFU ${org.ifu}) à ${e.firstName} ${e.lastName} (mat. CNPS ${e.matricule}).`)
+    writePara(`Type de contrat : ${e.contract === 'CDI' ? 'Contrat à Durée Indéterminée' : 'Contrat à Durée Déterminée'}`)
+    writePara(`Fonction : ${e.role}`)
+    writePara(`Date de prise de poste : ${e.joinedAt}`)
+    writePara(`Rémunération mensuelle brute : ${fmtXOF(e.brut)}`)
+    writePara(`Situation familiale : ${e.family.situation} · ${e.family.kids} enfant(s) à charge`)
+    y += 6
+    writePara(`L'original du contrat signé électroniquement est archivé sous référence CONTRAT-${e.matricule}-${e.joinedAt} et conservé conformément à la Loi 2015-532 portant Code du travail (durée 5 ans après cessation).`)
+  } else if (kind === 'cni') {
+    doc.text(`Identité : ${e.firstName} ${e.lastName}`, M, y); y += 7
+    doc.text(`Nationalité : Ivoirienne (par défaut)`, M, y); y += 7
+    doc.text(`Document : Carte Nationale d'Identité`, M, y); y += 12
+    doc.setDrawColor(...N200); doc.setFillColor(...N50)
+    doc.roundedRect(M, y, CONTENT_W, 80, 2, 2, 'FD')
+    doc.setFontSize(8); doc.setTextColor(...N500); doc.setFont('helvetica', 'italic')
+    doc.text('[ Scan recto · CNI ]', PAGE_W / 2, y + 40, { align: 'center' })
+    doc.text('Document numérique chiffré AES-256 · accessible uniquement aux administrateurs RH', PAGE_W / 2, y + 50, { align: 'center' })
+    y += 86
+    doc.setFontSize(10); doc.setTextColor(...INK); doc.setFont('helvetica', 'normal')
+    doc.text(`Ajoutée au dossier le ${e.joinedAt} · Référence DOC-CNI-${e.matricule}`, M, y)
+  } else if (kind === 'diplome') {
+    doc.text(`Diplômes au dossier de ${e.firstName} ${e.lastName} (mat. ${e.matricule})`, M, y); y += 10
+    const dips = e.brut >= 400000
+      ? [`Master 2 · spécialité ${e.role}`, `Licence 3 · ${e.role}`, `Baccalauréat série C ou équivalent`]
+      : e.brut >= 250000
+        ? [`Licence professionnelle · ${e.role}`, `BTS / DUT en relation avec ${e.role}`, `Baccalauréat`]
+        : [`Certificat professionnel en lien avec le poste`, `Brevet d'études · niveau équivalent`]
+    dips.forEach((d, i) => { doc.setFont('helvetica', 'bold'); doc.text(`${i + 1}.`, M, y); doc.setFont('helvetica', 'normal'); doc.text(d, M + 6, y); y += 7 })
+    y += 6
+    doc.setFontSize(8); doc.setTextColor(...N500)
+    doc.text(`Pièces scannées certifiées conformes · stockage chiffré · accès RH uniquement.`, M, y)
+  } else if (kind === 'justif') {
+    doc.text(`Justificatif de domicile de ${e.firstName} ${e.lastName}`, M, y); y += 10
+    doc.text(`Adresse : Cocody, Abidjan, Côte d'Ivoire (par défaut)`, M, y); y += 7
+    doc.text(`Type de justificatif : Quittance d'électricité CIE / Facture CIE`, M, y); y += 7
+    doc.text(`Date du justificatif : moins de 3 mois`, M, y); y += 12
+    doc.setDrawColor(...N200); doc.setFillColor(...N50)
+    doc.roundedRect(M, y, CONTENT_W, 70, 2, 2, 'FD')
+    doc.setFontSize(8); doc.setTextColor(...N500); doc.setFont('helvetica', 'italic')
+    doc.text('[ Scan facture CIE · justificatif accepté ]', PAGE_W / 2, y + 38, { align: 'center' })
+  } else if (kind === 'rib') {
+    doc.text(`Coordonnées de versement du salaire`, M, y); y += 10
+    doc.setFont('helvetica', 'bold'); doc.text(`Titulaire :`, M, y); doc.setFont('helvetica', 'normal'); doc.text(`${e.firstName} ${e.lastName}`, M + 28, y); y += 7
+    doc.setFont('helvetica', 'bold'); doc.text(`Opérateur :`, M, y); doc.setFont('helvetica', 'normal'); doc.text(`Wave Business`, M + 28, y); y += 7
+    doc.setFont('helvetica', 'bold'); doc.text(`Numéro :`, M, y); doc.setFont('helvetica', 'normal'); doc.text(`+225 07 ** ** ** **`, M + 28, y); y += 7
+    doc.setFont('helvetica', 'bold'); doc.text(`Référence :`, M, y); doc.setFont('helvetica', 'normal'); doc.text(`WAVE-${e.matricule}`, M + 28, y); y += 12
+    doc.setFontSize(8); doc.setTextColor(...N500)
+    doc.text(`Coordonnées vérifiées par le salarié lors de l'embauche le ${e.joinedAt}.`, M, y); y += 5
+    doc.text(`Les versements sont effectués mensuellement le 5 du mois suivant la période de paie.`, M, y)
+  }
+
+  // Signature box bottom-right
+  doc.setDrawColor(...N200); doc.setFillColor(...N50)
+  doc.roundedRect(PAGE_W - M - 80, 240, 80, 36, 1, 1, 'FD')
+  doc.setFontSize(7); doc.setTextColor(...N500); doc.setFont('helvetica', 'bold')
+  doc.text('CERTIFIÉ PAR L\'EMPLOYEUR', PAGE_W - M - 76, 246)
+  doc.setFontSize(10); doc.setTextColor(...INK); doc.setFont('helvetica', 'normal')
+  doc.text(org.name, PAGE_W - M - 76, 253)
+  doc.setFont('helvetica', 'italic'); doc.setFontSize(8); doc.setTextColor(...ORANGE)
+  doc.text('« Document certifié conforme »', PAGE_W - M - 76, 270)
+
+  drawFooter(doc)
+  doc.save(`${kind}-${e.firstName.toLowerCase()}-${e.lastName.toLowerCase()}.pdf`)
+}
+
 export function downloadAttendanceSheetPDF(employees: Employee[], punches: Map<string, { status: string; punch: { in?: string; out?: string } }>) {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
   const today = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })

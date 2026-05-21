@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { ChevronLeft, Mail, Phone, MapPin, Calendar, FileText, Download } from 'lucide-react'
 import { EMPLOYEES, fcfa, computePayslip } from '../lib/mock'
 import { store } from '../lib/store'
-import { downloadPayslipPDF, downloadAttestationPDF } from '../lib/downloads'
+import { downloadPayslipPDF, downloadEmployeeDocument } from '../lib/downloads'
 
 export const Route = createFileRoute('/app/employees/$id')({
   loader: ({ params }) => {
@@ -130,8 +130,15 @@ function EmployeeDetail() {
       {tab === 'docs' && (
         <div className="bg-white border border-n-200 rounded-sm p-6">
           <div className="grid sm:grid-cols-2 gap-3">
-            {['Contrat de travail signé', 'CNI / Passeport', 'Diplôme(s)', 'Justificatif de domicile', 'Attestation CNPS', 'RIB Wave Business'].map((d) => (
-              <button key={d} onClick={() => { downloadAttestationPDF(e, d.includes('CNPS') ? 'cnps' : 'travail'); store.toast(`${d} téléchargé`, 'success') }} className="flex items-center gap-3 p-3 bg-n-50 hover:bg-orange-tint border border-n-200 rounded-sm text-left transition-colors">
+            {([
+              ['Contrat de travail signé',   'contrat'],
+              ['CNI / Passeport',            'cni'],
+              ['Diplôme(s)',                 'diplome'],
+              ['Justificatif de domicile',   'justif'],
+              ['Attestation CNPS',           'cnps'],
+              ['RIB Wave Business',          'rib'],
+            ] as const).map(([d, kind]) => (
+              <button key={d} onClick={() => { downloadEmployeeDocument(e, kind); store.toast(`${d} téléchargé`, 'success') }} className="flex items-center gap-3 p-3 bg-n-50 hover:bg-orange-tint border border-n-200 rounded-sm text-left transition-colors">
                 <FileText className="w-4 h-4 text-orange shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{d}</p>
