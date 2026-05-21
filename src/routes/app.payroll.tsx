@@ -1,14 +1,15 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
-import { Calculator, FileText, ChevronDown, Calendar } from 'lucide-react'
+import { Calculator, FileText, ChevronDown, Calendar, Eye } from 'lucide-react'
 import { EMPLOYEES, computePayslip, fcfa } from '../lib/mock'
+import { store } from '../lib/store'
 
-export const Route = createFileRoute('/app/payroll')({
-  component: PayrollPage,
-})
+export const Route = createFileRoute('/app/payroll')({ component: PayrollPage })
 
 function PayrollPage() {
   const [month] = useState('Novembre 2026')
+  const [days, setDays] = useState<Record<string, string>>({})
+  const [bonus, setBonus] = useState<Record<string, string>>({})
   const active = EMPLOYEES.filter(e => e.status === 'active')
   const totals = active.reduce((acc, e) => {
     const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
@@ -20,14 +21,10 @@ function PayrollPage() {
       <div className="flex items-end justify-between gap-4 flex-wrap">
         <div>
           <p className="text-[11px] tracking-[0.28em] uppercase text-n-500 font-semibold mb-2">Cycle de paie</p>
-          <h1 className="font-serif text-3xl lg:text-4xl font-semibold tracking-tight">
-            Saisie <span className="em-serif">mensuelle</span>
-          </h1>
-          <p className="mt-2 text-n-700 inline-flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-orange" /> Période · <strong>{month}</strong>
-          </p>
+          <h1 className="font-serif text-3xl lg:text-4xl font-semibold tracking-tight">Saisie <span className="em-serif">mensuelle</span></h1>
+          <p className="mt-2 text-n-700 inline-flex items-center gap-2"><Calendar className="w-4 h-4 text-orange" /> Période · <strong>{month}</strong></p>
         </div>
-        <button className="inline-flex items-center gap-2 border border-n-300 px-4 h-9 text-sm font-medium hover:bg-n-50 transition-colors rounded-sm">
+        <button onClick={() => store.toast('Sélecteur de période disponible en tier Pro', 'info')} className="inline-flex items-center gap-2 border border-n-300 px-4 h-9 text-sm font-medium hover:bg-n-50 transition-colors rounded-sm">
           Changer de période <ChevronDown className="w-3.5 h-3.5" />
         </button>
       </div>
@@ -48,6 +45,7 @@ function PayrollPage() {
                 <th className="text-right px-3 py-3 text-[10px] tracking-[0.18em] uppercase font-semibold text-n-700">- CNPS</th>
                 <th className="text-right px-3 py-3 text-[10px] tracking-[0.18em] uppercase font-semibold text-n-700">- ITS</th>
                 <th className="text-right px-3 py-3 text-[10px] tracking-[0.18em] uppercase font-semibold text-orange">Net à payer</th>
+                <th className="px-2 py-3"></th>
               </tr>
             </thead>
             <tbody>
@@ -56,22 +54,29 @@ function PayrollPage() {
                 return (
                   <tr key={e.id} className="border-b border-n-100 hover:bg-n-50/50 transition-colors">
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 bg-n-100 text-n-700 font-semibold text-[10px] rounded-full flex items-center justify-center shrink-0">
-                          {e.firstName[0]}{e.lastName[0]}
-                        </div>
+                      <Link to="/app/employees/$id" params={{ id: e.id }} className="flex items-center gap-2 hover:text-orange">
+                        <div className="w-7 h-7 bg-n-100 text-n-700 font-semibold text-[10px] rounded-full flex items-center justify-center shrink-0">{e.firstName[0]}{e.lastName[0]}</div>
                         <div className="min-w-0">
                           <p className="font-medium text-[13px] truncate">{e.firstName} {e.lastName}</p>
                           <p className="text-[10px] text-n-500">{e.role}</p>
                         </div>
-                      </div>
+                      </Link>
                     </td>
-                    <td className="text-center px-3 py-3"><input defaultValue="22" className="w-12 bg-n-50 border border-n-200 px-2 py-1 text-center text-xs font-mono rounded-sm focus:outline-none focus:border-orange" /></td>
+                    <td className="text-center px-3 py-3">
+                      <input value={days[e.id] ?? '22'} onChange={(ev) => setDays({...days, [e.id]: ev.target.value})} className="w-12 bg-n-50 border border-n-200 px-2 py-1 text-center text-xs font-mono rounded-sm focus:outline-none focus:border-orange" />
+                    </td>
                     <td className="text-right px-3 py-3 font-mono text-xs">{fcfa(e.brut)}</td>
-                    <td className="text-right px-3 py-3"><input defaultValue="0" className="w-20 bg-n-50 border border-n-200 px-2 py-1 text-right text-xs font-mono rounded-sm focus:outline-none focus:border-orange" /></td>
+                    <td className="text-right px-3 py-3">
+                      <input value={bonus[e.id] ?? '0'} onChange={(ev) => setBonus({...bonus, [e.id]: ev.target.value})} className="w-20 bg-n-50 border border-n-200 px-2 py-1 text-right text-xs font-mono rounded-sm focus:outline-none focus:border-orange" />
+                    </td>
                     <td className="text-right px-3 py-3 font-mono text-xs text-n-600">- {fcfa(Math.round(p.cnps))}</td>
                     <td className="text-right px-3 py-3 font-mono text-xs text-n-600">- {fcfa(Math.round(p.its))}</td>
                     <td className="text-right px-3 py-3 font-mono text-sm font-semibold text-orange-deep">{fcfa(Math.round(p.net))}</td>
+                    <td className="px-2 py-3">
+                      <Link to="/app/payroll/payslip/$id" params={{ id: e.id }} className="w-7 h-7 hover:bg-orange-tint rounded-sm inline-flex items-center justify-center text-n-500 hover:text-orange" title="Aperçu bulletin">
+                        <Eye className="w-3.5 h-3.5" />
+                      </Link>
+                    </td>
                   </tr>
                 )
               })}
@@ -84,16 +89,16 @@ function PayrollPage() {
         <div className="px-6 lg:px-8 py-4 flex items-center justify-between gap-6 flex-wrap">
           <div className="grid grid-cols-3 lg:grid-cols-4 gap-x-8 gap-y-2 text-xs">
             <div><p className="text-[10px] uppercase tracking-wider text-n-500">Total brut</p><p className="font-mono font-semibold">{fcfa(Math.round(totals.brut))}</p></div>
-            <div><p className="text-[10px] uppercase tracking-wider text-n-500">Total CNPS</p><p className="font-mono font-semibold">{fcfa(Math.round(totals.cnps + totals.its + totals.igr + totals.cn))}</p></div>
+            <div><p className="text-[10px] uppercase tracking-wider text-n-500">Total retenues</p><p className="font-mono font-semibold">{fcfa(Math.round(totals.cnps + totals.its + totals.igr + totals.cn))}</p></div>
             <div><p className="text-[10px] uppercase tracking-wider text-n-500">Charges patronales</p><p className="font-mono font-semibold">{fcfa(Math.round(totals.patron))}</p></div>
             <div><p className="text-[10px] uppercase tracking-wider text-orange-deep font-semibold">Net total à payer</p><p className="font-serif font-semibold text-lg text-orange-deep">{fcfa(Math.round(totals.net))}</p></div>
           </div>
           <div className="flex items-center gap-2 ml-auto">
-            <button className="inline-flex items-center gap-2 border border-n-300 px-4 h-10 text-sm font-medium hover:bg-n-50 transition-colors rounded-sm">
+            <button onClick={() => store.toast('Brouillon enregistré localement', 'info')} className="inline-flex items-center gap-2 border border-n-300 px-4 h-10 text-sm font-medium hover:bg-n-50 transition-colors rounded-sm">
               <FileText className="w-4 h-4" /> Enregistrer brouillon
             </button>
-            <button className="inline-flex items-center gap-2 bg-orange text-white px-5 h-10 text-sm font-semibold uppercase tracking-wider hover:bg-orange-deep transition-colors">
-              <Calculator className="w-4 h-4" /> Calculer et générer bulletins
+            <button onClick={() => store.toast(`${active.length} bulletins générés. Téléchargement en cours…`, 'success')} className="inline-flex items-center gap-2 bg-orange text-white px-5 h-10 text-sm font-semibold uppercase tracking-wider hover:bg-orange-deep transition-colors">
+              <Calculator className="w-4 h-4" /> Calculer et générer
             </button>
           </div>
         </div>

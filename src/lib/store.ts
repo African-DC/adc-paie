@@ -1,0 +1,64 @@
+import { useEffect, useState } from 'react'
+
+type Notif = { id: string; title: string; desc: string; time: string; read: boolean; type: 'info' | 'warning' | 'success' }
+
+const NOTIFS_INITIAL: Notif[] = [
+  { id: 'n1', title: 'Bordereau CNPS prêt', desc: 'La déclaration de novembre 2026 attend votre validation.', time: 'il y a 12 min', read: false, type: 'warning' },
+  { id: 'n2', title: 'Paie d\'octobre validée', desc: 'Tous les bulletins ont été générés et envoyés.', time: 'il y a 2 jours', read: false, type: 'success' },
+  { id: 'n3', title: 'Nouvel ITS publié', desc: 'Le barème ITS 2027 a été appliqué automatiquement.', time: 'il y a 5 jours', read: true, type: 'info' },
+  { id: 'n4', title: 'Aïcha Koné a posé 5 jours de congé', desc: 'Du 23 au 27 décembre 2026. À valider.', time: 'il y a 1 semaine', read: true, type: 'info' },
+]
+
+type State = {
+  spotlightOpen: boolean
+  notifOpen: boolean
+  chatOpen: boolean
+  onboardingDone: boolean
+  toast: { id: string; msg: string; type: 'success' | 'info' | 'warning' } | null
+  notifs: Notif[]
+}
+
+let state: State = {
+  spotlightOpen: false,
+  notifOpen: false,
+  chatOpen: false,
+  onboardingDone: false,
+  toast: null,
+  notifs: NOTIFS_INITIAL,
+}
+
+const listeners = new Set<() => void>()
+
+function setState(patch: Partial<State>) {
+  state = { ...state, ...patch }
+  listeners.forEach((l) => l())
+}
+
+export function useStore<T>(selector: (s: State) => T): T {
+  const [, force] = useState(0)
+  useEffect(() => {
+    const l = () => force((n) => n + 1)
+    listeners.add(l)
+    return () => { listeners.delete(l) }
+  }, [])
+  return selector(state)
+}
+
+export const store = {
+  openSpotlight: () => setState({ spotlightOpen: true }),
+  closeSpotlight: () => setState({ spotlightOpen: false }),
+  toggleSpotlight: () => setState({ spotlightOpen: !state.spotlightOpen }),
+  toggleNotif: () => setState({ notifOpen: !state.notifOpen, chatOpen: false }),
+  closeNotif: () => setState({ notifOpen: false }),
+  toggleChat: () => setState({ chatOpen: !state.chatOpen, notifOpen: false }),
+  closeChat: () => setState({ chatOpen: false }),
+  markAllRead: () => setState({ notifs: state.notifs.map((n) => ({ ...n, read: true })) }),
+  markRead: (id: string) => setState({ notifs: state.notifs.map((n) => n.id === id ? { ...n, read: true } : n) }),
+  toast: (msg: string, type: 'success' | 'info' | 'warning' = 'success') => {
+    const id = String(Date.now())
+    setState({ toast: { id, msg, type } })
+    setTimeout(() => {
+      if (state.toast?.id === id) setState({ toast: null })
+    }, 3500)
+  },
+}

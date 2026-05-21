@@ -1,19 +1,23 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { useState } from 'react'
 import { Building2, Users, Shield, Bell } from 'lucide-react'
 import { TENANT } from '../lib/mock'
+import { store } from '../lib/store'
 
-export const Route = createFileRoute('/app/settings')({
-  component: SettingsPage,
-})
+export const Route = createFileRoute('/app/settings')({ component: SettingsPage })
 
 function SettingsPage() {
+  const [toggles, setToggles] = useState({ mfa: true, login_alert: true, multi_session: false, deadline: true, monthly: true, whatsapp: false })
+  const flip = (k: keyof typeof toggles) => {
+    const next = !toggles[k]
+    setToggles({ ...toggles, [k]: next })
+    store.toast(next ? 'Préférence activée' : 'Préférence désactivée', 'success')
+  }
   return (
     <div className="space-y-6 max-w-4xl">
       <div>
         <p className="text-[11px] tracking-[0.28em] uppercase text-n-500 font-semibold mb-2">Configuration</p>
-        <h1 className="font-serif text-3xl lg:text-4xl font-semibold tracking-tight">
-          Réglages de l'<span className="em-serif">espace</span>
-        </h1>
+        <h1 className="font-serif text-3xl lg:text-4xl font-semibold tracking-tight">Réglages de l'<span className="em-serif">espace</span></h1>
         <p className="mt-2 text-n-700">Identifiants légaux de votre entreprise et préférences de la plateforme.</p>
       </div>
 
@@ -43,19 +47,19 @@ function SettingsPage() {
               </div>
             ))}
           </div>
-          <button className="mt-4 text-sm font-semibold text-orange hover:text-orange-deep">+ Inviter un collaborateur</button>
+          <button onClick={() => store.toast('Modal d\'invitation disponible en tier Pro', 'info')} className="mt-4 text-sm font-semibold text-orange hover:text-orange-deep">+ Inviter un collaborateur</button>
         </Card>
 
         <Card title="Sécurité" icon={Shield}>
-          <Toggle label="Authentification à deux facteurs (MFA)" desc="Recommandé pour l'accès aux données salariés" checked />
-          <Toggle label="Notifications de connexion suspecte" desc="Alerte e-mail en cas de connexion depuis un nouvel appareil" checked />
-          <Toggle label="Sessions multiples" desc="Autoriser la connexion simultanée sur plusieurs appareils" />
+          <Toggle k="mfa" label="Authentification à deux facteurs (MFA)" desc="Recommandé pour l'accès aux données salariés" toggles={toggles} flip={flip} />
+          <Toggle k="login_alert" label="Notifications de connexion suspecte" desc="Alerte e-mail en cas de connexion depuis un nouvel appareil" toggles={toggles} flip={flip} />
+          <Toggle k="multi_session" label="Sessions multiples" desc="Autoriser la connexion simultanée sur plusieurs appareils" toggles={toggles} flip={flip} />
         </Card>
 
         <Card title="Notifications" icon={Bell}>
-          <Toggle label="Rappel échéances CNPS et DGI" desc="Alerte 5 jours avant chaque date limite" checked />
-          <Toggle label="Récap mensuel par e-mail" desc="Synthèse de la paie du mois envoyée le 1er du mois suivant" checked />
-          <Toggle label="Alertes WhatsApp Business" desc="Notifications légales urgentes via WhatsApp" />
+          <Toggle k="deadline" label="Rappel échéances CNPS et DGI" desc="Alerte 5 jours avant chaque date limite" toggles={toggles} flip={flip} />
+          <Toggle k="monthly" label="Récap mensuel par e-mail" desc="Synthèse de la paie du mois envoyée le 1er du mois suivant" toggles={toggles} flip={flip} />
+          <Toggle k="whatsapp" label="Alertes WhatsApp Business" desc="Notifications légales urgentes via WhatsApp" toggles={toggles} flip={flip} />
         </Card>
       </div>
     </div>
@@ -80,15 +84,16 @@ function Field({ label, value, mono }: { label: string; value: string; mono?: bo
       <p className="text-[11px] uppercase tracking-wider text-n-500 font-semibold pt-1">{label}</p>
       <div className="sm:col-span-2 flex items-center justify-between gap-3">
         <p className={`text-sm font-medium ${mono ? 'font-mono' : ''}`}>{value}</p>
-        <button className="text-xs text-orange hover:text-orange-deep font-semibold">Modifier</button>
+        <button onClick={() => store.toast('Édition disponible en tier Business', 'info')} className="text-xs text-orange hover:text-orange-deep font-semibold">Modifier</button>
       </div>
     </div>
   )
 }
 
-function Toggle({ label, desc, checked }: { label: string; desc: string; checked?: boolean }) {
+function Toggle({ k, label, desc, toggles, flip }: any) {
+  const checked = toggles[k]
   return (
-    <div className="flex items-start justify-between gap-4 py-3 border-b border-n-100 last:border-0">
+    <button onClick={() => flip(k)} className="w-full flex items-start justify-between gap-4 py-3 border-b border-n-100 last:border-0 text-left">
       <div className="flex-1">
         <p className="font-medium text-sm">{label}</p>
         <p className="text-xs text-n-500 mt-0.5">{desc}</p>
@@ -96,6 +101,6 @@ function Toggle({ label, desc, checked }: { label: string; desc: string; checked
       <div className={`w-10 h-6 rounded-full p-0.5 transition-colors shrink-0 ${checked ? 'bg-orange' : 'bg-n-300'}`}>
         <div className={`w-5 h-5 bg-white rounded-full transition-transform ${checked ? 'translate-x-4' : ''}`} />
       </div>
-    </div>
+    </button>
   )
 }

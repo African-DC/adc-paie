@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
@@ -16,7 +17,14 @@ import { Route as AppSettingsRouteImport } from './routes/app.settings'
 import { Route as AppPayrollRouteImport } from './routes/app.payroll'
 import { Route as AppEmployeesRouteImport } from './routes/app.employees'
 import { Route as AppDeclarationsRouteImport } from './routes/app.declarations'
+import { Route as AppEmployeesIdRouteImport } from './routes/app.employees.$id'
+import { Route as AppPayrollPayslipIdRouteImport } from './routes/app.payroll.payslip.$id'
 
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppRoute = AppRouteImport.update({
   id: '/app',
   path: '/app',
@@ -52,70 +60,106 @@ const AppDeclarationsRoute = AppDeclarationsRouteImport.update({
   path: '/declarations',
   getParentRoute: () => AppRoute,
 } as any)
+const AppEmployeesIdRoute = AppEmployeesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AppEmployeesRoute,
+} as any)
+const AppPayrollPayslipIdRoute = AppPayrollPayslipIdRouteImport.update({
+  id: '/payslip/$id',
+  path: '/payslip/$id',
+  getParentRoute: () => AppPayrollRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
+  '/login': typeof LoginRoute
   '/app/declarations': typeof AppDeclarationsRoute
-  '/app/employees': typeof AppEmployeesRoute
-  '/app/payroll': typeof AppPayrollRoute
+  '/app/employees': typeof AppEmployeesRouteWithChildren
+  '/app/payroll': typeof AppPayrollRouteWithChildren
   '/app/settings': typeof AppSettingsRoute
   '/app/': typeof AppIndexRoute
+  '/app/employees/$id': typeof AppEmployeesIdRoute
+  '/app/payroll/payslip/$id': typeof AppPayrollPayslipIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/login': typeof LoginRoute
   '/app/declarations': typeof AppDeclarationsRoute
-  '/app/employees': typeof AppEmployeesRoute
-  '/app/payroll': typeof AppPayrollRoute
+  '/app/employees': typeof AppEmployeesRouteWithChildren
+  '/app/payroll': typeof AppPayrollRouteWithChildren
   '/app/settings': typeof AppSettingsRoute
   '/app': typeof AppIndexRoute
+  '/app/employees/$id': typeof AppEmployeesIdRoute
+  '/app/payroll/payslip/$id': typeof AppPayrollPayslipIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
+  '/login': typeof LoginRoute
   '/app/declarations': typeof AppDeclarationsRoute
-  '/app/employees': typeof AppEmployeesRoute
-  '/app/payroll': typeof AppPayrollRoute
+  '/app/employees': typeof AppEmployeesRouteWithChildren
+  '/app/payroll': typeof AppPayrollRouteWithChildren
   '/app/settings': typeof AppSettingsRoute
   '/app/': typeof AppIndexRoute
+  '/app/employees/$id': typeof AppEmployeesIdRoute
+  '/app/payroll/payslip/$id': typeof AppPayrollPayslipIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/app'
+    | '/login'
     | '/app/declarations'
     | '/app/employees'
     | '/app/payroll'
     | '/app/settings'
     | '/app/'
+    | '/app/employees/$id'
+    | '/app/payroll/payslip/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/login'
     | '/app/declarations'
     | '/app/employees'
     | '/app/payroll'
     | '/app/settings'
     | '/app'
+    | '/app/employees/$id'
+    | '/app/payroll/payslip/$id'
   id:
     | '__root__'
     | '/'
     | '/app'
+    | '/login'
     | '/app/declarations'
     | '/app/employees'
     | '/app/payroll'
     | '/app/settings'
     | '/app/'
+    | '/app/employees/$id'
+    | '/app/payroll/payslip/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
+  LoginRoute: typeof LoginRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app': {
       id: '/app'
       path: '/app'
@@ -165,21 +209,59 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDeclarationsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/employees/$id': {
+      id: '/app/employees/$id'
+      path: '/$id'
+      fullPath: '/app/employees/$id'
+      preLoaderRoute: typeof AppEmployeesIdRouteImport
+      parentRoute: typeof AppEmployeesRoute
+    }
+    '/app/payroll/payslip/$id': {
+      id: '/app/payroll/payslip/$id'
+      path: '/payslip/$id'
+      fullPath: '/app/payroll/payslip/$id'
+      preLoaderRoute: typeof AppPayrollPayslipIdRouteImport
+      parentRoute: typeof AppPayrollRoute
+    }
   }
 }
 
+interface AppEmployeesRouteChildren {
+  AppEmployeesIdRoute: typeof AppEmployeesIdRoute
+}
+
+const AppEmployeesRouteChildren: AppEmployeesRouteChildren = {
+  AppEmployeesIdRoute: AppEmployeesIdRoute,
+}
+
+const AppEmployeesRouteWithChildren = AppEmployeesRoute._addFileChildren(
+  AppEmployeesRouteChildren,
+)
+
+interface AppPayrollRouteChildren {
+  AppPayrollPayslipIdRoute: typeof AppPayrollPayslipIdRoute
+}
+
+const AppPayrollRouteChildren: AppPayrollRouteChildren = {
+  AppPayrollPayslipIdRoute: AppPayrollPayslipIdRoute,
+}
+
+const AppPayrollRouteWithChildren = AppPayrollRoute._addFileChildren(
+  AppPayrollRouteChildren,
+)
+
 interface AppRouteChildren {
   AppDeclarationsRoute: typeof AppDeclarationsRoute
-  AppEmployeesRoute: typeof AppEmployeesRoute
-  AppPayrollRoute: typeof AppPayrollRoute
+  AppEmployeesRoute: typeof AppEmployeesRouteWithChildren
+  AppPayrollRoute: typeof AppPayrollRouteWithChildren
   AppSettingsRoute: typeof AppSettingsRoute
   AppIndexRoute: typeof AppIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppDeclarationsRoute: AppDeclarationsRoute,
-  AppEmployeesRoute: AppEmployeesRoute,
-  AppPayrollRoute: AppPayrollRoute,
+  AppEmployeesRoute: AppEmployeesRouteWithChildren,
+  AppPayrollRoute: AppPayrollRouteWithChildren,
   AppSettingsRoute: AppSettingsRoute,
   AppIndexRoute: AppIndexRoute,
 }
@@ -189,6 +271,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
+  LoginRoute: LoginRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

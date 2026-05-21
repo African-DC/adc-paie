@@ -1,19 +1,16 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Download, Upload, ExternalLink } from 'lucide-react'
 import { DECLARATIONS, fcfa } from '../lib/mock'
+import { store } from '../lib/store'
 
-export const Route = createFileRoute('/app/declarations')({
-  component: DeclarationsPage,
-})
+export const Route = createFileRoute('/app/declarations')({ component: DeclarationsPage })
 
 function DeclarationsPage() {
   return (
     <div className="space-y-6">
       <div>
         <p className="text-[11px] tracking-[0.28em] uppercase text-n-500 font-semibold mb-2">Conformité légale</p>
-        <h1 className="font-serif text-3xl lg:text-4xl font-semibold tracking-tight">
-          Déclarations <span className="em-serif">obligatoires</span>
-        </h1>
+        <h1 className="font-serif text-3xl lg:text-4xl font-semibold tracking-tight">Déclarations <span className="em-serif">obligatoires</span></h1>
         <p className="mt-2 text-n-700">Vos exports CNPS et DGI au format attendu par les plateformes officielles.</p>
       </div>
 
@@ -58,16 +55,14 @@ function DeclarationsPage() {
                   <td className="px-4 py-3 text-n-700">{d.period}</td>
                   <td className="px-4 py-3 font-mono text-xs">{d.due}</td>
                   <td className="px-4 py-3 font-mono text-right font-semibold">{fcfa(d.amount)}</td>
-                  <td className="px-4 py-3 text-center">
-                    <StatusBadge status={d.status} />
-                  </td>
+                  <td className="px-4 py-3 text-center"><StatusBadge status={d.status} /></td>
                   <td className="px-4 py-3 text-right">
                     {d.status === 'À soumettre' || d.status === 'En cours' ? (
-                      <button className="inline-flex items-center gap-1.5 bg-orange text-white px-3 h-8 text-[11px] font-semibold uppercase tracking-wider hover:bg-orange-deep transition-colors rounded-sm">
+                      <button onClick={() => store.toast(`${d.type} soumise sur ${d.type.includes('CNPS') ? 'e-CNPS' : 'e-impots'}`, 'success')} className="inline-flex items-center gap-1.5 bg-orange text-white px-3 h-8 text-[11px] font-semibold uppercase tracking-wider hover:bg-orange-deep transition-colors rounded-sm">
                         <Upload className="w-3 h-3" /> Soumettre
                       </button>
                     ) : (
-                      <button className="inline-flex items-center gap-1.5 border border-n-300 text-n-700 px-3 h-8 text-[11px] font-medium hover:bg-n-50 transition-colors rounded-sm">
+                      <button onClick={() => store.toast(`${d.type} téléchargée au format Excel`, 'success')} className="inline-flex items-center gap-1.5 border border-n-300 text-n-700 px-3 h-8 text-[11px] font-medium hover:bg-n-50 transition-colors rounded-sm">
                         <Download className="w-3 h-3" /> Télécharger
                       </button>
                     )}
@@ -81,9 +76,7 @@ function DeclarationsPage() {
 
       <div className="bg-orange-tint border-l-4 border-orange p-6 rounded-sm">
         <p className="font-semibold text-ink">À savoir · pénalités CNPS et DGI</p>
-        <p className="text-sm text-n-700 mt-2">
-          CNPS · 0,05 % par jour de retard sur les cotisations impayées. DGI · 10 % de majoration le premier mois puis 3 % par mois suivant. ADC Paie alerte automatiquement J-5 avant chaque échéance.
-        </p>
+        <p className="text-sm text-n-700 mt-2">CNPS · 0,05 % par jour de retard sur les cotisations impayées. DGI · 10 % de majoration le premier mois puis 3 % par mois suivant. ADC Paie alerte automatiquement J-5 avant chaque échéance.</p>
         <a href="https://e-impots.gouv.ci" target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-2 text-orange-deep font-semibold text-sm hover:underline">
           Accéder à e-impots.gouv.ci <ExternalLink className="w-3.5 h-3.5" />
         </a>
