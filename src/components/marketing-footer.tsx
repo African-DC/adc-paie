@@ -31,10 +31,11 @@ export function MarketingFooter() {
               </ul>
             </div>
             <div>
-              <p className="text-[10px] tracking-[0.22em] uppercase text-n-400 mb-4 font-semibold">Conformité</p>
+              <p className="text-[10px] tracking-[0.22em] uppercase text-n-400 mb-4 font-semibold">Outils gratuits</p>
               <ul className="space-y-3 text-sm">
+                <li><Link to="/calculatrice" className="text-white hover:text-orange transition-colors">Calculatrice paie</Link></li>
+                <li><Link to="/aide" className="text-white hover:text-orange transition-colors">Aide & barèmes</Link></li>
                 <li><span className="text-white/80">CNPS · barèmes 2026</span></li>
-                <li><span className="text-white/80">DGI · État 301 et DAS</span></li>
                 <li><span className="text-white/80">Code du travail · art. 32.5</span></li>
               </ul>
             </div>

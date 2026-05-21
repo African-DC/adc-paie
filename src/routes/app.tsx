@@ -49,7 +49,7 @@ function AppLayout() {
   return (
     <div className="min-h-screen flex bg-n-50">
       {drawer && <div className="fixed inset-0 bg-ink/60 z-40 lg:hidden" onClick={() => setDrawer(false)} />}
-      <aside className={`fixed lg:relative inset-y-0 left-0 w-72 lg:w-64 bg-ink-2 text-white shrink-0 z-50 lg:z-auto transform transition-transform duration-200 lg:transform-none flex flex-col ${drawer ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+      <aside className={`fixed lg:sticky inset-y-0 lg:inset-y-auto lg:top-0 lg:h-screen left-0 w-72 lg:w-64 bg-ink-2 text-white shrink-0 z-50 lg:z-auto transform transition-transform duration-200 lg:transform-none flex flex-col ${drawer ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
         <div className="px-6 py-5 border-b border-white/10 flex items-center justify-between">
           <Link to="/" className="block">
             <span className="font-serif text-xl font-semibold">ADC <span style={{color:'var(--color-orange)',fontStyle:'italic',fontWeight:500}}>Paie</span></span>

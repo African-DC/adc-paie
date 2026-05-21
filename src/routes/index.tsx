@@ -15,7 +15,8 @@ function LandingPage() {
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-n-700">
             <a href="#features" className="hover:text-orange transition-colors">Fonctionnalités</a>
             <a href="#pricing" className="hover:text-orange transition-colors">Tarifs</a>
-            <a href="#trust" className="hover:text-orange transition-colors">Confiance</a>
+            <Link to="/calculatrice" className="hover:text-orange transition-colors">Calculatrice</Link>
+            <Link to="/aide" className="hover:text-orange transition-colors">Aide & barèmes</Link>
           </nav>
           <div className="flex items-center gap-3">
             <Link to="/app" className="inline-flex items-center gap-2 bg-ink text-white px-4 h-9 text-[13px] font-semibold uppercase tracking-wider hover:bg-orange transition-colors">
@@ -112,6 +113,48 @@ function LandingPage() {
                 <p className="text-sm text-n-700 leading-relaxed">{f.desc}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="tools" className="bg-n-50 border-y border-n-200">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12 py-20 lg:py-24">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            <div>
+              <div className="inline-flex items-center gap-3 text-[11px] tracking-[0.28em] uppercase text-n-700 font-semibold mb-6">
+                <span className="w-8 h-px bg-orange" />Outils gratuits
+              </div>
+              <h2 className="font-serif text-4xl lg:text-5xl font-semibold leading-tight tracking-tight">
+                Essayez les <span className="em-serif">barèmes 2026</span><br />sans créer de compte.
+              </h2>
+              <p className="mt-6 text-lg text-n-700 leading-relaxed max-w-xl">
+                Calculez un net depuis un brut, l'inverse pour une embauche, ou consultez les barèmes ITS, CNPS, IGR et CN à jour. Tout en accès libre, sans inscription.
+              </p>
+              <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                <Link to="/calculatrice" className="inline-flex items-center justify-between gap-3 bg-orange text-white px-6 h-12 text-sm font-semibold uppercase tracking-wider hover:bg-orange-deep transition-colors">
+                  Calculatrice brut↔net <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link to="/aide" className="inline-flex items-center justify-between gap-3 border border-ink text-ink px-6 h-12 text-sm font-semibold uppercase tracking-wider hover:bg-ink hover:text-white transition-colors">
+                  Aide & barèmes <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            </div>
+            <div className="bg-ink text-white rounded-sm p-7 lg:p-8 shadow-2xl relative">
+              <div className="absolute -top-3 left-7 bg-orange text-white text-[10px] uppercase tracking-[0.22em] font-semibold px-3 py-1">Aperçu calcul</div>
+              <p className="text-[11px] uppercase tracking-wider text-n-400 mt-2">Pour un brut de</p>
+              <p className="font-serif text-3xl font-semibold">350 000 XOF</p>
+              <p className="text-[11px] uppercase tracking-wider text-n-400 mt-4">Net mensuel à payer</p>
+              <p className="font-serif text-5xl font-semibold text-orange leading-none">271 921 XOF</p>
+              <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-1.5 text-sm border-t border-white/15 pt-4">
+                <p className="text-n-400">CNPS 6,3 %</p><p className="font-mono text-right">- 22 050</p>
+                <p className="text-n-400">ITS progressif</p><p className="font-mono text-right">- 45 529</p>
+                <p className="text-n-400">IGR 1,5 %</p><p className="font-mono text-right">- 5 250</p>
+                <p className="text-n-400">CN 1,5 %</p><p className="font-mono text-right">- 5 250</p>
+              </div>
+              <Link to="/calculatrice" className="mt-5 inline-flex items-center gap-1.5 text-orange text-sm font-semibold hover:underline">
+                Personnaliser ce calcul <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
           </div>
         </div>
       </section>
