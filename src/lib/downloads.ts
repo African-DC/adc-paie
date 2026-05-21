@@ -18,7 +18,9 @@ const PAGE_W = 210
 const CONTENT_W = PAGE_W - M * 2
 
 function fmtXOF(n: number): string {
-  return Math.round(n).toLocaleString('fr-FR').replace(/,/g, ' ') + ' XOF'
+  // ASCII space pur (U+0020) pour éviter le narrow-no-break-space (U+202F) que jsPDF helvetica rend en '/'
+  const num = Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+  return num + ' FCFA'
 }
 
 function getOrg(): Org {
@@ -29,41 +31,64 @@ function drawHeader(doc: jsPDF, opts: { title: string; subtitle?: string; ref?: 
   const org = getOrg()
   const { title, subtitle, ref } = opts
 
-  // Bandeau organisation (entreprise cliente) en haut à gauche
+  // Bandeau ink full width
   doc.setFillColor(...INK)
-  doc.rect(0, 0, PAGE_W, 6, 'F')
+  doc.rect(0, 0, PAGE_W, 22, 'F')
 
-  // Titre principal
-  doc.setTextColor(...INK)
+  // Mini bloc orange en haut-gauche en accent
+  doc.setFillColor(...ORANGE)
+  doc.rect(0, 0, 6, 22, 'F')
+
+  // Nom organisation (gros, blanc) à gauche
+  doc.setTextColor(255, 255, 255)
   doc.setFont('helvetica', 'bold')
-  doc.setFontSize(18)
-  doc.text(title, M, 20)
+  doc.setFontSize(13)
+  doc.text(org.name, M, 11)
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(7.5)
+  doc.setTextColor(190, 190, 190)
+  doc.text(`${org.city}  ·  IFU ${org.ifu}  ·  CNPS ${org.cnps}`, M, 16)
+
+  // Badge édité par à droite
+  doc.setFontSize(7)
+  doc.setTextColor(190, 190, 190)
+  doc.text('Édité par', PAGE_W - M, 9, { align: 'right' })
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(11)
+  doc.setTextColor(255, 255, 255)
+  doc.text('ADC', PAGE_W - M - 13, 16, { align: 'left' })
+  doc.setTextColor(...ORANGE)
+  doc.setFont('helvetica', 'italic')
+  doc.text('Paie', PAGE_W - M - 5, 16, { align: 'left' })
+
+  // Section titre éditoriale : grand titre + filet orange épais sous le titre + label uppercase
+  doc.setTextColor(...N500)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(7)
+  const labelTitle = title.toUpperCase()
+  // tracking large simulé via espacement
+  doc.text(labelTitle.split('').join(' '), M, 32)
+
+  // Filet orange épais
+  doc.setFillColor(...ORANGE)
+  doc.rect(M, 35, 20, 1.2, 'F')
 
   if (subtitle) {
     doc.setFont('helvetica', 'normal')
-    doc.setFontSize(9)
-    doc.setTextColor(...N500)
-    doc.text(subtitle, M, 26)
+    doc.setFontSize(13)
+    doc.setTextColor(...INK)
+    doc.text(subtitle, M, 44)
   }
 
   if (ref) {
-    doc.setFontSize(8)
+    doc.setFontSize(7)
     doc.setTextColor(...N500)
-    doc.text(ref, PAGE_W - M, 20, { align: 'right' })
+    doc.text('RÉFÉRENCE', PAGE_W - M, 32, { align: 'right' })
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(10)
+    doc.setTextColor(...INK)
+    doc.text(ref, PAGE_W - M, 38, { align: 'right' })
   }
-
-  // Bloc nom organisation à droite
-  doc.setFontSize(8)
-  doc.setTextColor(...N500)
-  doc.text('ÉMETTEUR', PAGE_W - M, 26, { align: 'right' })
-  doc.setFont('helvetica', 'bold')
-  doc.setFontSize(10)
-  doc.setTextColor(...INK)
-  doc.text(org.name, PAGE_W - M, 31, { align: 'right' })
-
-  doc.setDrawColor(...N200)
-  doc.setLineWidth(0.3)
-  doc.line(M, 36, PAGE_W - M, 36)
 }
 
 function drawFooter(doc: jsPDF) {
@@ -92,35 +117,37 @@ function drawFooter(doc: jsPDF) {
 }
 
 function drawInfoBoxes(doc: jsPDF, y: number, left: { title: string; lines: string[] }, right: { title: string; lines: string[] }) {
-  const colW = (CONTENT_W - 6) / 2
-  const boxH = 32
-  doc.setDrawColor(...N200)
-  doc.setFillColor(...N50)
-  doc.roundedRect(M, y, colW, boxH, 1, 1, 'FD')
-  doc.roundedRect(M + colW + 6, y, colW, boxH, 1, 1, 'FD')
+  const colW = (CONTENT_W - 16) / 2
+  const boxH = 30
 
-  doc.setFontSize(7)
-  doc.setTextColor(...N500)
+  // Pas de cadre, juste un trait vertical orange entre les 2 colonnes (style éditorial)
+  doc.setDrawColor(...ORANGE)
+  doc.setLineWidth(0.4)
+  doc.line(M + colW + 8, y + 2, M + colW + 8, y + boxH - 2)
+
   doc.setFont('helvetica', 'bold')
-  doc.text(left.title.toUpperCase(), M + 4, y + 6)
-  doc.text(right.title.toUpperCase(), M + colW + 10, y + 6)
+  doc.setFontSize(7)
+  doc.setTextColor(...ORANGE)
+  doc.text(left.title.toUpperCase().split('').join(' '), M, y + 5)
+  doc.text(right.title.toUpperCase().split('').join(' '), M + colW + 16, y + 5)
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(12)
+  doc.setTextColor(...INK)
+  doc.text((left.lines[0] || '').slice(0, 38), M, y + 13)
+  doc.text((right.lines[0] || '').slice(0, 38), M + colW + 16, y + 13)
 
   doc.setFont('helvetica', 'normal')
-  doc.setFontSize(9)
-  doc.setTextColor(...INK)
-  left.lines.forEach((l, i) => {
-    if (i === 0) { doc.setFont('helvetica', 'bold'); doc.setFontSize(10) }
-    else { doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...N700) }
-    doc.text(l.length > 50 ? l.slice(0, 50) : l, M + 4, y + 12 + i * 5)
+  doc.setFontSize(8)
+  doc.setTextColor(...N700)
+  left.lines.slice(1).forEach((l, i) => {
+    doc.text(l.slice(0, 42), M, y + 19 + i * 4.5)
   })
-  doc.setTextColor(...INK)
-  right.lines.forEach((l, i) => {
-    if (i === 0) { doc.setFont('helvetica', 'bold'); doc.setFontSize(10) }
-    else { doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...N700) }
-    doc.text(l.length > 50 ? l.slice(0, 50) : l, M + colW + 10, y + 12 + i * 5)
+  right.lines.slice(1).forEach((l, i) => {
+    doc.text(l.slice(0, 42), M + colW + 16, y + 19 + i * 4.5)
   })
 
-  return y + boxH + 6
+  return y + boxH + 4
 }
 
 export function downloadPayslipPDF(e: Employee, period = 'Novembre 2026') {
@@ -131,9 +158,9 @@ export function downloadPayslipPDF(e: Employee, period = 'Novembre 2026') {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
   drawHeader(doc, { title: 'Bulletin de paie', subtitle: `Période · ${period} · paiement le 5 du mois suivant`, ref: `N° BUL-${period.replace(/ /g, '-')}-${e.id.padStart(4, '0')}` })
 
-  let y = drawInfoBoxes(doc, 42,
-    { title: 'Employeur', lines: [org.name, org.city, `IFU · ${org.ifu}`, `CNPS · ${org.cnps}`] },
-    { title: 'Salarié', lines: [`${e.firstName} ${e.lastName}`, `${e.role} · ${e.contract}`, `Mat. CNPS · ${e.matricule}`, `${e.family.situation} · ${e.family.kids} enfant(s) · ${parts} part(s)`] }
+  let y = drawInfoBoxes(doc, 50,
+    { title: 'Employeur', lines: [org.name, org.city, `IFU ${org.ifu}`, `CNPS ${org.cnps}`] },
+    { title: 'Salarié', lines: [`${e.firstName} ${e.lastName}`, `${e.role} · ${e.contract}`, `Mat. CNPS ${e.matricule}`, `${e.family.situation} · ${e.family.kids} enfant(s) · ${parts} part(s)`] }
   )
 
   autoTable(doc, {
@@ -148,19 +175,20 @@ export function downloadPayslipPDF(e: Employee, period = 'Novembre 2026') {
       ['CN · Contribution Nationale', fmtXOF(e.brut), '1,5 %', '', fmtXOF(p.cn)],
     ],
     foot: [[
-      { content: 'NET À PAYER', colSpan: 4, styles: { halign: 'left', fontStyle: 'bold', fillColor: [255, 247, 237] as any, textColor: INK as any, fontSize: 11 } },
-      { content: fmtXOF(p.net), styles: { halign: 'right', fontStyle: 'bold', fillColor: [255, 247, 237] as any, textColor: ORANGE as any, fontSize: 12 } },
+      { content: 'NET À PAYER', colSpan: 4, styles: { halign: 'left', fontStyle: 'bold', fillColor: INK as any, textColor: [255, 255, 255] as any, fontSize: 13, cellPadding: { top: 5, bottom: 5, left: 4, right: 4 } } },
+      { content: fmtXOF(p.net), styles: { halign: 'right', fontStyle: 'bold', fillColor: ORANGE as any, textColor: [255, 255, 255] as any, fontSize: 14, cellPadding: { top: 5, bottom: 5, left: 4, right: 4 } } },
     ]],
-    headStyles: { fillColor: INK as any, textColor: [255, 255, 255] as any, fontSize: 8, fontStyle: 'bold', halign: 'left' },
-    bodyStyles: { fontSize: 9, textColor: N700 as any, cellPadding: { top: 2.5, bottom: 2.5, left: 3, right: 3 } },
+    headStyles: { fillColor: INK as any, textColor: [255, 255, 255] as any, fontSize: 8, fontStyle: 'bold', halign: 'left', cellPadding: { top: 3, bottom: 3, left: 4, right: 4 } },
+    bodyStyles: { fontSize: 9.5, textColor: N700 as any, cellPadding: { top: 3.5, bottom: 3.5, left: 4, right: 4 } },
+    alternateRowStyles: { fillColor: [252, 252, 252] as any },
     columnStyles: { 1: { halign: 'right' }, 2: { halign: 'right' }, 3: { halign: 'right' }, 4: { halign: 'right', textColor: ORANGE as any, fontStyle: 'bold' } },
     theme: 'plain',
     margin: { left: M, right: M },
     didDrawCell: (data) => {
-      if (data.section === 'body' || data.section === 'head') {
+      if (data.section === 'body') {
         const doc = data.doc
         doc.setDrawColor(...N200)
-        doc.setLineWidth(0.2)
+        doc.setLineWidth(0.15)
         doc.line(M, data.cell.y + data.cell.height, PAGE_W - M, data.cell.y + data.cell.height)
       }
     },
