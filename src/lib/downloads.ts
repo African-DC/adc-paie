@@ -584,13 +584,12 @@ export function downloadEmployeeDocument(e: Employee, kind: 'contrat' | 'cni' | 
 
   const org = getOrg()
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
-  const titles: Record<typeof kind, { title: string; sub: string }> = {
+  const titles: Record<'contrat' | 'cni' | 'diplome' | 'justif' | 'rib', { title: string; sub: string }> = {
     contrat: { title: 'Contrat de travail signé',       sub: `Copie certifiée · ${e.firstName} ${e.lastName}` },
     cni:     { title: 'Pièce d\'identité · CNI / Passeport', sub: `Copie scannée · ${e.firstName} ${e.lastName}` },
     diplome: { title: 'Diplôme(s) certifié(s)',          sub: `Justificatifs académiques · ${e.firstName} ${e.lastName}` },
     justif:  { title: 'Justificatif de domicile',        sub: `Adresse certifiée · ${e.firstName} ${e.lastName}` },
     rib:     { title: 'RIB Wave Business',               sub: `Coordonnées de versement · ${e.firstName} ${e.lastName}` },
-    cnps:    { title: '', sub: '' },
   }
   const { title, sub } = titles[kind]
   drawHeader(doc, { title, subtitle: sub })

@@ -4,6 +4,7 @@ import { Calculator, FileText, ChevronDown, Calendar, Eye, Send, Archive, Search
 import { EMPLOYEES, computePayslip, fcfa } from '../lib/mock'
 import { store } from '../lib/store'
 import { PaySalariesModal, ExportAuditModal } from '../components/payroll-modals'
+import { downloadPayslipsZip } from '../lib/downloads'
 
 export const Route = createFileRoute('/app/payroll/')({ component: PayrollPage })
 
@@ -141,8 +142,8 @@ function PayrollPage() {
             <button onClick={() => store.toast('Brouillon enregistré localement', 'info')} className="inline-flex items-center gap-2 border border-n-300 px-3 h-10 text-xs font-medium hover:bg-n-50 transition-colors rounded-sm uppercase tracking-wider">
               <FileText className="w-3.5 h-3.5" /> Brouillon
             </button>
-            <button onClick={() => store.toast(`${active.length} bulletins générés. Téléchargement en cours…`, 'success')} className="inline-flex items-center gap-2 border-2 border-orange text-orange-deep px-4 h-10 text-xs font-semibold uppercase tracking-wider hover:bg-orange-tint transition-colors rounded-sm">
-              <Calculator className="w-3.5 h-3.5" /> Calculer
+            <button onClick={async () => { store.toast(`${active.length} bulletins calculés · archive ZIP en préparation…`, 'info'); await downloadPayslipsZip(active, [month]); store.toast(`${active.length} bulletins ${month} téléchargés (ZIP)`, 'success') }} className="inline-flex items-center gap-2 border-2 border-orange text-orange-deep px-4 h-10 text-xs font-semibold uppercase tracking-wider hover:bg-orange-tint transition-colors rounded-sm">
+              <Calculator className="w-3.5 h-3.5" /> Calculer & ZIP
             </button>
             <button onClick={() => setPayOpen(true)} className="inline-flex items-center gap-2 bg-orange text-white px-5 h-10 text-xs font-semibold uppercase tracking-wider hover:bg-orange-deep transition-colors rounded-sm">
               <Send className="w-3.5 h-3.5" /> Payer les salaires
