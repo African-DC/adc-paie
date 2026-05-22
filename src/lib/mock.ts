@@ -55,60 +55,29 @@ export const TENANT = {
 
 export const CURRENT_USER = { name: 'Marcel Djedje-li', role: 'Administrateur', initials: 'MD' }
 
-export function fcfa(n: number): string {
-  return n.toLocaleString('fr-FR').replace(/,/g, ' ') + ' FCFA'
-}
+// Calculs paie : importés depuis le package @adc/payroll-engine (engine durci v0.1.0)
+// Voir packages/payroll-engine/ pour les barèmes 2026 et tests unitaires.
+import {
+  fcfa as engineFcfa,
+  fcfaShort as engineFcfaShort,
+  computePayslipLegacy,
+  computeAncienneteMonths as engineComputeAncienneteMonths,
+  computeAnciennetePct as engineComputeAnciennetePct,
+} from '@adc/payroll-engine'
 
-export function fcfaShort(n: number): string {
-  if (n >= 1000000) return (n / 1000000).toFixed(1).replace('.0', '') + 'M'
-  if (n >= 1000) return Math.round(n / 1000) + 'K'
-  return String(n)
-}
+export const fcfa = engineFcfa
+export const fcfaShort = engineFcfaShort
 
-// Calcule la prime d'ancienneté mensuelle (CCI 1977 Art. 31)
-// 2 % après 24 mois, +1 % par année supplémentaire, plafond 25 % du salaire de base
+const REFERENCE_DATE = new Date('2026-11-30')
+
 export function computeAncienneteMonths(joinedAt: string): number {
-  const start = new Date(joinedAt)
-  const now = new Date('2026-11-30') // période de référence démo
-  const months = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth())
-  return Math.max(0, months)
+  return engineComputeAncienneteMonths(joinedAt, REFERENCE_DATE)
 }
 
-export function computeAnciennetePct(months: number): number {
-  if (months < 24) return 0
-  const years = Math.floor(months / 12)
-  const pct = 2 + (years - 2) // 2 % à 2 ans, +1/an
-  return Math.min(pct, 25) / 100
-}
+export const computeAnciennetePct = engineComputeAnciennetePct
 
-// Calculs paie ivoirien simplifiés
-// Sources : DGI CI, CNPS CI, CLEISS, Code Général des Impôts 2026, Ordonnance 2023-719, CCI 1977
 export function computePayslip(brut: number, kids = 0, married = false, joinedAt = '2025-01-01') {
-  // Prime d'ancienneté mensuelle (CCI 1977)
-  const anciennetePct = computeAnciennetePct(computeAncienneteMonths(joinedAt))
-  const ancienneteAmount = Math.round(brut * anciennetePct)
-  const brutTotal = brut + ancienneteAmount
-  // CNPS salariale 6,3 % du brut total (plafond 3 375 000 FCFA = 45 × SMIG)
-  const brutPlaf = Math.min(brutTotal, 3_375_000)
-  const cnps = brutPlaf * 0.063
-  // CMU forfait : 500 FCFA salarié + 500 FCFA employeur
-  const cmuSal = 500
-  // ITS barème 2026 par tranche annuelle / part (Ordonnance 2023-719)
-  const baseAnnuelle = brutTotal * 12 - cnps * 12 - brutTotal * 12 * 0.15
-  const parts = 1 + (married ? 0.5 : 0) + kids * 0.5
-  const baseParPart = baseAnnuelle / parts
-  let itsParPart = 0
-  if (baseParPart > 600000) itsParPart += Math.min(baseParPart - 600000, 600000) * 0.1
-  if (baseParPart > 1200000) itsParPart += Math.min(baseParPart - 1200000, 800000) * 0.2
-  if (baseParPart > 2000000) itsParPart += (baseParPart - 2000000) * 0.25
-  const its = (itsParPart * parts) / 12
-  const igr = brutTotal * 0.015 // Impôt Général sur le Revenu (forfait CI)
-  const cn = brutTotal * 0.015  // Contribution Nationale (Loi 2003-308)
-  // Allocations familiales CNPS : 7 500 FCFA/enfant, max 6, versées par CNPS au salarié (pas par employeur)
-  const allocFam = Math.min(kids, 6) * 7500
-  const net = brutTotal - cnps - cmuSal - its - igr - cn
-  const patron = brutTotal * 0.169 + 500 // CNPS patronale 16,9 % + CMU patronale 500 FCFA
-  return { brut, brutTotal, anciennetePct, ancienneteAmount, cnps, cmuSal, its, igr, cn, allocFam, net, patron, total: brutTotal + patron }
+  return computePayslipLegacy(brut, kids, married, joinedAt, { year: 2026, month: 11 })
 }
 
 export const TOTALS = (() => {
