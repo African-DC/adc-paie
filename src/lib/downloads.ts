@@ -1,10 +1,13 @@
+// Imports compat ESM/CJS (gotcha Vite SSR Q1 2026)
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import * as XLSX from 'xlsx'
 import JSZip from 'jszip'
-import { saveAs } from 'file-saver'
+import fileSaver from 'file-saver'
 import { computePayslip, type Employee } from './mock'
 import { store, type Org } from './store'
+
+const { saveAs } = fileSaver
 
 const ORANGE: [number, number, number] = [249, 115, 22]
 const INK: [number, number, number] = [10, 10, 10]

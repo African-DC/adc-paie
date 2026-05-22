@@ -1,25 +1,53 @@
-import { Outlet, createRootRoute, HeadContent, Link } from '@tanstack/react-router'
+import { Outlet, createRootRoute, HeadContent, Link, Scripts } from '@tanstack/react-router'
 import { Home, ArrowLeft, Search } from 'lucide-react'
-import '../styles.css'
+import { ConvexBetterAuthProvider } from '@convex-dev/better-auth/react'
+import { convex } from '../lib/convex-client'
+import { authClient } from '../lib/auth-client'
+import appCss from '../styles.css?url'
 
 export const Route = createRootRoute({
   head: () => ({
     meta: [
       { charSet: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'ADC Paie & RH · SaaS conforme CNPS et DGI pour PME ivoiriennes' },
-      { name: 'description', content: 'Plateforme SaaS de gestion de paie conforme CNPS, DGI et Code du travail ivoirien. Édité par African Digit Consulting.' },
+      { title: 'ADC Paie & RH · African Digit Consulting' },
+      { name: 'description', content: 'ADC Paie & RH · SaaS conforme CNPS et DGI pour les PME ivoiriennes. African Digit Consulting.' },
       { name: 'theme-color', content: '#f97316' },
+      { property: 'og:title', content: 'ADC Paie & RH · Le SaaS paie conforme des PME ivoiriennes' },
+      { property: 'og:description', content: 'Calcul automatique CNPS, ITS, IGR. Bulletins PDF. Déclarations DGI. Conçu par African Digit Consulting.' },
+      { property: 'og:type', content: 'website' },
+      { property: 'og:image', content: '/logo-adc.png' },
     ],
     links: [
+      { rel: 'icon', type: 'image/png', href: '/logo-adc-icon.png' },
+      { rel: 'stylesheet', href: appCss },
       { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
       { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossOrigin: 'anonymous' },
-      { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,500;1,9..144,600&family=Poppins:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap' },
+      {
+        rel: 'stylesheet',
+        href: 'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,500;1,9..144,600&family=Poppins:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap',
+      },
     ],
   }),
-  component: () => <><HeadContent /><Outlet /></>,
+  shellComponent: RootDocument,
   notFoundComponent: NotFoundPage,
 })
+
+function RootDocument({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="fr">
+      <head>
+        <HeadContent />
+      </head>
+      <body>
+        <ConvexBetterAuthProvider client={convex} authClient={authClient}>
+          {children}
+        </ConvexBetterAuthProvider>
+        <Scripts />
+      </body>
+    </html>
+  )
+}
 
 function NotFoundPage() {
   const isApp = typeof window !== 'undefined' && window.location.pathname.startsWith('/app')
