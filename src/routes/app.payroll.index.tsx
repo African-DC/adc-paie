@@ -1,11 +1,13 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
-import { Calculator, FileText, ChevronDown, Calendar, Eye, Send, Archive, Search, X, RotateCcw, Sparkles, Gift } from 'lucide-react'
+import { Calculator, FileText, ChevronDown, Calendar, Eye, Send, Archive, Search, X, RotateCcw, Sparkles, Gift, Plus } from 'lucide-react'
 import { EMPLOYEES, computePayslip, fcfa } from '../lib/mock'
 import { store } from '../lib/store'
 import { PaySalariesModal, ExportAuditModal } from '../components/payroll-modals'
 import { GratificationModal } from '../components/gratification-modal'
+import { PayrollComplementsModal, computeComplementsAmount, type Complements } from '../components/payroll-complements-modal'
 import { downloadPayslipsZip } from '../lib/downloads'
+import type { Employee } from '../lib/mock'
 
 export const Route = createFileRoute('/app/payroll/')({ component: PayrollPage })
 
@@ -17,6 +19,8 @@ function PayrollPage() {
   const [payOpen, setPayOpen] = useState(false)
   const [exportOpen, setExportOpen] = useState(false)
   const [gratifOpen, setGratifOpen] = useState(false)
+  const [complOpen, setComplOpen] = useState<Employee | null>(null)
+  const [comps, setComps] = useState<Record<string, Complements>>({})
   const [query, setQuery] = useState('')
   const active = EMPLOYEES.filter(e => e.status === 'active')
   const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '')
@@ -78,7 +82,7 @@ function PayrollPage() {
                 <th className="text-left px-4 py-3 text-[10px] tracking-[0.18em] uppercase font-semibold text-n-700">Salarié</th>
                 <th className="text-center px-3 py-3 text-[10px] tracking-[0.18em] uppercase font-semibold text-n-700">Jours</th>
                 <th className="text-right px-3 py-3 text-[10px] tracking-[0.18em] uppercase font-semibold text-n-700">Brut</th>
-                <th className="text-right px-3 py-3 text-[10px] tracking-[0.18em] uppercase font-semibold text-n-700">+ Primes</th>
+                <th className="text-right px-3 py-3 text-[10px] tracking-[0.18em] uppercase font-semibold text-n-700">+ Compléments</th>
                 <th className="text-right px-3 py-3 text-[10px] tracking-[0.18em] uppercase font-semibold text-n-700">- CNPS</th>
                 <th className="text-right px-3 py-3 text-[10px] tracking-[0.18em] uppercase font-semibold text-n-700">- ITS</th>
                 <th className="text-right px-3 py-3 text-[10px] tracking-[0.18em] uppercase font-semibold text-orange">Net à payer</th>
@@ -111,7 +115,14 @@ function PayrollPage() {
                     </td>
                     <td className="text-right px-3 py-3 font-mono text-xs">{fcfa(e.brut)}</td>
                     <td className="text-right px-3 py-3">
-                      <input value={bonus[e.id] ?? '0'} onChange={(ev) => setBonus({...bonus, [e.id]: ev.target.value})} className="w-20 bg-n-50 border border-n-200 px-2 py-1 text-right text-xs font-mono rounded-sm focus:outline-none focus:border-orange" />
+                      {(() => {
+                        const add = comps[e.id] ? computeComplementsAmount(e, comps[e.id]) : 0
+                        return (
+                          <button onClick={() => setComplOpen(e)} className={`inline-flex items-center gap-1 px-2 h-7 text-[11px] font-mono rounded-sm transition-colors ${add > 0 ? 'bg-orange-tint text-orange-deep font-semibold border border-orange/30 hover:bg-orange/20' : 'bg-n-50 text-n-500 border border-n-200 hover:bg-n-100'}`} title="Heures sup, indemnités, primes">
+                            {add > 0 ? `+ ${fcfa(add)}` : <><Plus className="w-3 h-3" /> Ajouter</>}
+                          </button>
+                        )
+                      })()}
                     </td>
                     <td className="text-right px-3 py-3 font-mono text-xs text-n-600">- {fcfa(Math.round(p.cnps))}</td>
                     <td className="text-right px-3 py-3 font-mono text-xs text-n-600">- {fcfa(Math.round(p.its))}</td>
@@ -159,6 +170,15 @@ function PayrollPage() {
       <PaySalariesModal open={payOpen} onClose={() => setPayOpen(false)} total={Math.round(totals.net)} count={active.length} />
       <ExportAuditModal open={exportOpen} onClose={() => setExportOpen(false)} />
       <GratificationModal open={gratifOpen} onClose={() => setGratifOpen(false)} />
+      {complOpen && (
+        <PayrollComplementsModal
+          open={true}
+          employee={complOpen}
+          current={comps[complOpen.id]}
+          onClose={() => setComplOpen(null)}
+          onSave={(c) => setComps({ ...comps, [complOpen.id]: c })}
+        />
+      )}
       <PeriodPickerModal open={periodOpen} current={month} onClose={() => setPeriodOpen(false)} onPick={(m) => { setMonth(m); store.toast(`Période active : ${m}`, 'success'); setPeriodOpen(false) }} />
     </div>
   )

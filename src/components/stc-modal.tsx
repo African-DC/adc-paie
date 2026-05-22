@@ -87,7 +87,7 @@ export function STCModal({ open, employee, onClose }: { open: boolean; employee:
                 {stc.preavis > 0 && <STCRow label={`Indemnité de préavis (${stc.preavisMois} mois)`} value={fcfa(Math.round(stc.preavis))} />}
                 {stc.indemniteLicenciement > 0 && <STCRow label="Indemnité de licenciement (Art. 39 CC)" value={fcfa(Math.round(stc.indemniteLicenciement))} />}
                 {stc.indemniteRetraite > 0 && <STCRow label="Indemnité de départ à la retraite" value={fcfa(Math.round(stc.indemniteRetraite))} />}
-                {stc.indemnitePrecarite > 0 && <STCRow label="Indemnité de précarité fin CDD (Art. 14.6)" value={fcfa(Math.round(stc.indemnitePrecarite))} />}
+                {stc.indemnitePrecarite > 0 && <STCRow label="Indemnité de précarité fin CDD (Art. 15.8 · 3 %)" value={fcfa(Math.round(stc.indemnitePrecarite))} />}
                 {stc.indemniteConges > 0 && <STCRow label={`Congés payés non pris (${stc.joursCongesNonPris} j)`} value={fcfa(Math.round(stc.indemniteConges))} />}
                 {stc.proRataGratification > 0 && <STCRow label={`Prorata 13e mois (${stc.moisDepuisDerniereGrat}/12)`} value={fcfa(Math.round(stc.proRataGratification))} />}
               </tbody>

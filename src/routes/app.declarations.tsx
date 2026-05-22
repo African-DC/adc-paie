@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Download, Upload, ExternalLink, FileText } from 'lucide-react'
+import { Download, Upload, ExternalLink, FileText, Calendar } from 'lucide-react'
 import { DECLARATIONS, EMPLOYEES, fcfa } from '../lib/mock'
 import { store } from '../lib/store'
-import { downloadDeclarationExcel, downloadBordereauCNPSPDF } from '../lib/downloads'
+import { downloadDeclarationExcel, downloadBordereauCNPSPDF, downloadDISAExcel, downloadEtat301Excel } from '../lib/downloads'
 
 export const Route = createFileRoute('/app/declarations')({ component: DeclarationsPage })
 
@@ -59,12 +59,20 @@ function DeclarationsPage() {
                   <td className="px-4 py-3 text-center"><StatusBadge status={d.status} /></td>
                   <td className="px-4 py-3 text-right">
                     <div className="inline-flex items-center gap-1.5">
-                      {d.type.includes('CNPS') && (
+                      {d.type === 'Bordereau CNPS' && (
                         <button onClick={() => { downloadBordereauCNPSPDF(EMPLOYEES, d.period); store.toast('Bordereau CNPS PDF généré · prêt à signer et déposer', 'success') }} className="inline-flex items-center gap-1.5 border border-n-300 text-n-700 px-2.5 h-8 text-[11px] font-medium hover:bg-n-50 transition-colors rounded-sm" title="Bordereau PDF signable">
                           <FileText className="w-3 h-3" /> PDF
                         </button>
                       )}
-                      {d.status === 'À soumettre' || d.status === 'En cours' ? (
+                      {d.type === 'DISA + DASC annuels' ? (
+                        <button onClick={() => { downloadDISAExcel(EMPLOYEES, 2025); store.toast('DISA + DASC 2025 téléchargés · à déposer sur e-CNPS avant le 31 mars', 'success') }} className={`inline-flex items-center gap-1.5 px-3 h-8 text-[11px] font-semibold uppercase tracking-wider rounded-sm transition-colors ${d.status === 'Validé' ? 'border border-n-300 text-n-700 hover:bg-n-50' : 'bg-orange text-white hover:bg-orange-deep'}`}>
+                          <Download className="w-3 h-3" /> DISA + DASC
+                        </button>
+                      ) : d.type === 'État 301 annuel' ? (
+                        <button onClick={() => { downloadEtat301Excel(EMPLOYEES, 2025); store.toast('État 301 annuel 2025 téléchargé · à déposer sur e-impots avant le 30 mai', 'success') }} className={`inline-flex items-center gap-1.5 px-3 h-8 text-[11px] font-semibold uppercase tracking-wider rounded-sm transition-colors ${d.status === 'Validé' ? 'border border-n-300 text-n-700 hover:bg-n-50' : 'bg-orange text-white hover:bg-orange-deep'}`}>
+                          <Download className="w-3 h-3" /> État 301
+                        </button>
+                      ) : d.status === 'À soumettre' || d.status === 'En cours' ? (
                         <button onClick={() => { downloadDeclarationExcel(d.type.includes('CNPS') ? 'cnps' : 'dgi', d.period, EMPLOYEES); store.toast(`${d.type} générée · prête à soumettre sur ${d.type.includes('CNPS') ? 'e-CNPS' : 'e-impots'}`, 'success') }} className="inline-flex items-center gap-1.5 bg-orange text-white px-3 h-8 text-[11px] font-semibold uppercase tracking-wider hover:bg-orange-deep transition-colors rounded-sm">
                           <Upload className="w-3 h-3" /> Excel & soumettre
                         </button>
@@ -82,12 +90,23 @@ function DeclarationsPage() {
         </div>
       </div>
 
-      <div className="bg-orange-tint border-l-4 border-orange p-6 rounded-sm">
-        <p className="font-semibold text-ink">À savoir · pénalités CNPS et DGI</p>
-        <p className="text-sm text-n-700 mt-2">CNPS · 0,05 % par jour de retard sur les cotisations impayées. DGI · 10 % de majoration le premier mois puis 3 % par mois suivant. ADC Paie alerte automatiquement J-5 avant chaque échéance.</p>
-        <a href="https://e-impots.gouv.ci" target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-2 text-orange-deep font-semibold text-sm hover:underline">
-          Accéder à e-impots.gouv.ci <ExternalLink className="w-3.5 h-3.5" />
-        </a>
+      <div className="grid lg:grid-cols-2 gap-4">
+        <div className="bg-orange-tint border-l-4 border-orange p-6 rounded-sm">
+          <p className="font-semibold text-ink">À savoir · pénalités CNPS et DGI</p>
+          <p className="text-sm text-n-700 mt-2">CNPS · 0,05 % par jour de retard sur les cotisations impayées. DGI · 10 % de majoration le premier mois puis 3 % par mois suivant. ADC Paie alerte automatiquement J-5 avant chaque échéance.</p>
+          <a href="https://e-impots.gouv.ci" target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-2 text-orange-deep font-semibold text-sm hover:underline">
+            Accéder à e-impots.gouv.ci <ExternalLink className="w-3.5 h-3.5" />
+          </a>
+        </div>
+        <div className="bg-white border border-n-200 p-6 rounded-sm">
+          <p className="font-semibold text-ink inline-flex items-center gap-2"><Calendar className="w-4 h-4 text-orange" /> Calendrier des déclarations annuelles</p>
+          <ul className="mt-3 space-y-2 text-sm">
+            <li className="flex items-start gap-2"><strong className="text-orange-deep w-20 shrink-0">31 mars</strong><span className="text-n-700">DISA + DASC à la CNPS (récap salaires et cotisations N-1)</span></li>
+            <li className="flex items-start gap-2"><strong className="text-orange-deep w-20 shrink-0">30 mai</strong><span className="text-n-700">État 301 à la DGI (récap des salaires N-1)</span></li>
+            <li className="flex items-start gap-2"><strong className="text-orange-deep w-20 shrink-0">30 juin</strong><span className="text-n-700">État 301 prorogé pour les entreprises avec commissaire aux comptes</span></li>
+            <li className="flex items-start gap-2"><strong className="text-orange-deep w-20 shrink-0">15 j+1</strong><span className="text-n-700">Bordereau CNPS et ITS mensuels (chaque mois)</span></li>
+          </ul>
+        </div>
       </div>
     </div>
   )

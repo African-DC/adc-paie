@@ -25,6 +25,7 @@ import { Route as AppMeRouteImport } from './routes/app.me'
 import { Route as AppLeaveRouteImport } from './routes/app.leave'
 import { Route as AppDeclarationsRouteImport } from './routes/app.declarations'
 import { Route as AppAttendanceRouteImport } from './routes/app.attendance'
+import { Route as AppAnnouncementsRouteImport } from './routes/app.announcements'
 import { Route as AppAdvancesRouteImport } from './routes/app.advances'
 import { Route as AppPayrollIndexRouteImport } from './routes/app.payroll.index'
 import { Route as AppEmployeesIndexRouteImport } from './routes/app.employees.index'
@@ -111,6 +112,11 @@ const AppAttendanceRoute = AppAttendanceRouteImport.update({
   path: '/attendance',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAnnouncementsRoute = AppAnnouncementsRouteImport.update({
+  id: '/announcements',
+  path: '/announcements',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAdvancesRoute = AppAdvancesRouteImport.update({
   id: '/advances',
   path: '/advances',
@@ -148,6 +154,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/mentions-legales': typeof MentionsLegalesRoute
   '/app/advances': typeof AppAdvancesRoute
+  '/app/announcements': typeof AppAnnouncementsRoute
   '/app/attendance': typeof AppAttendanceRoute
   '/app/declarations': typeof AppDeclarationsRoute
   '/app/leave': typeof AppLeaveRoute
@@ -170,6 +177,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/mentions-legales': typeof MentionsLegalesRoute
   '/app/advances': typeof AppAdvancesRoute
+  '/app/announcements': typeof AppAnnouncementsRoute
   '/app/attendance': typeof AppAttendanceRoute
   '/app/declarations': typeof AppDeclarationsRoute
   '/app/leave': typeof AppLeaveRoute
@@ -194,6 +202,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/mentions-legales': typeof MentionsLegalesRoute
   '/app/advances': typeof AppAdvancesRoute
+  '/app/announcements': typeof AppAnnouncementsRoute
   '/app/attendance': typeof AppAttendanceRoute
   '/app/declarations': typeof AppDeclarationsRoute
   '/app/leave': typeof AppLeaveRoute
@@ -219,6 +228,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/mentions-legales'
     | '/app/advances'
+    | '/app/announcements'
     | '/app/attendance'
     | '/app/declarations'
     | '/app/leave'
@@ -241,6 +251,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/mentions-legales'
     | '/app/advances'
+    | '/app/announcements'
     | '/app/attendance'
     | '/app/declarations'
     | '/app/leave'
@@ -264,6 +275,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/mentions-legales'
     | '/app/advances'
+    | '/app/announcements'
     | '/app/attendance'
     | '/app/declarations'
     | '/app/leave'
@@ -403,6 +415,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAttendanceRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/announcements': {
+      id: '/app/announcements'
+      path: '/announcements'
+      fullPath: '/app/announcements'
+      preLoaderRoute: typeof AppAnnouncementsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/advances': {
       id: '/app/advances'
       path: '/advances'
@@ -443,6 +462,7 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppAdvancesRoute: typeof AppAdvancesRoute
+  AppAnnouncementsRoute: typeof AppAnnouncementsRoute
   AppAttendanceRoute: typeof AppAttendanceRoute
   AppDeclarationsRoute: typeof AppDeclarationsRoute
   AppLeaveRoute: typeof AppLeaveRoute
@@ -458,6 +478,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppAdvancesRoute: AppAdvancesRoute,
+  AppAnnouncementsRoute: AppAnnouncementsRoute,
   AppAttendanceRoute: AppAttendanceRoute,
   AppDeclarationsRoute: AppDeclarationsRoute,
   AppLeaveRoute: AppLeaveRoute,

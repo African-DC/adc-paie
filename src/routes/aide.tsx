@@ -13,11 +13,11 @@ const FAQ = [
   },
   {
     q: 'Quels sont les taux CNPS salarié et patronal ?',
-    a: `Cotisations salariales (à retenir sur le bulletin) :\n· Retraite : 6,3 % du brut plafonné à 70 000 FCFA/mois (45 fois le SMIG)\n\nCotisations patronales (à la charge de l'employeur) :\n· Retraite : 7,7 %\n· Prestations familiales : 5,75 %\n· Accidents du travail : 2 à 5 % selon le secteur (3,5 % par défaut)\n\nTotal patronal moyen : 16 à 18 % du brut.`,
+    a: `Cotisations salariales (à retenir sur le bulletin) :\n· Total 6,3 % du brut · plafond mensuel 3 375 000 FCFA (45 × SMIG)\n· Décomposé : Retraite 3,2 %, CMU 1,5 %, Famille 0,75 %, Accident travail 0,75 %\n\nCotisations patronales (à la charge de l'employeur) :\n· Retraite : 7,7 %\n· Prestations familiales : 5,75 %\n· Accidents du travail : 2 à 5 % selon le secteur (3,5 % par défaut)\n· CMU : 1 000 FCFA/mois par salarié\n\nTotal patronal moyen : 16 à 18 % du brut.`,
   },
   {
-    q: 'Quand soumettre l\'État 301 et le Bordereau CNPS ?',
-    a: `L'État 301 (déclaration salariale DGI) et le Bordereau CNPS sont mensuels, à déposer au plus tard le 15 du mois suivant la période de paie.\n\nExemple : la paie de novembre 2026 doit être déclarée avant le 15 décembre 2026.\n\nADC Paie alerte automatiquement 5 jours avant chaque échéance.`,
+    q: 'Quand soumettre les déclarations CNPS et DGI ?',
+    a: `Mensuel :\n· ITS (DGI) et Bordereau CNPS · au plus tard le 15 du mois suivant\n\nAnnuel :\n· DISA + DASC (CNPS) · au plus tard le 31 mars\n· État 301 (DGI · récap annuel des salaires) · au plus tard le 30 mai (ou 30 juin pour entreprises certifiées)\n\nExemple : la paie de novembre 2026 doit être déclarée avant le 15 décembre 2026.\n\nADC Paie alerte automatiquement 5 jours avant chaque échéance.`,
   },
   {
     q: 'Quelle est la sanction en cas de retard de cotisation CNPS ou DGI ?',
@@ -25,7 +25,7 @@ const FAQ = [
   },
   {
     q: 'Comment calculer l\'IGR et la CN ?',
-    a: `IGR (Impôt Général sur le Revenu) : 1,5 % du brut, retenu à la source.\n\nCN (Contribution Nationale) : 1,5 % du brut, prélevée à la source (Loi 2003-308).\n\nLes deux sont reversées mensuellement avec l'État 301 à la DGI.`,
+    a: `IGR (Impôt Général sur le Revenu) : 1,5 % du brut, retenu à la source.\n\nCN (Contribution Nationale) : 1,5 % du brut, prélevée à la source (Loi 2003-308).\n\nLes deux sont reversées mensuellement avec la déclaration ITS à la DGI.`,
   },
   {
     q: 'Combien de jours de congés payés par mois ?',
@@ -42,18 +42,18 @@ const FAQ = [
 ]
 
 const ECHEANCES_2026 = [
-  { mois: 'Janvier',    dgi: '15/01', cnps: '15/01', note: 'DAS annuelle N-1 à déposer avant fin janvier' },
+  { mois: 'Janvier',    dgi: '15/01', cnps: '15/01', note: 'Préparer la DISA + DASC annuelles CNPS' },
   { mois: 'Février',    dgi: '15/02', cnps: '15/02', note: '' },
-  { mois: 'Mars',       dgi: '15/03', cnps: '15/03', note: 'Trimestre 1 : récap optionnel' },
-  { mois: 'Avril',      dgi: '15/04', cnps: '15/04', note: '' },
-  { mois: 'Mai',        dgi: '15/05', cnps: '15/05', note: '' },
-  { mois: 'Juin',       dgi: '15/06', cnps: '15/06', note: 'Trimestre 2 : récap optionnel' },
+  { mois: 'Mars',       dgi: '15/03', cnps: '31/03', note: 'DISA + DASC CNPS annuelles · échéance 31/03' },
+  { mois: 'Avril',      dgi: '15/04', cnps: '15/04', note: 'Préparer État 301 annuel DGI' },
+  { mois: 'Mai',        dgi: '30/05', cnps: '15/05', note: 'État 301 annuel DGI · échéance 30/05' },
+  { mois: 'Juin',       dgi: '30/06', cnps: '15/06', note: 'État 301 annuel · entreprises certifiées · 30/06' },
   { mois: 'Juillet',    dgi: '15/07', cnps: '15/07', note: '' },
   { mois: 'Août',       dgi: '15/08', cnps: '15/08', note: '' },
-  { mois: 'Septembre',  dgi: '15/09', cnps: '15/09', note: 'Trimestre 3 : récap optionnel' },
+  { mois: 'Septembre',  dgi: '15/09', cnps: '15/09', note: '' },
   { mois: 'Octobre',    dgi: '15/10', cnps: '15/10', note: '' },
   { mois: 'Novembre',   dgi: '15/11', cnps: '15/11', note: '' },
-  { mois: 'Décembre',   dgi: '15/12', cnps: '15/12', note: 'Préparer la DAS annuelle' },
+  { mois: 'Décembre',   dgi: '15/12', cnps: '15/12', note: 'Verser la gratification (13e mois)' },
 ]
 
 const GLOSSAIRE = [
@@ -61,11 +61,13 @@ const GLOSSAIRE = [
   ['ITS', 'Impôt sur les Traitements et Salaires · barème progressif par parts fiscales'],
   ['IGR', 'Impôt Général sur le Revenu · taxe complémentaire 1,5 % du brut'],
   ['CN', 'Contribution Nationale · prélèvement de 1,5 % du brut au profit de l\'État (Loi 2003-308)'],
+  ['CMU', 'Couverture Maladie Universelle · 1 000 FCFA/mois/salarié (1 000 patronal + 1 000 salarié)'],
   ['IFU', 'Identifiant Fiscal Unique · numéro attribué par la DGI à chaque entreprise'],
   ['DPAE', 'Déclaration Préalable À l\'Embauche · à transmettre à la CNPS avant la prise de poste'],
   ['Bordereau CNPS', 'Document mensuel détaillant les cotisations sociales du mois'],
-  ['État 301', 'Déclaration mensuelle DGI des salaires versés et impôts retenus'],
-  ['DAS', 'Déclaration Annuelle des Salaires · récap fiscal et social en janvier N+1'],
+  ['État 301', 'Déclaration annuelle DGI · récap salaires N-1 · échéance 30 mai (ou 30 juin certifiés)'],
+  ['DISA', 'Déclaration Individuelle des Salaires Annuels · CNPS · échéance 31 mars'],
+  ['DASC', 'Déclaration Annuelle des Salaires et Cotisations · CNPS · accompagne la DISA'],
   ['SMIG', 'Salaire Minimum Interprofessionnel Garanti · 75 000 FCFA/mois en Côte d\'Ivoire (2026)'],
 ]
 

@@ -29,14 +29,18 @@ export const EMPLOYEES: Employee[] = [
   { id: '15', firstName: 'Nadège', lastName: 'Yapo', matricule: 'CI-04812053', role: 'Chargée communication', contract: 'CDI', brut: 320000, status: 'leave', family: { situation: 'marié(e)', kids: 2 }, joinedAt: '2024-01-08' },
 ]
 
-export type Declaration = { id: string; type: 'État 301' | 'Bordereau CNPS' | 'DAS annuelle'; period: string; due: string; status: 'À soumettre' | 'En cours' | 'Soumis' | 'Validé'; amount: number }
+export type Declaration = { id: string; type: 'ITS mensuel' | 'Bordereau CNPS' | 'DISA + DASC annuels' | 'État 301 annuel'; period: string; due: string; status: 'À soumettre' | 'En cours' | 'Soumis' | 'Validé'; amount: number }
 
 export const DECLARATIONS: Declaration[] = [
-  { id: 'd1', type: 'État 301', period: 'Novembre 2026', due: '2026-12-15', status: 'À soumettre', amount: 1248500 },
+  // Annuelles 2026 (exercice 2025)
+  { id: 'a1', type: 'DISA + DASC annuels', period: 'Exercice 2025', due: '2026-03-31', status: 'Validé', amount: 21240000 },
+  { id: 'a2', type: 'État 301 annuel', period: 'Exercice 2025', due: '2026-05-30', status: 'Validé', amount: 14982000 },
+  // Mensuelles 2026
+  { id: 'd1', type: 'ITS mensuel', period: 'Novembre 2026', due: '2026-12-15', status: 'À soumettre', amount: 1248500 },
   { id: 'd2', type: 'Bordereau CNPS', period: 'Novembre 2026', due: '2026-12-15', status: 'En cours', amount: 1857200 },
-  { id: 'd3', type: 'État 301', period: 'Octobre 2026', due: '2026-11-15', status: 'Soumis', amount: 1192800 },
+  { id: 'd3', type: 'ITS mensuel', period: 'Octobre 2026', due: '2026-11-15', status: 'Soumis', amount: 1192800 },
   { id: 'd4', type: 'Bordereau CNPS', period: 'Octobre 2026', due: '2026-11-15', status: 'Validé', amount: 1812400 },
-  { id: 'd5', type: 'État 301', period: 'Septembre 2026', due: '2026-10-15', status: 'Validé', amount: 1178900 },
+  { id: 'd5', type: 'ITS mensuel', period: 'Septembre 2026', due: '2026-10-15', status: 'Validé', amount: 1178900 },
   { id: 'd6', type: 'Bordereau CNPS', period: 'Septembre 2026', due: '2026-10-15', status: 'Validé', amount: 1798300 },
 ]
 

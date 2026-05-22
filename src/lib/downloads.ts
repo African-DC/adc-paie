@@ -435,6 +435,88 @@ export function downloadImportTemplateExcel() {
   XLSX.writeFile(wb, 'modele-import-salaries-adc-paie.xlsx')
 }
 
+// Déclarations ANNUELLES
+export function downloadDISAExcel(employees: Employee[], year = 2025) {
+  // DISA = Déclaration Individuelle des Salaires Annuels (CNPS, échéance 31 mars)
+  // 1 ligne par salarié × 12 mois récap, brut annuel et cotisations totales
+  const rows = employees.filter((e) => e.status === 'active').map((e) => {
+    const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
+    return {
+      'Matricule CNPS': e.matricule,
+      'Prénom': e.firstName,
+      'Nom': e.lastName,
+      'Date embauche': e.joinedAt,
+      'Fonction': e.role,
+      'Mois cotisés': 12,
+      'Brut annuel FCFA': e.brut * 12,
+      'CNPS sal. 6.3 % annuel': Math.round(p.cnps * 12),
+      'CNPS pat. 16.9 % annuel': Math.round(e.brut * 12 * 0.169),
+      'Total cotisations CNPS annuel': Math.round((p.cnps + e.brut * 0.169) * 12),
+    }
+  })
+  const wb = XLSX.utils.book_new()
+  const ws = XLSX.utils.json_to_sheet(rows)
+  ws['!cols'] = [{ wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 12 }, { wch: 26 }, { wch: 12 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 22 }]
+  XLSX.utils.book_append_sheet(wb, ws, `DISA ${year}`)
+  // 2e feuille DASC récap
+  const total = rows.reduce((s, r) => s + (r['Total cotisations CNPS annuel'] as number), 0)
+  const totalBrut = rows.reduce((s, r) => s + (r['Brut annuel FCFA'] as number), 0)
+  const dasc = [
+    { Rubrique: 'Effectif déclaré',                       Valeur: rows.length },
+    { Rubrique: `Masse salariale brute ${year}`,          Valeur: totalBrut },
+    { Rubrique: `Cotisations salariales 6.3 %`,           Valeur: Math.round(totalBrut * 0.063) },
+    { Rubrique: `Cotisations patronales 16.9 %`,          Valeur: Math.round(totalBrut * 0.169) },
+    { Rubrique: `TOTAL DASC à verser`,                    Valeur: total },
+    { Rubrique: 'Échéance dépôt',                          Valeur: `31 mars ${year + 1}` },
+  ]
+  const ws2 = XLSX.utils.json_to_sheet(dasc)
+  ws2['!cols'] = [{ wch: 38 }, { wch: 22 }]
+  XLSX.utils.book_append_sheet(wb, ws2, 'DASC récap')
+  XLSX.writeFile(wb, `disa-dasc-${year}.xlsx`)
+}
+
+export function downloadEtat301Excel(employees: Employee[], year = 2025) {
+  // État 301 = récap annuel des salaires versés (DGI, échéance 30 mai)
+  const rows = employees.filter((e) => e.status === 'active').map((e) => {
+    const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
+    return {
+      'Matricule CNPS': e.matricule,
+      'Prénom': e.firstName,
+      'Nom': e.lastName,
+      'IFU salarié (optionnel)': '',
+      'Brut annuel FCFA': e.brut * 12,
+      'CNPS retenue (déductible)': Math.round(p.cnps * 12),
+      'Base imposable ITS': Math.round((e.brut - p.cnps) * 12 * 0.85),
+      'Quotient familial (parts)': 1 + (e.family.situation === 'marié(e)' ? 0.5 : 0) + e.family.kids * 0.5,
+      'ITS annuel': Math.round(p.its * 12),
+      'IGR annuel (1.5 %)': Math.round(p.igr * 12),
+      'CN annuelle (1.5 %)': Math.round(p.cn * 12),
+      'Net annuel versé': Math.round(p.net * 12),
+    }
+  })
+  const wb = XLSX.utils.book_new()
+  const ws = XLSX.utils.json_to_sheet(rows)
+  ws['!cols'] = [{ wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 18 }, { wch: 18 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 16 }, { wch: 18 }, { wch: 18 }, { wch: 18 }]
+  XLSX.utils.book_append_sheet(wb, ws, `État 301 ${year}`)
+  // Récap
+  const totalITS = rows.reduce((s, r) => s + (r['ITS annuel'] as number), 0)
+  const totalIGR = rows.reduce((s, r) => s + (r['IGR annuel (1.5 %)'] as number), 0)
+  const totalCN = rows.reduce((s, r) => s + (r['CN annuelle (1.5 %)'] as number), 0)
+  const recap = [
+    { Rubrique: 'Effectif déclaré',                       Valeur: rows.length },
+    { Rubrique: `Masse salariale brute ${year}`,          Valeur: rows.reduce((s, r) => s + (r['Brut annuel FCFA'] as number), 0) },
+    { Rubrique: `Total ITS retenu`,                       Valeur: totalITS },
+    { Rubrique: `Total IGR retenu`,                       Valeur: totalIGR },
+    { Rubrique: `Total CN retenue`,                       Valeur: totalCN },
+    { Rubrique: `TOTAL DGI à reverser`,                   Valeur: totalITS + totalIGR + totalCN },
+    { Rubrique: 'Échéance dépôt',                          Valeur: `30 mai ${year + 1} (30 juin certifiés)` },
+  ]
+  const ws2 = XLSX.utils.json_to_sheet(recap)
+  ws2['!cols'] = [{ wch: 38 }, { wch: 22 }]
+  XLSX.utils.book_append_sheet(wb, ws2, 'Récap')
+  XLSX.writeFile(wb, `etat-301-${year}.xlsx`)
+}
+
 export function downloadDeclarationExcel(type: 'cnps' | 'dgi', period = 'Novembre 2026', employees: Employee[]) {
   const wb = XLSX.utils.book_new(); setExcelMeta(wb)
   const active = employees.filter((e) => e.status === 'active')
@@ -710,15 +792,17 @@ export function computeSTC(e: Employee, motif: STCMotif, joursCongesNonPris: num
     else if (totalYears <= 10) indemniteLicenciement = brutMensuel * 0.30 * 5 + brutMensuel * 0.35 * (totalYears - 5)
     else indemniteLicenciement = brutMensuel * 0.30 * 5 + brutMensuel * 0.35 * 5 + brutMensuel * 0.40 * (totalYears - 10)
   }
-  // Indemnité de départ à la retraite (barème allégé : 20% jusqu'à 10 ans, 25% au-delà)
+  // Indemnité de départ à la retraite (Code du travail CI : même barème que licenciement)
   let indemniteRetraite = 0
   if (motif === 'retraite') {
-    indemniteRetraite = brutMensuel * 0.20 * Math.min(totalYears, 10) + brutMensuel * 0.25 * Math.max(0, totalYears - 10)
+    if (totalYears <= 5) indemniteRetraite = brutMensuel * 0.30 * totalYears
+    else if (totalYears <= 10) indemniteRetraite = brutMensuel * 0.30 * 5 + brutMensuel * 0.35 * (totalYears - 5)
+    else indemniteRetraite = brutMensuel * 0.30 * 5 + brutMensuel * 0.35 * 5 + brutMensuel * 0.40 * (totalYears - 10)
   }
-  // Indemnité de précarité fin CDD (~7% du total brut perçu)
+  // Indemnité de précarité fin CDD (Art. 15.8 Code travail CI : 3% du brut total perçu)
   let indemnitePrecarite = 0
   if (motif === 'fin-cdd') {
-    indemnitePrecarite = brutMensuel * 12 * totalYears * 0.07
+    indemnitePrecarite = brutMensuel * 12 * totalYears * 0.03
   }
   const indemniteConges = brutJour * joursCongesNonPris
   const moisDepuisDerniereGrat = 11
@@ -780,7 +864,7 @@ export function downloadSTCPDF(e: Employee, motif: STCMotif, joursCongesNonPris:
   if (stc.preavis > 0) rows.push([`Indemnité compensatrice de préavis`, `${stc.preavisMois} mois × ${fmtXOF(stc.brutMensuel)}`, fmtXOF(stc.preavis)])
   if (stc.indemniteLicenciement > 0) rows.push([`Indemnité de licenciement (Art. 39 CC interpro)`, `${anciennete.years} an(s) ${anciennete.months} mois`, fmtXOF(stc.indemniteLicenciement)])
   if (stc.indemniteRetraite > 0) rows.push([`Indemnité de départ à la retraite`, `${anciennete.years} an(s) ${anciennete.months} mois`, fmtXOF(stc.indemniteRetraite)])
-  if (stc.indemnitePrecarite > 0) rows.push([`Indemnité de précarité (fin CDD · Art. 14.6)`, `7 % du brut perçu`, fmtXOF(stc.indemnitePrecarite)])
+  if (stc.indemnitePrecarite > 0) rows.push([`Indemnité de précarité (fin CDD · Art. 15.8)`, `3 % du brut perçu`, fmtXOF(stc.indemnitePrecarite)])
   if (stc.indemniteConges > 0) rows.push([`Indemnité compensatrice de congés payés`, `${joursCongesNonPris} j non pris`, fmtXOF(stc.indemniteConges)])
   if (stc.proRataGratification > 0) rows.push([`Prorata de gratification (13e mois)`, `${stc.moisDepuisDerniereGrat}/12`, fmtXOF(stc.proRataGratification)])
 
