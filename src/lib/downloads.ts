@@ -697,28 +697,37 @@ export type STCMotif = 'licenciement' | 'demission' | 'retraite' | 'fin-cdd' | '
 export function computeSTC(e: Employee, motif: STCMotif, joursCongesNonPris: number, anciennete: { years: number; months: number }) {
   const brutMensuel = e.brut
   const brutJour = brutMensuel / 30
-  // Préavis (CC interpro CI Art. 34 — durée selon catégorie, simplifié)
+  // Préavis (CC interpro CI Art. 34) : indemnité compensatrice due par l'employeur
+  // en licenciement non motivé par faute lourde. En démission, le préavis est dû par le salarié.
   const preavisMois = e.brut >= 400000 ? 3 : e.brut >= 200000 ? 2 : 1
-  const preavis = motif === 'demission' || motif === 'licenciement' ? brutMensuel * preavisMois : 0
-  // Indemnité de licenciement (Art. 39 CC interpro : 30% du brut mensuel × années pour 1-5 ans, 35% pour 6-10, 40% au-delà)
+  const preavis = motif === 'licenciement' ? brutMensuel * preavisMois : 0
+  // Indemnité de licenciement (Art. 39 CC interpro : 30/35/40% du brut × années par tranche)
+  // Versée en licenciement et rupture conventionnelle.
   const totalYears = anciennete.years + anciennete.months / 12
   let indemniteLicenciement = 0
-  if (motif === 'licenciement') {
+  if (motif === 'licenciement' || motif === 'rupture-conventionnelle') {
     if (totalYears <= 5) indemniteLicenciement = brutMensuel * 0.30 * totalYears
     else if (totalYears <= 10) indemniteLicenciement = brutMensuel * 0.30 * 5 + brutMensuel * 0.35 * (totalYears - 5)
     else indemniteLicenciement = brutMensuel * 0.30 * 5 + brutMensuel * 0.35 * 5 + brutMensuel * 0.40 * (totalYears - 10)
   }
-  // Congés payés non pris
+  // Indemnité de départ à la retraite (barème allégé : 20% jusqu'à 10 ans, 25% au-delà)
+  let indemniteRetraite = 0
+  if (motif === 'retraite') {
+    indemniteRetraite = brutMensuel * 0.20 * Math.min(totalYears, 10) + brutMensuel * 0.25 * Math.max(0, totalYears - 10)
+  }
+  // Indemnité de précarité fin CDD (~7% du total brut perçu)
+  let indemnitePrecarite = 0
+  if (motif === 'fin-cdd') {
+    indemnitePrecarite = brutMensuel * 12 * totalYears * 0.07
+  }
   const indemniteConges = brutJour * joursCongesNonPris
-  // Prorata gratification (1/12 du brut × mois écoulés depuis dernier versement, présumés 11)
   const moisDepuisDerniereGrat = 11
   const proRataGratification = (brutMensuel * moisDepuisDerniereGrat) / 12
-  // Salaire du mois en cours (présumé complet)
   const salaireMois = brutMensuel
-  const total = salaireMois + preavis + indemniteLicenciement + indemniteConges + proRataGratification
+  const total = salaireMois + preavis + indemniteLicenciement + indemniteRetraite + indemnitePrecarite + indemniteConges + proRataGratification
   return {
-    salaireMois, preavis, preavisMois, indemniteLicenciement, indemniteConges, joursCongesNonPris,
-    proRataGratification, moisDepuisDerniereGrat, total, motif, anciennete, brutMensuel
+    salaireMois, preavis, preavisMois, indemniteLicenciement, indemniteRetraite, indemnitePrecarite,
+    indemniteConges, joursCongesNonPris, proRataGratification, moisDepuisDerniereGrat, total, motif, anciennete, brutMensuel
   }
 }
 
@@ -770,6 +779,8 @@ export function downloadSTCPDF(e: Employee, motif: STCMotif, joursCongesNonPris:
   ]
   if (stc.preavis > 0) rows.push([`Indemnité compensatrice de préavis`, `${stc.preavisMois} mois × ${fmtXOF(stc.brutMensuel)}`, fmtXOF(stc.preavis)])
   if (stc.indemniteLicenciement > 0) rows.push([`Indemnité de licenciement (Art. 39 CC interpro)`, `${anciennete.years} an(s) ${anciennete.months} mois`, fmtXOF(stc.indemniteLicenciement)])
+  if (stc.indemniteRetraite > 0) rows.push([`Indemnité de départ à la retraite`, `${anciennete.years} an(s) ${anciennete.months} mois`, fmtXOF(stc.indemniteRetraite)])
+  if (stc.indemnitePrecarite > 0) rows.push([`Indemnité de précarité (fin CDD · Art. 14.6)`, `7 % du brut perçu`, fmtXOF(stc.indemnitePrecarite)])
   if (stc.indemniteConges > 0) rows.push([`Indemnité compensatrice de congés payés`, `${joursCongesNonPris} j non pris`, fmtXOF(stc.indemniteConges)])
   if (stc.proRataGratification > 0) rows.push([`Prorata de gratification (13e mois)`, `${stc.moisDepuisDerniereGrat}/12`, fmtXOF(stc.proRataGratification)])
 
