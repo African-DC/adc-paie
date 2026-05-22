@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react'
 
 type Notif = { id: string; title: string; desc: string; time: string; read: boolean; type: 'info' | 'warning' | 'success' }
 
-export type Org = { name: string; ifu: string; cnps: string; sector: string; taux_at: string; city: string }
-const DEFAULT_ORG: Org = { name: 'Sahel Industries SARL', ifu: 'CI-2104-A-098456', cnps: '048120', sector: 'Agro-industrie', taux_at: '3.5', city: 'Abidjan, Plateau' }
+export type Org = { name: string; ifu: string; cnps: string; sector: string; taux_at: string; city: string; convention: string }
+const DEFAULT_ORG: Org = { name: 'Sahel Industries SARL', ifu: 'CI-2104-A-098456', cnps: '048120', sector: 'Agro-industrie', taux_at: '3.5', city: 'Abidjan, Plateau', convention: 'Interprofessionnelle 1977' }
+export const CONVENTIONS = ['Interprofessionnelle 1977', 'Banques et établissements financiers (2025)', 'BTP', 'Mines et carrières', 'Commerce', 'Industries', 'Transport', 'Hôtellerie et restauration', 'Enseignement privé', 'Autre / sectorielle propre']
 const ORG_KEY = 'adc-paie-org-v1'
 function loadOrg(): Org { try { if (typeof localStorage === 'undefined') return DEFAULT_ORG; const s = localStorage.getItem(ORG_KEY); return s ? { ...DEFAULT_ORG, ...JSON.parse(s) } : DEFAULT_ORG } catch { return DEFAULT_ORG } }
 function saveOrg(o: Org) { try { if (typeof localStorage !== 'undefined') localStorage.setItem(ORG_KEY, JSON.stringify(o)) } catch {} }

@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import { Building2, Users, Shield, Bell, History, X, Edit3, Check, CheckCircle2, AlertCircle, LogIn, FileSignature, Send, Wallet, Trash2 } from 'lucide-react'
 import { EMPLOYEES } from '../lib/mock'
-import { store, useStore } from '../lib/store'
+import { store, useStore, CONVENTIONS } from '../lib/store'
 import { downloadAuditLogCSV, downloadEmployeesExcel } from '../lib/downloads'
 
 export const Route = createFileRoute('/app/settings')({ component: SettingsPage })
@@ -17,7 +17,7 @@ function SettingsPage() {
   const org = useStore((s) => s.org)
   const [editing, setEditing] = useState<string | null>(null)
   const setField = (k: string, v: string) => store.setOrg({ [k]: v } as any)
-  const saveField = (k: string) => { setEditing(null); store.toast(`${({ name: 'Raison sociale', ifu: 'IFU', cnps: 'CNPS', sector: 'Secteur', taux_at: 'Taux AT', city: 'Ville' } as any)[k]} mis à jour · répercuté dans toute l'app`, 'success') }
+  const saveField = (k: string) => { setEditing(null); store.toast(`${({ name: 'Raison sociale', ifu: 'IFU', cnps: 'CNPS', sector: 'Secteur', taux_at: 'Taux AT', city: 'Ville', convention: 'Convention collective' } as any)[k]} mis à jour · répercuté dans toute l'app`, 'success') }
   const tenant = org
   return (
     <div className="space-y-6 max-w-4xl">
@@ -35,6 +35,15 @@ function SettingsPage() {
           <EditableField label="Secteur d'activité"        k="sector"  value={tenant.sector}  editing={editing} setEditing={setEditing} onChange={setField} onSave={saveField} />
           <EditableField label="Taux Accidents du travail" k="taux_at" value={tenant.taux_at} editing={editing} setEditing={setEditing} onChange={setField} onSave={saveField} suffix=" %" />
           <EditableField label="Ville"                     k="city"    value={tenant.city}    editing={editing} setEditing={setEditing} onChange={setField} onSave={saveField} />
+          <div className="flex items-center justify-between py-2.5 border-b border-n-100 last:border-0 gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] uppercase tracking-wider text-n-500 font-semibold mb-0.5">Convention collective applicable</p>
+              <select value={tenant.convention} onChange={(e) => { setField('convention', e.target.value); saveField('convention') }} className="text-sm font-medium border border-n-300 rounded-sm h-9 px-2 focus:border-orange focus:ring-1 focus:ring-orange outline-none w-full">
+                {CONVENTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+              <p className="text-[11px] text-n-500 mt-1">Affiché sur tous les bulletins de paie (mention Art. 32.5 obligatoire).</p>
+            </div>
+          </div>
         </Card>
 
         <Card title="Équipe et rôles" icon={Users}>

@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { X, Plus, Clock, Coins, Sparkles, Trash2 } from 'lucide-react'
+import { X, Plus, Clock, Coins, Sparkles, Trash2, Home, Car } from 'lucide-react'
 import { type Employee, fcfa } from '../lib/mock'
 import { store } from '../lib/store'
 
@@ -16,10 +16,14 @@ export type Complements = {
   transport: number       // indemnité transport (plafond non imposable 25 000)
   repas: number           // panier-repas (exonéré dans limite 10 % rém. totale)
   deplacement: number     // indemnité déplacement (sur justificatifs)
+  // Avantages en nature (CGI Art. 116-120) — taxables au brut imposable
+  vehicule: number        // prix TTC du véhicule fonction
+  vehiculeCarburantEmployeur: boolean  // si true : forfait 20 %, sinon 15 %
+  logement: number        // loyer mensuel pris en charge par l'employeur
   primes: { label: string; amount: number }[]
 }
 
-const ZERO: Complements = { hsJour15: 0, hsJour50: 0, hsNuit: 0, hsDimanche: 0, hsNuitDimanche: 0, transport: 0, repas: 0, deplacement: 0, primes: [] }
+const ZERO: Complements = { hsJour15: 0, hsJour50: 0, hsNuit: 0, hsDimanche: 0, hsNuitDimanche: 0, transport: 0, repas: 0, deplacement: 0, vehicule: 0, vehiculeCarburantEmployeur: false, logement: 0, primes: [] }
 
 export function computeComplementsAmount(e: Employee, c: Complements): number {
   const tauxHoraire = e.brut / 173.33 // 173,33 h légales mensuelles CI (40h × 52/12)
@@ -29,8 +33,11 @@ export function computeComplementsAmount(e: Employee, c: Complements): number {
         + tauxHoraire * c.hsDimanche * 1.75
         + tauxHoraire * c.hsNuitDimanche * 2.00
   const indemnites = c.transport + c.repas + c.deplacement
+  // Avantages en nature : véhicule = % du prix / 12 (mensualisation), logement = loyer
+  const vehiculePct = c.vehiculeCarburantEmployeur ? 0.20 : 0.15
+  const avNature = (c.vehicule * vehiculePct) / 12 + c.logement
   const primesTotal = c.primes.reduce((s, p) => s + (p.amount || 0), 0)
-  return Math.round(hs + indemnites + primesTotal)
+  return Math.round(hs + indemnites + avNature + primesTotal)
 }
 
 export function PayrollComplementsModal({ open, employee, current, onClose, onSave }: {
@@ -87,6 +94,25 @@ export function PayrollComplementsModal({ open, employee, current, onClose, onSa
               <NumField label="Transport" value={c.transport} onChange={setNum('transport')} hint={c.transport > 25000 ? `⚠ ${fcfa(c.transport - 25000)} imposable` : 'Non imposable (Art. 118 CGI)'} />
               <NumField label="Panier-repas" value={c.repas} onChange={setNum('repas')} hint={c.repas > employee.brut * 0.10 ? `⚠ > 10 % rém. (${fcfa(Math.round(employee.brut * 0.10))})` : 'Exonéré dans la limite 10 %'} />
               <NumField label="Déplacement (justifs)" value={c.deplacement} onChange={setNum('deplacement')} hint="Sur justificatifs > 500 km" />
+            </div>
+          </Section>
+
+          <Section icon={Home} title="Avantages en nature" subtitle="CGI Art. 116-120 · à ajouter au brut imposable">
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-[10px] uppercase tracking-wider text-n-500 font-semibold inline-flex items-center gap-1.5"><Car className="w-3 h-3" /> Véhicule fonction — prix TTC</label>
+                <input type="number" min="0" value={c.vehicule || ''} onChange={setNum('vehicule')} className="mt-1 w-full border border-n-300 rounded-sm h-10 px-3 text-sm font-mono focus:border-orange focus:ring-1 focus:ring-orange outline-none" placeholder="0" />
+                <label className="text-[11px] text-n-500 mt-1 inline-flex items-center gap-1.5">
+                  <input type="checkbox" checked={c.vehiculeCarburantEmployeur} onChange={(e) => setC({ ...c, vehiculeCarburantEmployeur: e.target.checked })} className="accent-orange" />
+                  Carburant à la charge employeur (forfait 20 % au lieu de 15 %)
+                </label>
+                <p className="text-[11px] text-orange-deep font-medium mt-1">+ {fcfa(Math.round((c.vehicule * (c.vehiculeCarburantEmployeur ? 0.20 : 0.15)) / 12))}/mois imposable</p>
+              </div>
+              <div>
+                <label className="text-[10px] uppercase tracking-wider text-n-500 font-semibold inline-flex items-center gap-1.5"><Home className="w-3 h-3" /> Logement (loyer mensuel)</label>
+                <input type="number" min="0" value={c.logement || ''} onChange={setNum('logement')} className="mt-1 w-full border border-n-300 rounded-sm h-10 px-3 text-sm font-mono focus:border-orange focus:ring-1 focus:ring-orange outline-none" placeholder="0" />
+                <p className="text-[11px] text-n-500 mt-1">Loyer pris en charge par l'employeur · 100 % taxable</p>
+              </div>
             </div>
           </Section>
 

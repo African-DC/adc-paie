@@ -195,7 +195,29 @@ export function downloadPayslipPDF(e: Employee, period = 'Novembre 2026') {
     },
   })
 
-  y = (doc as any).lastAutoTable.finalY + 10
+  y = (doc as any).lastAutoTable.finalY + 6
+
+  // Cumuls annuels (Art. 32.5 obligation) — bandeau ink + orange
+  const monthNum = (() => {
+    const idx = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'].indexOf(period.toLowerCase().split(' ')[0])
+    return idx >= 0 ? idx + 1 : 11
+  })()
+  doc.setFillColor(...INK)
+  doc.rect(M, y, CONTENT_W, 14, 'F')
+  doc.setFillColor(...ORANGE)
+  doc.rect(M, y, 2.5, 14, 'F')
+  doc.setTextColor(255, 255, 255)
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(7)
+  doc.text(`C U M U L S   D E P U I S   L E   1 E R   J A N V I E R   (${monthNum}/12)`, M + 6, y + 5)
+  doc.setFontSize(9)
+  doc.setFont('helvetica', 'normal')
+  doc.text(`Brut · ${fmtXOF(e.brut * monthNum)}`, M + 6, y + 11)
+  doc.text(`Retenues · ${fmtXOF(Math.round((p.cnps + p.cmuSal + p.its + p.igr + p.cn) * monthNum))}`, M + 76, y + 11)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(...ORANGE)
+  doc.text(`Net cumulé · ${fmtXOF(Math.round(p.net * monthNum))}`, PAGE_W - M - 4, y + 11, { align: 'right' })
+  y += 18
 
   // Charges patronales (boîte gauche) + Mentions légales (boîte droite)
   const colW = (CONTENT_W - 6) / 2
@@ -235,11 +257,14 @@ export function downloadPayslipPDF(e: Employee, period = 'Novembre 2026') {
 
   doc.setFontSize(7)
   doc.setTextColor(...N700)
-  const legal = "Bulletin émis conformément à l'article 32.5 du Code du travail ivoirien (Loi 2015-532). Conservation obligatoire 5 ans. En cas de litige, ce document fait foi de la rémunération versée."
+  const legal = `Bulletin émis conformément à l'article 32.5 du Code du travail ivoirien (Loi 2015-532). Convention collective applicable : ${(getOrg() as any).convention || 'Interprofessionnelle 1977'}. À conserver sans limitation de durée. En cas de litige, ce document fait foi de la rémunération versée.`
   const lines = doc.splitTextToSize(legal, colW - 8)
   doc.text(lines, M + colW + 10, y + 12)
   doc.setTextColor(...N500)
-  doc.text('Signé numériquement · SHA-256', M + colW + 10, y + 44)
+  doc.setFont('helvetica', 'bold')
+  doc.text('À CONSERVER SANS LIMITATION', M + colW + 10, y + 40)
+  doc.setFont('helvetica', 'normal')
+  doc.text('Signé numériquement · SHA-256', M + colW + 10, y + 45)
 
   drawFooter(doc)
   doc.save(`bulletin-${period.replace(/ /g, '-').toLowerCase()}-${e.firstName.toLowerCase()}-${e.lastName.toLowerCase()}.pdf`)
