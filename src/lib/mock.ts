@@ -66,8 +66,10 @@ export function fcfaShort(n: number): string {
 }
 
 // Calculs paie ivoirien simplifiés
+// Sources : DGI CI, CNPS CI, Code Général des Impôts 2026
 export function computePayslip(brut: number, kids = 0, married = false) {
-  const cnps = brut * 0.063
+  const cnps = brut * 0.063 // Retraite 3.2% + CMU 1.5% + Famille 0.75% + AT 0.75% = 6.3% (plafond 3 375 000 FCFA)
+  const cmuSal = 1000 // Couverture Maladie Universelle salariale (forfait 1 000 FCFA/mois)
   const baseAnnuelle = brut * 12 - cnps * 12 - brut * 12 * 0.15
   const parts = 1 + (married ? 0.5 : 0) + kids * 0.5
   const baseParPart = baseAnnuelle / parts
@@ -78,9 +80,9 @@ export function computePayslip(brut: number, kids = 0, married = false) {
   const its = (itsParPart * parts) / 12
   const igr = brut * 0.015
   const cn = brut * 0.015
-  const net = brut - cnps - its - igr - cn
-  const patron = brut * 0.17
-  return { brut, cnps, its, igr, cn, net, patron, total: brut + patron }
+  const net = brut - cnps - cmuSal - its - igr - cn
+  const patron = brut * 0.169 + 1000 // CNPS patronale 16,9% + CMU patronale 1 000 FCFA forfaitaire
+  return { brut, cnps, cmuSal, its, igr, cn, net, patron, total: brut + patron }
 }
 
 export const TOTALS = (() => {

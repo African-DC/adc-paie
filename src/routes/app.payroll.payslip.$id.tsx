@@ -65,12 +65,21 @@ function PayslipPage() {
     },
     {
       key: 'cnps',
-      label: 'CNPS · retraite + CMU + famille + AT',
+      label: 'CNPS · retraite + famille + AT',
       base: fcfa(e.brut),
       rate: '6,3 %',
       due: '',
       retain: fcfa(Math.round(p.cnps)),
-      explainer: 'Caisse Nationale de Prévoyance Sociale. Part salariale fixe 6,3 % du brut (retraite 6,3 % uniquement côté salarié — CMU, prestations familiales et accidents du travail sont à 100 % patronaux). Plafonné à 70 000 FCFA de retenue par mois (45 fois le SMIG).',
+      explainer: 'Caisse Nationale de Prévoyance Sociale. Part salariale 6,3 % du brut, plafond mensuel 3 375 000 FCFA (= 45 × SMIG). Décomposition : retraite 3,2 %, prestations familiales 0,75 %, accident travail 0,75 %, CMU 1,5 %. La quote-part patronale (16,9 %) est à la charge exclusive de l\'employeur.',
+    },
+    {
+      key: 'cmu',
+      label: 'CMU · Couverture Maladie Universelle',
+      base: '—',
+      rate: 'forfait',
+      due: '',
+      retain: fcfa(p.cmuSal),
+      explainer: 'Couverture Maladie Universelle (régime obligatoire CI). 1 000 FCFA/mois retenus sur le salaire + 1 000 FCFA/mois à la charge de l\'employeur. Donne droit au remboursement de 70 % des actes médicaux (ticket modérateur 30 %) via le réseau de prestataires agréés.',
     },
     {
       key: 'its',

@@ -1,9 +1,9 @@
 import { createFileRoute, Link, notFound } from '@tanstack/react-router'
 import { useState } from 'react'
-import { ChevronLeft, Mail, Phone, MapPin, Calendar, FileText, Download, LogOut } from 'lucide-react'
+import { ChevronLeft, Mail, Phone, MapPin, Calendar, FileText, Download, LogOut, BadgeCheck } from 'lucide-react'
 import { EMPLOYEES, fcfa, computePayslip } from '../lib/mock'
 import { store } from '../lib/store'
-import { downloadPayslipPDF, downloadEmployeeDocument } from '../lib/downloads'
+import { downloadPayslipPDF, downloadEmployeeDocument, downloadDPAEPDF } from '../lib/downloads'
 import { STCModal } from '../components/stc-modal'
 
 export const Route = createFileRoute('/app/employees/$id')({
@@ -53,6 +53,9 @@ function EmployeeDetail() {
             <Link to="/app/payroll/payslip/$id" params={{ id: e.id }} className="inline-flex items-center gap-2 border border-n-300 px-4 h-9 text-xs font-medium hover:bg-n-50 transition-colors rounded-sm">
               <FileText className="w-3.5 h-3.5" /> Voir le bulletin
             </Link>
+            <button onClick={() => { downloadDPAEPDF(e); store.toast('DPAE générée · à déposer sur e-DPAE CNPS', 'success') }} className="inline-flex items-center gap-2 border border-n-300 px-4 h-9 text-xs font-medium hover:bg-n-50 transition-colors rounded-sm" title="Déclaration Préalable À l'Embauche · à déposer à la CNPS">
+              <BadgeCheck className="w-3.5 h-3.5" /> DPAE CNPS
+            </button>
             <button onClick={() => setStcOpen(true)} className="inline-flex items-center gap-2 border border-red-300 text-red-700 hover:bg-red-50 px-4 h-9 text-xs font-medium transition-colors rounded-sm" title="Calculer le solde de tout compte et générer le certificat de travail">
               <LogOut className="w-3.5 h-3.5" /> Initier sortie / STC
             </button>
@@ -115,7 +118,7 @@ function EmployeeDetail() {
                   <tr key={m} className="border-b border-n-100 hover:bg-n-50/50">
                     <td className="px-4 py-3 font-medium">{m}</td>
                     <td className="px-4 py-3 font-mono text-right">{fcfa(e.brut)}</td>
-                    <td className="px-4 py-3 font-mono text-right text-n-600">- {fcfa(Math.round(p.cnps + p.its + p.igr + p.cn))}</td>
+                    <td className="px-4 py-3 font-mono text-right text-n-600">- {fcfa(Math.round(p.cnps + p.cmuSal + p.its + p.igr + p.cn))}</td>
                     <td className="px-4 py-3 font-mono text-right font-semibold text-orange-deep">{fcfa(Math.round(p.net))}</td>
                     <td className="px-4 py-3 text-right">
                       {i === 0 ? (

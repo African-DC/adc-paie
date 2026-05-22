@@ -169,7 +169,8 @@ export function downloadPayslipPDF(e: Employee, period = 'Novembre 2026') {
     body: [
       ['Salaire de base', '22 jours', '—', fmtXOF(e.brut), ''],
       [{ content: 'Salaire brut', styles: { fontStyle: 'bold', fillColor: N50 } }, { content: '', styles: { fillColor: N50 } }, { content: '', styles: { fillColor: N50 } }, { content: fmtXOF(e.brut), styles: { fontStyle: 'bold', fillColor: N50 } }, { content: '', styles: { fillColor: N50 } }],
-      ['CNPS retraite + CMU', fmtXOF(e.brut), '6,3 %', '', fmtXOF(p.cnps)],
+      ['CNPS (retraite, famille, AT)', fmtXOF(e.brut), '6,3 %', '', fmtXOF(p.cnps)],
+      ['CMU · Couverture Maladie Univ.', '—', 'forfait', '', fmtXOF(p.cmuSal)],
       ['ITS (quotient familial)', fmtXOF(e.brut), 'progressif', '', fmtXOF(p.its)],
       ['IGR · Impôt Général', fmtXOF(e.brut), '1,5 %', '', fmtXOF(p.igr)],
       ['CN · Contribution Nationale', fmtXOF(e.brut), '1,5 %', '', fmtXOF(p.cn)],
@@ -746,6 +747,91 @@ export function downloadEmployeeDocument(e: Employee, kind: 'contrat' | 'cni' | 
 
   drawFooter(doc)
   doc.save(`${kind}-${e.firstName.toLowerCase()}-${e.lastName.toLowerCase()}.pdf`)
+}
+
+// ============================================================================
+// DPAE — Déclaration Préalable À l'Embauche (CNPS)
+// Obligation légale : déposée AVANT le 1er jour de travail effectif
+// ============================================================================
+
+export function downloadDPAEPDF(e: Employee) {
+  const org = getOrg()
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' })
+  drawHeader(doc, {
+    title: 'Déclaration préalable à l\'embauche',
+    subtitle: `DPAE · ${e.firstName} ${e.lastName}`,
+    ref: `DPAE-${e.matricule}-${e.joinedAt.replace(/-/g, '')}`,
+  })
+
+  let y = drawInfoBoxes(doc, 52, {
+    title: 'Employeur déclarant',
+    lines: [org.name, `IFU ${org.ifu}`, `Compte CNPS ${org.cnps}`, `${org.city}`],
+  }, {
+    title: 'CNPS Côte d\'Ivoire',
+    lines: [`Caisse Nationale de Prévoyance Sociale`, `Dépôt avant prise de poste effective`, `www.cnps.ci · e-DPAE`, `Sanction défaut : amende employeur`],
+  })
+
+  // Bandeau salarié
+  doc.setFillColor(...N50); doc.setDrawColor(...ORANGE); doc.setLineWidth(0.5)
+  doc.roundedRect(M, y, CONTENT_W, 38, 1, 1, 'FD')
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(7); doc.setTextColor(...ORANGE)
+  doc.text('S A L A R I É   E M B A U C H É', M + 4, y + 5)
+  doc.setFontSize(14); doc.setTextColor(...INK)
+  doc.text(`${e.firstName} ${e.lastName}`, M + 4, y + 13)
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(...N700)
+  doc.text(`Matricule CNPS : ${e.matricule}`, M + 4, y + 20)
+  doc.text(`Date de prise de poste : ${e.joinedAt}`, M + 4, y + 26)
+  doc.text(`Type de contrat : ${e.contract === 'CDI' ? 'Contrat à Durée Indéterminée' : 'Contrat à Durée Déterminée'}`, M + 4, y + 32)
+  doc.text(`Fonction : ${e.role}`, PAGE_W - M - 4, y + 20, { align: 'right' })
+  doc.text(`Rémunération brute : ${fmtXOF(e.brut)}/mois`, PAGE_W - M - 4, y + 26, { align: 'right' })
+  doc.text(`Situation familiale : ${e.family.situation} · ${e.family.kids} enfant(s)`, PAGE_W - M - 4, y + 32, { align: 'right' })
+  y += 46
+
+  // Engagement employeur
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(...INK)
+  const engagement = `Je soussigné(e), représentant légal de ${org.name}, déclare par la présente embaucher le salarié ci-dessus à compter du ${e.joinedAt}. Je m'engage à verser les cotisations sociales obligatoires (retraite, prestations familiales, accidents du travail, CMU) auprès de la CNPS pour ce salarié.`
+  const lines = doc.splitTextToSize(engagement, CONTENT_W)
+  doc.text(lines, M, y); y += lines.length * 5 + 6
+
+  // Cotisations prévues
+  autoTable(doc, {
+    startY: y,
+    head: [['Cotisation', 'Taux', 'Base', 'Montant mensuel']],
+    body: [
+      ['Retraite salariale',          '6,3 %',          fmtXOF(e.brut), fmtXOF(Math.round(e.brut * 0.063))],
+      ['Retraite patronale',          '7,7 %',          fmtXOF(e.brut), fmtXOF(Math.round(e.brut * 0.077))],
+      ['Prestations familiales',      '5,75 %',         fmtXOF(e.brut), fmtXOF(Math.round(e.brut * 0.0575))],
+      ['Accidents du travail',        `${org.taux_at} %`, fmtXOF(e.brut), fmtXOF(Math.round(e.brut * (parseFloat(org.taux_at) || 3.5) / 100))],
+      ['CMU salariale',               'forfait',        '—',            fmtXOF(1000)],
+      ['CMU patronale',               'forfait',        '—',            fmtXOF(1000)],
+    ],
+    foot: [['TOTAL COTISATIONS CNPS', '', '', fmtXOF(Math.round(e.brut * (0.063 + 0.077 + 0.0575 + (parseFloat(org.taux_at) || 3.5) / 100)) + 2000)]],
+    headStyles: { fillColor: INK as any, textColor: [255, 255, 255] as any, fontSize: 8 },
+    bodyStyles: { fontSize: 9 },
+    footStyles: { fillColor: ORANGE as any, textColor: [255, 255, 255] as any, fontSize: 10, fontStyle: 'bold' },
+    columnStyles: { 1: { halign: 'center' }, 2: { halign: 'right' }, 3: { halign: 'right', fontStyle: 'bold' } },
+    theme: 'grid',
+    margin: { left: M, right: M },
+  })
+
+  // Signatures
+  doc.setDrawColor(...N200); doc.setLineWidth(0.3)
+  doc.line(M, 245, M + 70, 245)
+  doc.line(PAGE_W - M - 70, 245, PAGE_W - M, 245)
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(...INK)
+  doc.text(`Pour ${org.name}`, M, 250)
+  doc.text(`Le salarié`, PAGE_W - M - 70, 250)
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(...N500)
+  doc.text(`Cachet, date et signature`, M, 255)
+  doc.text(`${e.firstName} ${e.lastName} · signature`, PAGE_W - M - 70, 255)
+
+  // Mention conformité
+  doc.setFont('helvetica', 'italic'); doc.setFontSize(8); doc.setTextColor(...N500)
+  doc.text(`Document à déposer auprès de la CNPS via e-DPAE (www.cnps.ci) ou en agence avant le 1er jour de travail effectif.`, M, 268)
+  doc.text(`Tout défaut de déclaration expose l'employeur à des sanctions financières (Loi 2015-532 + décrets CNPS).`, M, 272)
+
+  drawFooter(doc)
+  doc.save(`dpae-${e.firstName.toLowerCase()}-${e.lastName.toLowerCase()}.pdf`)
 }
 
 export function downloadAttendanceSheetPDF(employees: Employee[], punches: Map<string, { status: string; punch: { in?: string; out?: string } }>) {

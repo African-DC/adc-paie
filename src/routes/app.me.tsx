@@ -144,7 +144,7 @@ function MePage() {
                   <tr key={m} className="border-b border-n-100 hover:bg-n-50/50">
                     <td className="px-4 py-3 font-medium">{m}{i === 0 && <span className="ml-2 inline-block px-1.5 py-0.5 bg-orange text-white text-[9px] font-bold uppercase tracking-wider rounded-sm">Nouveau</span>}</td>
                     <td className="px-4 py-3 font-mono text-right">{fcfa(me.brut)}</td>
-                    <td className="px-4 py-3 font-mono text-right text-n-600">- {fcfa(Math.round(p.cnps + p.its + p.igr + p.cn))}</td>
+                    <td className="px-4 py-3 font-mono text-right text-n-600">- {fcfa(Math.round(p.cnps + p.cmuSal + p.its + p.igr + p.cn))}</td>
                     <td className="px-4 py-3 font-mono text-right font-semibold text-orange-deep">{fcfa(Math.round(p.net))}</td>
                     <td className="px-4 py-3 text-right">
                       <div className="inline-flex items-center gap-2">
