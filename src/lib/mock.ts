@@ -66,10 +66,15 @@ export function fcfaShort(n: number): string {
 }
 
 // Calculs paie ivoirien simplifiés
-// Sources : DGI CI, CNPS CI, Code Général des Impôts 2026
+// Sources : DGI CI, CNPS CI, CLEISS, Code Général des Impôts 2026, Ordonnance 2023-719
 export function computePayslip(brut: number, kids = 0, married = false) {
-  const cnps = brut * 0.063 // Retraite 3.2% + CMU 1.5% + Famille 0.75% + AT 0.75% = 6.3% (plafond 3 375 000 FCFA)
-  const cmuSal = 1000 // Couverture Maladie Universelle salariale (forfait 1 000 FCFA/mois)
+  // CNPS salariale 6,3 % du brut (plafond 3 375 000 FCFA = 45 × SMIG)
+  // Décomposée : retraite 3,2 % + CMU 1,5 % + famille 0,75 % + AT 0,75 %
+  const brutPlaf = Math.min(brut, 3_375_000)
+  const cnps = brutPlaf * 0.063
+  // CMU forfait régime général : 500 FCFA salarié + 500 FCFA employeur = 1 000 FCFA total/mois
+  const cmuSal = 500
+  // ITS barème 2026 par tranche annuelle / part (Ordonnance 2023-719)
   const baseAnnuelle = brut * 12 - cnps * 12 - brut * 12 * 0.15
   const parts = 1 + (married ? 0.5 : 0) + kids * 0.5
   const baseParPart = baseAnnuelle / parts
@@ -78,10 +83,10 @@ export function computePayslip(brut: number, kids = 0, married = false) {
   if (baseParPart > 1200000) itsParPart += Math.min(baseParPart - 1200000, 800000) * 0.2
   if (baseParPart > 2000000) itsParPart += (baseParPart - 2000000) * 0.25
   const its = (itsParPart * parts) / 12
-  const igr = brut * 0.015
-  const cn = brut * 0.015
+  const igr = brut * 0.015 // Impôt Général sur le Revenu (forfait CI)
+  const cn = brut * 0.015  // Contribution Nationale (Loi 2003-308)
   const net = brut - cnps - cmuSal - its - igr - cn
-  const patron = brut * 0.169 + 1000 // CNPS patronale 16,9% + CMU patronale 1 000 FCFA forfaitaire
+  const patron = brut * 0.169 + 500 // CNPS patronale 16,9 % + CMU patronale 500 FCFA
   return { brut, cnps, cmuSal, its, igr, cn, net, patron, total: brut + patron }
 }
 

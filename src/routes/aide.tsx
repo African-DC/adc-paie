@@ -13,7 +13,7 @@ const FAQ = [
   },
   {
     q: 'Quels sont les taux CNPS salarié et patronal ?',
-    a: `Cotisations salariales (à retenir sur le bulletin) :\n· Total 6,3 % du brut · plafond mensuel 3 375 000 FCFA (45 × SMIG)\n· Décomposé : Retraite 3,2 %, CMU 1,5 %, Famille 0,75 %, Accident travail 0,75 %\n\nCotisations patronales (à la charge de l'employeur) :\n· Retraite : 7,7 %\n· Prestations familiales : 5,75 %\n· Accidents du travail : 2 à 5 % selon le secteur (3,5 % par défaut)\n· CMU : 1 000 FCFA/mois par salarié\n\nTotal patronal moyen : 16 à 18 % du brut.`,
+    a: `Cotisations salariales (à retenir sur le bulletin) :\n· CNPS : 6,3 % du brut · plafond mensuel 3 375 000 FCFA (45 × SMIG)\n  Décomposé : Retraite 3,2 %, CMU 1,5 %, Famille 0,75 %, Accident travail 0,75 %\n· CMU forfait : 500 FCFA/mois (régime de base CNAM)\n\nCotisations patronales (à la charge de l'employeur) :\n· Retraite : 7,7 %\n· Prestations familiales : 5,75 %\n· Accidents du travail : 2 à 5 % selon le secteur (3,5 % par défaut)\n· CMU forfait : 500 FCFA/mois par salarié\n\nTotal patronal moyen : 16 à 18 % du brut + 500 FCFA CMU.`,
   },
   {
     q: 'Quand soumettre les déclarations CNPS et DGI ?',
@@ -61,7 +61,7 @@ const GLOSSAIRE = [
   ['ITS', 'Impôt sur les Traitements et Salaires · barème progressif par parts fiscales'],
   ['IGR', 'Impôt Général sur le Revenu · taxe complémentaire 1,5 % du brut'],
   ['CN', 'Contribution Nationale · prélèvement de 1,5 % du brut au profit de l\'État (Loi 2003-308)'],
-  ['CMU', 'Couverture Maladie Universelle · 1 000 FCFA/mois/salarié (1 000 patronal + 1 000 salarié)'],
+  ['CMU', 'Couverture Maladie Universelle · forfait 1 000 FCFA/mois partagé (500 salarié + 500 employeur), versé à la CNPS pour la CNAM'],
   ['IFU', 'Identifiant Fiscal Unique · numéro attribué par la DGI à chaque entreprise'],
   ['DPAE', 'Déclaration Préalable À l\'Embauche · à transmettre à la CNPS avant la prise de poste'],
   ['Bordereau CNPS', 'Document mensuel détaillant les cotisations sociales du mois'],

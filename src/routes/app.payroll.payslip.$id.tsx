@@ -79,7 +79,7 @@ function PayslipPage() {
       rate: 'forfait',
       due: '',
       retain: fcfa(p.cmuSal),
-      explainer: 'Couverture Maladie Universelle (régime obligatoire CI). 1 000 FCFA/mois retenus sur le salaire + 1 000 FCFA/mois à la charge de l\'employeur. Donne droit au remboursement de 70 % des actes médicaux (ticket modérateur 30 %) via le réseau de prestataires agréés.',
+      explainer: 'Couverture Maladie Universelle (régime obligatoire CI). Forfait 1 000 FCFA/mois partagé : 500 FCFA retenus sur le salaire + 500 FCFA à la charge de l\'employeur. Versé à la CNPS (collecteur pour la CNAM). Donne droit au remboursement de 70 % des actes médicaux (ticket modérateur 30 %).',
     },
     {
       key: 'its',

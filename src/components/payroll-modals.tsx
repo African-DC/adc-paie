@@ -6,11 +6,11 @@ import { downloadAuditArchiveZip } from '../lib/downloads'
 
 type Provider = 'wave' | 'orange' | 'mtn' | 'bank'
 
-const PROVIDERS: Array<{ id: Provider; name: string; fees: string; speed: string; logo?: string; fallback?: string; color: string; bg?: string }> = [
-  { id: 'wave',   name: 'Wave',            fees: '0 %',          speed: '< 30 s',  logo: '/providers/wave.png',         color: '#1DCBEF', bg: '#1DCBEF' },
-  { id: 'orange', name: 'Orange Money',    fees: '1,0 %',        speed: '< 1 min', logo: '/providers/orange-money.svg', color: '#FF6600', bg: '#000000' },
-  { id: 'mtn',    name: 'MTN MoMo',        fees: '1,2 %',        speed: '< 1 min', logo: '/providers/mtn-momo.png',     color: '#FFCC00', bg: '#FFCC00' },
-  { id: 'bank',   name: 'Virement bancaire', fees: '500 FCFA/op.', speed: 'J+1',     fallback: '🏦', color: '#0a0a0a', bg: '#0a0a0a' },
+const PROVIDERS: Array<{ id: Provider; name: string; fees: string; feesPct: number; speed: string; logo?: string; fallback?: string; color: string; bg?: string }> = [
+  { id: 'wave',   name: 'Wave',            fees: '1 % (20k/jour offerts)',   feesPct: 0.01,  speed: '< 30 s',  logo: '/providers/wave.png',         color: '#1DCBEF', bg: '#1DCBEF' },
+  { id: 'orange', name: 'Orange Money',    fees: '~ 1,0 %',                   feesPct: 0.01,  speed: '< 1 min', logo: '/providers/orange-money.svg', color: '#FF6600', bg: '#000000' },
+  { id: 'mtn',    name: 'MTN MoMo',        fees: '~ 1 % (plaf. 4 500)',       feesPct: 0.01,  speed: '< 1 min', logo: '/providers/mtn-momo.png',     color: '#FFCC00', bg: '#FFCC00' },
+  { id: 'bank',   name: 'Virement bancaire', fees: 'gratuit / variable',      feesPct: 0,     speed: 'J+1',     fallback: '🏦', color: '#0a0a0a', bg: '#0a0a0a' },
 ]
 
 export function PaySalariesModal({ open, onClose, total, count }: { open: boolean; onClose: () => void; total: number; count: number }) {
@@ -71,8 +71,8 @@ export function PaySalariesModal({ open, onClose, total, count }: { open: boolea
               <p className="text-[10px] uppercase tracking-[0.22em] text-n-500 font-semibold mb-2">Récapitulatif</p>
               <div className="text-sm space-y-1.5">
                 <div className="flex justify-between"><span className="text-n-600">Montant net à verser</span><span className="font-mono font-semibold">{fcfa(total)}</span></div>
-                <div className="flex justify-between"><span className="text-n-600">Frais {p.name}</span><span className="font-mono">{fcfa(Math.round(total * 0.01))}</span></div>
-                <div className="flex justify-between font-semibold border-t border-n-200 pt-1.5 mt-1.5"><span>Total débit compte employeur</span><span className="font-mono text-orange-deep">{fcfa(total + Math.round(total * 0.01))}</span></div>
+                <div className="flex justify-between"><span className="text-n-600">Frais {p.name}</span><span className="font-mono">{p.feesPct > 0 ? fcfa(Math.round(total * p.feesPct)) : 'gratuit'}</span></div>
+                <div className="flex justify-between font-semibold border-t border-n-200 pt-1.5 mt-1.5"><span>Total débit compte employeur</span><span className="font-mono text-orange-deep">{fcfa(total + Math.round(total * p.feesPct))}</span></div>
               </div>
             </div>
             <div className="mt-5 flex items-center justify-end gap-2">
