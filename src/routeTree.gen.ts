@@ -9,6 +9,8 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SignupRouteImport } from './routes/signup'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as MentionsLegalesRouteImport } from './routes/mentions-legales'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ConfidentialiteRouteImport } from './routes/confidentialite'
@@ -30,8 +32,19 @@ import { Route as AppAdvancesRouteImport } from './routes/app.advances'
 import { Route as AppPayrollIndexRouteImport } from './routes/app.payroll.index'
 import { Route as AppEmployeesIndexRouteImport } from './routes/app.employees.index'
 import { Route as AppEmployeesIdRouteImport } from './routes/app.employees.$id'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
 import { Route as AppPayrollPayslipIdRouteImport } from './routes/app.payroll.payslip.$id'
 
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MentionsLegalesRoute = MentionsLegalesRouteImport.update({
   id: '/mentions-legales',
   path: '/mentions-legales',
@@ -137,6 +150,11 @@ const AppEmployeesIdRoute = AppEmployeesIdRouteImport.update({
   path: '/employees/$id',
   getParentRoute: () => AppRoute,
 } as any)
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppPayrollPayslipIdRoute = AppPayrollPayslipIdRouteImport.update({
   id: '/payroll/payslip/$id',
   path: '/payroll/payslip/$id',
@@ -153,6 +171,8 @@ export interface FileRoutesByFullPath {
   '/confidentialite': typeof ConfidentialiteRoute
   '/login': typeof LoginRoute
   '/mentions-legales': typeof MentionsLegalesRoute
+  '/onboarding': typeof OnboardingRoute
+  '/signup': typeof SignupRoute
   '/app/advances': typeof AppAdvancesRoute
   '/app/announcements': typeof AppAnnouncementsRoute
   '/app/attendance': typeof AppAttendanceRoute
@@ -162,6 +182,7 @@ export interface FileRoutesByFullPath {
   '/app/reports': typeof AppReportsRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/': typeof AppIndexRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
   '/app/employees/$id': typeof AppEmployeesIdRoute
   '/app/employees/': typeof AppEmployeesIndexRoute
   '/app/payroll/': typeof AppPayrollIndexRoute
@@ -176,6 +197,8 @@ export interface FileRoutesByTo {
   '/confidentialite': typeof ConfidentialiteRoute
   '/login': typeof LoginRoute
   '/mentions-legales': typeof MentionsLegalesRoute
+  '/onboarding': typeof OnboardingRoute
+  '/signup': typeof SignupRoute
   '/app/advances': typeof AppAdvancesRoute
   '/app/announcements': typeof AppAnnouncementsRoute
   '/app/attendance': typeof AppAttendanceRoute
@@ -185,6 +208,7 @@ export interface FileRoutesByTo {
   '/app/reports': typeof AppReportsRoute
   '/app/settings': typeof AppSettingsRoute
   '/app': typeof AppIndexRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
   '/app/employees/$id': typeof AppEmployeesIdRoute
   '/app/employees': typeof AppEmployeesIndexRoute
   '/app/payroll': typeof AppPayrollIndexRoute
@@ -201,6 +225,8 @@ export interface FileRoutesById {
   '/confidentialite': typeof ConfidentialiteRoute
   '/login': typeof LoginRoute
   '/mentions-legales': typeof MentionsLegalesRoute
+  '/onboarding': typeof OnboardingRoute
+  '/signup': typeof SignupRoute
   '/app/advances': typeof AppAdvancesRoute
   '/app/announcements': typeof AppAnnouncementsRoute
   '/app/attendance': typeof AppAttendanceRoute
@@ -210,6 +236,7 @@ export interface FileRoutesById {
   '/app/reports': typeof AppReportsRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/': typeof AppIndexRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
   '/app/employees/$id': typeof AppEmployeesIdRoute
   '/app/employees/': typeof AppEmployeesIndexRoute
   '/app/payroll/': typeof AppPayrollIndexRoute
@@ -227,6 +254,8 @@ export interface FileRouteTypes {
     | '/confidentialite'
     | '/login'
     | '/mentions-legales'
+    | '/onboarding'
+    | '/signup'
     | '/app/advances'
     | '/app/announcements'
     | '/app/attendance'
@@ -236,6 +265,7 @@ export interface FileRouteTypes {
     | '/app/reports'
     | '/app/settings'
     | '/app/'
+    | '/api/auth/$'
     | '/app/employees/$id'
     | '/app/employees/'
     | '/app/payroll/'
@@ -250,6 +280,8 @@ export interface FileRouteTypes {
     | '/confidentialite'
     | '/login'
     | '/mentions-legales'
+    | '/onboarding'
+    | '/signup'
     | '/app/advances'
     | '/app/announcements'
     | '/app/attendance'
@@ -259,6 +291,7 @@ export interface FileRouteTypes {
     | '/app/reports'
     | '/app/settings'
     | '/app'
+    | '/api/auth/$'
     | '/app/employees/$id'
     | '/app/employees'
     | '/app/payroll'
@@ -274,6 +307,8 @@ export interface FileRouteTypes {
     | '/confidentialite'
     | '/login'
     | '/mentions-legales'
+    | '/onboarding'
+    | '/signup'
     | '/app/advances'
     | '/app/announcements'
     | '/app/attendance'
@@ -283,6 +318,7 @@ export interface FileRouteTypes {
     | '/app/reports'
     | '/app/settings'
     | '/app/'
+    | '/api/auth/$'
     | '/app/employees/$id'
     | '/app/employees/'
     | '/app/payroll/'
@@ -299,10 +335,27 @@ export interface RootRouteChildren {
   ConfidentialiteRoute: typeof ConfidentialiteRoute
   LoginRoute: typeof LoginRoute
   MentionsLegalesRoute: typeof MentionsLegalesRoute
+  OnboardingRoute: typeof OnboardingRoute
+  SignupRoute: typeof SignupRoute
+  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/mentions-legales': {
       id: '/mentions-legales'
       path: '/mentions-legales'
@@ -450,6 +503,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppEmployeesIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/payroll/payslip/$id': {
       id: '/app/payroll/payslip/$id'
       path: '/payroll/payslip/$id'
@@ -504,6 +564,9 @@ const rootRouteChildren: RootRouteChildren = {
   ConfidentialiteRoute: ConfidentialiteRoute,
   LoginRoute: LoginRoute,
   MentionsLegalesRoute: MentionsLegalesRoute,
+  OnboardingRoute: OnboardingRoute,
+  SignupRoute: SignupRoute,
+  ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

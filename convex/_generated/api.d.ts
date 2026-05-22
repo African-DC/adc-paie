@@ -13,6 +13,7 @@ import type * as http from "../http.js";
 import type * as lib_auditLog from "../lib/auditLog.js";
 import type * as lib_rbac from "../lib/rbac.js";
 import type * as lib_withOrg from "../lib/withOrg.js";
+import type * as organizations from "../organizations.js";
 
 import type {
   ApiFromModules,
@@ -26,6 +27,7 @@ declare const fullApi: ApiFromModules<{
   "lib/auditLog": typeof lib_auditLog;
   "lib/rbac": typeof lib_rbac;
   "lib/withOrg": typeof lib_withOrg;
+  organizations: typeof organizations;
 }>;
 
 /**

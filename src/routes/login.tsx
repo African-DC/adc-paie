@@ -1,17 +1,56 @@
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate, useSearch } from '@tanstack/react-router'
 import { useState } from 'react'
-import { ArrowRight, Lock, Mail, Sparkles } from 'lucide-react'
+import { ArrowRight, Lock, Mail, Sparkles, AlertCircle } from 'lucide-react'
+import { z } from 'zod'
+import { signIn, useSession } from '../lib/auth-client'
 
-export const Route = createFileRoute('/login')({ component: LoginPage })
+const loginSearchSchema = z.object({
+  redirect: z.string().optional(),
+  error: z.string().optional(),
+})
+
+export const Route = createFileRoute('/login')({
+  validateSearch: loginSearchSchema,
+  component: LoginPage,
+})
 
 function LoginPage() {
   const nav = useNavigate()
+  const search = useSearch({ from: '/login' })
+  const session = useSession()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setTimeout(() => nav({ to: '/app' }), 800)
+  const [error, setError] = useState<string | null>(search.error ?? null)
+
+  if (session.data && !session.isPending) {
+    // déjà connecté → rediriger
+    nav({ to: search.redirect ?? '/app' })
   }
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+    setLoading(true)
+    try {
+      const { error: err } = await signIn.email({
+        email,
+        password,
+        rememberMe: true,
+      })
+      if (err) {
+        setError(err.message ?? 'Identifiants invalides')
+        setLoading(false)
+        return
+      }
+      // Pattern obligatoire avec Convex + Better Auth : reload pour propager JWT
+      window.location.href = search.redirect ?? '/app'
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur de connexion')
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen flex">
       <div className="flex-1 flex items-center justify-center px-6 py-12 bg-white">
@@ -21,30 +60,58 @@ function LoginPage() {
           <h1 className="font-serif text-3xl font-semibold tracking-tight">Connectez-vous à votre <span className="em-serif">espace</span>.</h1>
           <p className="mt-3 text-sm text-n-700">Accédez à votre paie, vos déclarations et vos salariés.</p>
 
+          {error && (
+            <div className="mt-6 px-3 py-2.5 bg-red-50 border border-red-200 rounded-sm flex items-start gap-2 text-sm text-red-800">
+              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+              <p>{error}</p>
+            </div>
+          )}
+
           <form onSubmit={submit} className="mt-8 space-y-4">
             <div>
-              <label className="text-[10px] uppercase tracking-[0.22em] text-n-600 font-semibold">E-mail</label>
+              <label htmlFor="email" className="text-[10px] uppercase tracking-[0.22em] text-n-600 font-semibold">E-mail</label>
               <div className="mt-2 flex items-center gap-2 border border-n-300 px-3 h-11 rounded-sm focus-within:border-orange transition-colors">
                 <Mail className="w-4 h-4 text-n-500" />
-                <input defaultValue="marcel@adc-paie.ci" required type="email" className="flex-1 bg-transparent outline-none text-sm" />
+                <input
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  type="email"
+                  autoComplete="email"
+                  className="flex-1 bg-transparent outline-none text-sm"
+                />
               </div>
             </div>
             <div>
-              <label className="text-[10px] uppercase tracking-[0.22em] text-n-600 font-semibold">Mot de passe</label>
+              <label htmlFor="password" className="text-[10px] uppercase tracking-[0.22em] text-n-600 font-semibold">Mot de passe</label>
               <div className="mt-2 flex items-center gap-2 border border-n-300 px-3 h-11 rounded-sm focus-within:border-orange transition-colors">
                 <Lock className="w-4 h-4 text-n-500" />
-                <input defaultValue="••••••••••" required type="password" className="flex-1 bg-transparent outline-none text-sm" />
+                <input
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  type="password"
+                  minLength={8}
+                  autoComplete="current-password"
+                  className="flex-1 bg-transparent outline-none text-sm"
+                />
               </div>
             </div>
-            <button type="submit" disabled={loading} className="w-full bg-orange text-white h-11 text-sm font-semibold uppercase tracking-wider hover:bg-orange-deep transition-colors flex items-center justify-center gap-2 rounded-sm disabled:opacity-60">
+            <button
+              type="submit"
+              disabled={loading || !email || password.length < 8}
+              className="w-full bg-orange text-white h-11 text-sm font-semibold uppercase tracking-wider hover:bg-orange-deep transition-colors flex items-center justify-center gap-2 rounded-sm disabled:opacity-60 disabled:cursor-not-allowed"
+            >
               {loading ? 'Connexion…' : <>Se connecter <ArrowRight className="w-4 h-4" /></>}
             </button>
           </form>
 
           <p className="mt-6 text-xs text-n-500 text-center">
-            Pas encore de compte ? <a href="mailto:africandigitconsulting@gmail.com" className="text-orange font-semibold hover:underline">Demander un accès beta</a>
+            Pas encore de compte ? <Link to="/signup" className="text-orange font-semibold hover:underline">Créer mon espace</Link>
           </p>
-          <p className="mt-2 text-[11px] text-center text-n-400">Démo · entrez n'importe quel e-mail pour accéder à l'app</p>
+          <p className="mt-2 text-[11px] text-center text-n-400">8 caractères minimum pour le mot de passe</p>
         </div>
       </div>
       <div className="hidden lg:flex flex-1 ink-glow text-white items-center justify-center p-12 relative">

@@ -1,13 +1,22 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
+import { useQuery, useMutation } from 'convex/react'
 import { Building2, Users, Shield, Bell, History, X, Edit3, Check, CheckCircle2, AlertCircle, LogIn, FileSignature, Send, Wallet, Trash2, Scale, Activity } from 'lucide-react'
 import { EMPLOYEES } from '../lib/mock'
 import { store, useStore, CONVENTIONS } from '../lib/store'
+import { useSession } from '../lib/auth-client'
+import { api } from '../../convex/_generated/api'
 import { downloadAuditLogCSV, downloadEmployeesExcel } from '../lib/downloads'
 
 export const Route = createFileRoute('/app/settings')({ component: SettingsPage })
 
 function SettingsPage() {
+  const session = useSession()
+  // Convex audit log (real) — fallback mock si pas connecté
+  const auditEntries = useQuery(
+    api.organizations.listAuditLog,
+    session.data ? { limit: 50 } : 'skip',
+  )
   const [toggles, setToggles] = useState({ mfa: true, login_alert: true, multi_session: false, deadline: true, monthly: true, whatsapp: false })
   const flip = (k: keyof typeof toggles) => {
     const next = !toggles[k]
@@ -107,18 +116,37 @@ function SettingsPage() {
         </Card>
 
         <Card title="Journal d'audit" icon={History}>
-          <p className="text-xs text-n-600 mb-4">Toutes les actions sensibles sont tracées pour la conformité. Conservation 5 ans, hash SHA-256 signé, accès restreint.</p>
-          <ul className="divide-y divide-n-100 -mx-6">
-            {AUDIT_LOG.map((l, i) => (
-              <li key={i} className="px-6 py-3 flex items-start gap-3">
-                <l.icon className={`w-4 h-4 mt-0.5 shrink-0 ${l.severity === 'high' ? 'text-orange' : l.severity === 'success' ? 'text-green-600' : 'text-n-500'}`} />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium">{l.action}</p>
-                  <p className="text-[11px] text-n-500 mt-0.5">{l.actor} · IP {l.ip} · {l.when}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
+          <p className="text-xs text-n-600 mb-4">Toutes les actions sensibles sont tracées pour la conformité ARTCI (Loi 2013-450). Conservation 5 ans, chaîne SHA-256 hash-chained, accès restreint.</p>
+          {auditEntries && auditEntries.length > 0 ? (
+            <ul className="divide-y divide-n-100 -mx-6">
+              {auditEntries.map((l) => (
+                <li key={l._id} className="px-6 py-3 flex items-start gap-3">
+                  <div className={`w-2 h-2 rounded-full mt-2 shrink-0 ${l.severity === 'high' ? 'bg-orange' : l.severity === 'success' ? 'bg-green-600' : 'bg-n-400'}`} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium">{l.action}</p>
+                    <p className="text-[11px] text-n-500 mt-0.5 font-mono">
+                      #{l.sequenceNumber} · {l.actorName} · {new Date(l._creationTime).toLocaleString('fr-FR')}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <ul className="divide-y divide-n-100 -mx-6">
+              {AUDIT_LOG.map((l, i) => (
+                <li key={i} className="px-6 py-3 flex items-start gap-3">
+                  <l.icon className={`w-4 h-4 mt-0.5 shrink-0 ${l.severity === 'high' ? 'text-orange' : l.severity === 'success' ? 'text-green-600' : 'text-n-500'}`} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium">{l.action}</p>
+                    <p className="text-[11px] text-n-500 mt-0.5">{l.actor} · IP {l.ip} · {l.when}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+          {!auditEntries && (
+            <p className="mt-3 text-[10px] text-n-400 italic">Données de démonstration · Connectez-vous pour voir le vrai journal d'audit Convex</p>
+          )}
           <button onClick={() => { downloadAuditLogCSV(AUDIT_LOG); store.toast('Audit log CSV téléchargé', 'success') }} className="mt-4 text-xs font-semibold text-orange hover:text-orange-deep uppercase tracking-wider">Exporter le journal complet (CSV)</button>
         </Card>
 

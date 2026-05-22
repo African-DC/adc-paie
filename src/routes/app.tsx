@@ -1,5 +1,8 @@
 import { createFileRoute, Link, Outlet, useLocation } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
+import { useQuery } from 'convex/react'
+import { authClient, useSession } from '../lib/auth-client'
+import { api } from '../../convex/_generated/api'
 import { LayoutDashboard, Users, Calculator, FileCheck2, Settings, Search, Bell, ChevronRight, Sparkles, CalendarDays, UserCircle2, Wallet, Menu, X, FileText, BadgeCheck, ShieldCheck, ArrowLeftRight, LogOut, Clock, BarChart3, Megaphone } from 'lucide-react'
 import { CURRENT_USER, EMPLOYEES } from '../lib/mock'
 import { Spotlight } from '../components/spotlight'
@@ -38,12 +41,51 @@ const ME = EMPLOYEES.find((e) => e.id === '4')!
 function AppLayout() {
   const loc = useLocation()
   const navigate = useNavigate()
+  const session = useSession()
   const unread = useStore((s) => s.notifs.filter((n) => !n.read).length)
-  const org = useStore((s) => s.org)
+  // Org : combine Better Auth (nom org) + Convex (paramètres métier IFU/CNPS/etc.)
+  // Fallback localStorage demo si pas encore connecté (mode démo)
+  const fallbackOrg = useStore((s) => s.org)
+  const orgSettings = useQuery(
+    api.organizations.getCurrentOrgSettings,
+    session.data ? {} : 'skip',
+  )
+  const org = orgSettings
+    ? {
+        name: fallbackOrg.name, // TODO Phase 2.7 : lire depuis Better Auth org name
+        ifu: orgSettings.ifu,
+        cnps: orgSettings.cnps,
+        sector: orgSettings.sector,
+        taux_at: String(orgSettings.tauxAT * 100),
+        city: orgSettings.city,
+        convention: orgSettings.convention,
+      }
+    : fallbackOrg
   const isMac = typeof navigator !== 'undefined' && navigator.platform.toLowerCase().includes('mac')
   const [drawer, setDrawer] = useState(false)
   const [confirmLogout, setConfirmLogout] = useState(false)
   useEffect(() => { setDrawer(false) }, [loc.pathname])
+
+  // Auth guard : si pas connecté → /login
+  // Si connecté mais pas d'org active → /onboarding
+  useEffect(() => {
+    if (session.isPending || typeof window === 'undefined') return
+    if (!session.data) {
+      navigate({ to: '/login', search: { redirect: loc.pathname } })
+      return
+    }
+    const activeOrgId = (session.data.user as { activeOrganizationId?: string }).activeOrganizationId
+    if (!activeOrgId) {
+      // Vérifier si l'user a des orgs (juste pas active) ou aucune
+      authClient.organization.list().then(({ data }) => {
+        if (!data || data.length === 0) {
+          navigate({ to: '/onboarding' })
+        } else {
+          authClient.organization.setActive({ organizationId: data[0].id })
+        }
+      })
+    }
+  }, [session.data, session.isPending, navigate, loc.pathname])
 
   const search = (loc as any).searchStr || (typeof window !== 'undefined' ? window.location.search : '') || ''
   const isEmployeeMode = loc.pathname.startsWith('/app/me') || search.includes('from=me')
@@ -216,7 +258,17 @@ function AppLayout() {
         cancelLabel="Annuler"
         variant="danger"
         onCancel={() => setConfirmLogout(false)}
-        onConfirm={() => { setConfirmLogout(false); store.toast('Déconnexion réussie', 'success'); navigate({ to: '/' }) }}
+        onConfirm={async () => {
+          setConfirmLogout(false)
+          await authClient.signOut({
+            fetchOptions: {
+              onSuccess: () => {
+                // Pattern obligatoire : reload pour clear JWT cache (gotcha known)
+                window.location.href = '/'
+              },
+            },
+          })
+        }}
       />
     </div>
   )
