@@ -21,7 +21,7 @@ function PayslipPage() {
   const navigate = useNavigate()
   const loc = useLocation()
   const fromMe = ((loc as any).searchStr || (typeof window !== 'undefined' ? window.location.search : '') || '').includes('from=me')
-  const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
+  const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)', e.joinedAt)
   const [explainAll, setExplainAll] = useState(false)
   const parts = 1 + (e.family.situation === 'marié(e)' ? 0.5 : 0) + e.family.kids * 0.5
 

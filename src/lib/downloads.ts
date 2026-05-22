@@ -152,7 +152,7 @@ function drawInfoBoxes(doc: jsPDF, y: number, left: { title: string; lines: stri
 
 export function downloadPayslipPDF(e: Employee, period = 'Novembre 2026') {
   const org = getOrg()
-  const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
+  const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)', e.joinedAt)
   const parts = 1 + (e.family.situation === 'marié(e)' ? 0.5 : 0) + e.family.kids * 0.5
 
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
@@ -168,13 +168,15 @@ export function downloadPayslipPDF(e: Employee, period = 'Novembre 2026') {
     head: [['Désignation', 'Base', 'Taux', 'À payer', 'À retenir']],
     body: [
       ['Salaire de base', '22 jours', '—', fmtXOF(e.brut), ''],
-      [{ content: 'Salaire brut', styles: { fontStyle: 'bold', fillColor: N50 } }, { content: '', styles: { fillColor: N50 } }, { content: '', styles: { fillColor: N50 } }, { content: fmtXOF(e.brut), styles: { fontStyle: 'bold', fillColor: N50 } }, { content: '', styles: { fillColor: N50 } }],
-      ['CNPS (retraite, famille, AT)', fmtXOF(e.brut), '6,3 %', '', fmtXOF(p.cnps)],
+      ...(p.ancienneteAmount > 0 ? [[`Prime d'ancienneté (CCI Art. 31)`, fmtXOF(e.brut), `${Math.round(p.anciennetePct * 100)} %`, fmtXOF(p.ancienneteAmount), '']] : []),
+      [{ content: 'Salaire brut total', styles: { fontStyle: 'bold', fillColor: N50 } }, { content: '', styles: { fillColor: N50 } }, { content: '', styles: { fillColor: N50 } }, { content: fmtXOF(p.brutTotal), styles: { fontStyle: 'bold', fillColor: N50 } }, { content: '', styles: { fillColor: N50 } }],
+      ['CNPS (retraite, famille, AT)', fmtXOF(p.brutTotal), '6,3 %', '', fmtXOF(p.cnps)],
       ['CMU · Couverture Maladie Univ.', '—', 'forfait', '', fmtXOF(p.cmuSal)],
-      ['ITS (quotient familial)', fmtXOF(e.brut), 'progressif', '', fmtXOF(p.its)],
-      ['IGR · Impôt Général', fmtXOF(e.brut), '1,5 %', '', fmtXOF(p.igr)],
-      ['CN · Contribution Nationale', fmtXOF(e.brut), '1,5 %', '', fmtXOF(p.cn)],
-    ],
+      ['ITS (quotient familial)', fmtXOF(p.brutTotal), 'progressif', '', fmtXOF(p.its)],
+      ['IGR · Impôt Général', fmtXOF(p.brutTotal), '1,5 %', '', fmtXOF(p.igr)],
+      ['CN · Contribution Nationale', fmtXOF(p.brutTotal), '1,5 %', '', fmtXOF(p.cn)],
+      ...(p.allocFam > 0 ? [[`Allocations familiales (versées par CNPS)`, `${e.family.kids} enfant(s)`, '7 500/enf', fmtXOF(p.allocFam), '']] : []),
+    ] as any,
     foot: [[
       { content: 'NET À PAYER', colSpan: 4, styles: { halign: 'left', fontStyle: 'bold', fillColor: INK as any, textColor: [255, 255, 255] as any, fontSize: 13, cellPadding: { top: 5, bottom: 5, left: 4, right: 4 } } },
       { content: fmtXOF(p.net), styles: { halign: 'right', fontStyle: 'bold', fillColor: ORANGE as any, textColor: [255, 255, 255] as any, fontSize: 14, cellPadding: { top: 5, bottom: 5, left: 4, right: 4 } } },
@@ -369,7 +371,7 @@ export function downloadAttestationPDF(e: Employee, type: 'travail' | 'cnps' | '
   } else if (type === 'cnps') {
     writePara(`Nous certifions que ${e.firstName} ${e.lastName} (mat. CNPS ${e.matricule}) est affilié(e) à la Caisse Nationale de Prévoyance Sociale via ${org.name} (employeur CNPS ${org.cnps}).`)
     writePara(`Détail des cotisations mensuelles versées pour ce salarié :`)
-    const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
+    const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)', e.joinedAt)
     autoTable(doc, {
       startY: y,
       head: [['Cotisation', 'Base FCFA', 'Taux', 'Montant FCFA']],
@@ -388,7 +390,7 @@ export function downloadAttestationPDF(e: Employee, type: 'travail' | 'cnps' | '
     })
   } else if (type === 'fiscal') {
     writePara(`Récapitulatif fiscal annuel 2025 délivré à ${e.firstName} ${e.lastName} (mat. ${e.matricule}) par ${org.name} (IFU ${org.ifu}).`)
-    const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
+    const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)', e.joinedAt)
     autoTable(doc, {
       startY: y,
       head: [['Élément', 'Cumul 2025 FCFA']],
@@ -439,7 +441,7 @@ function setExcelMeta(wb: XLSX.WorkBook) {
 
 export function downloadEmployeesExcel(employees: Employee[]) {
   const ws = XLSX.utils.json_to_sheet(employees.map((e) => {
-    const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
+    const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)', e.joinedAt)
     return { 'Matricule CNPS': e.matricule, 'Prénom': e.firstName, 'Nom': e.lastName, 'Fonction': e.role, 'Contrat': e.contract, 'Date d\'embauche': e.joinedAt, 'Statut': e.status === 'active' ? 'Actif' : 'En congé', 'Situation': e.family.situation, 'Enfants': e.family.kids, 'Brut FCFA': e.brut, 'CNPS FCFA': Math.round(p.cnps), 'ITS FCFA': Math.round(p.its), 'IGR+CN FCFA': Math.round(p.igr + p.cn), 'Net FCFA': Math.round(p.net), 'Coût employeur FCFA': Math.round(p.total) }
   }))
   ws['!cols'] = [{ wch: 14 }, { wch: 12 }, { wch: 14 }, { wch: 26 }, { wch: 9 }, { wch: 14 }, { wch: 10 }, { wch: 14 }, { wch: 8 }, { wch: 14 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 14 }, { wch: 16 }]
@@ -466,7 +468,7 @@ export function downloadDISAExcel(employees: Employee[], year = 2025) {
   // DISA = Déclaration Individuelle des Salaires Annuels (CNPS, échéance 31 mars)
   // 1 ligne par salarié × 12 mois récap, brut annuel et cotisations totales
   const rows = employees.filter((e) => e.status === 'active').map((e) => {
-    const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
+    const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)', e.joinedAt)
     return {
       'Matricule CNPS': e.matricule,
       'Prénom': e.firstName,
@@ -504,7 +506,7 @@ export function downloadDISAExcel(employees: Employee[], year = 2025) {
 export function downloadEtat301Excel(employees: Employee[], year = 2025) {
   // État 301 = récap annuel des salaires versés (DGI, échéance 30 mai)
   const rows = employees.filter((e) => e.status === 'active').map((e) => {
-    const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
+    const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)', e.joinedAt)
     return {
       'Matricule CNPS': e.matricule,
       'Prénom': e.firstName,
@@ -548,14 +550,14 @@ export function downloadDeclarationExcel(type: 'cnps' | 'dgi', period = 'Novembr
   const active = employees.filter((e) => e.status === 'active')
   if (type === 'cnps') {
     const rows = active.map((e) => {
-      const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
+      const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)', e.joinedAt)
       return { 'Mat. CNPS': e.matricule, 'Nom prénom': `${e.lastName} ${e.firstName}`, 'Salaire brut': e.brut, 'Salariale 6,3%': Math.round(p.cnps), 'Patronale 7,7%': Math.round(e.brut * 0.077), 'Prest. familiales 5,75%': Math.round(e.brut * 0.0575), 'AT 3,5%': Math.round(e.brut * 0.035), 'Total cotisations': Math.round(p.cnps + e.brut * 0.17) }
     })
     const ws = XLSX.utils.json_to_sheet(rows)
     XLSX.utils.book_append_sheet(wb, ws, 'Bordereau CNPS')
   } else {
     const rows = active.map((e) => {
-      const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
+      const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)', e.joinedAt)
       return { 'Mat. CNPS': e.matricule, 'Nom prénom': `${e.lastName} ${e.firstName}`, 'Salaire brut': e.brut, 'ITS': Math.round(p.its), 'IGR': Math.round(p.igr), 'CN': Math.round(p.cn), 'Total retenu': Math.round(p.its + p.igr + p.cn) }
     })
     const ws = XLSX.utils.json_to_sheet(rows)
@@ -606,7 +608,7 @@ export async function downloadAuditArchiveZip(employees: Employee[], period = 'N
   }
   if (items.includes('livre')) {
     const rows = active.map((e) => {
-      const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
+      const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)', e.joinedAt)
       return { 'Matricule': e.matricule, 'Salarié': `${e.firstName} ${e.lastName}`, 'Brut': e.brut, 'CNPS': Math.round(p.cnps), 'ITS': Math.round(p.its), 'IGR': Math.round(p.igr), 'CN': Math.round(p.cn), 'Net': Math.round(p.net), 'Coût employeur': Math.round(p.total) }
     })
     const ws = XLSX.utils.json_to_sheet(rows)
@@ -616,7 +618,7 @@ export async function downloadAuditArchiveZip(employees: Employee[], period = 'N
   }
   if (items.includes('cnps')) {
     const rows = active.map((e) => {
-      const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
+      const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)', e.joinedAt)
       return { 'Mat CNPS': e.matricule, 'Salarié': `${e.firstName} ${e.lastName}`, 'Brut': e.brut, 'Cotis salariale': Math.round(p.cnps), 'Cotis patronale': Math.round(e.brut * 0.17) }
     })
     const ws = XLSX.utils.json_to_sheet(rows)
@@ -626,7 +628,7 @@ export async function downloadAuditArchiveZip(employees: Employee[], period = 'N
   }
   if (items.includes('dgi')) {
     const rows = active.map((e) => {
-      const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
+      const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)', e.joinedAt)
       return { 'Mat CNPS': e.matricule, 'Salarié': `${e.firstName} ${e.lastName}`, 'Brut': e.brut, 'ITS': Math.round(p.its), 'IGR': Math.round(p.igr), 'CN': Math.round(p.cn) }
     })
     const ws = XLSX.utils.json_to_sheet(rows)
@@ -642,7 +644,7 @@ export async function downloadAuditArchiveZip(employees: Employee[], period = 'N
     const doc = new jsPDF({ unit: 'mm', format: 'a4' })
     drawHeader(doc, { title: 'Récapitulatif charges & retenues', subtitle: `Période · ${period}` })
     const t = active.reduce((acc, e) => {
-      const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
+      const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)', e.joinedAt)
       return { brut: acc.brut + e.brut, cnps: acc.cnps + p.cnps, its: acc.its + p.its, igr: acc.igr + p.igr, cn: acc.cn + p.cn, net: acc.net + p.net, patron: acc.patron + p.patron }
     }, { brut: 0, cnps: 0, its: 0, igr: 0, cn: 0, net: 0, patron: 0 })
     autoTable(doc, {
@@ -665,7 +667,7 @@ export async function downloadAuditArchiveZip(employees: Employee[], period = 'N
 
 function buildPayslipDoc(e: Employee, period: string): jsPDF {
   const org = getOrg()
-  const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
+  const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)', e.joinedAt)
   const parts = 1 + (e.family.situation === 'marié(e)' ? 0.5 : 0) + e.family.kids * 0.5
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
   drawHeader(doc, { title: 'Bulletin de paie', subtitle: `Période · ${period}`, ref: `N° BUL-${period.replace(/ /g, '-')}-${e.id.padStart(4, '0')}` })
@@ -1115,7 +1117,7 @@ export function downloadBordereauCNPSPDF(employees: Employee[], period = 'Novemb
 
   const active = employees.filter((e) => e.status === 'active')
   const rows = active.map((e) => {
-    const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
+    const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)', e.joinedAt)
     return [
       e.matricule,
       `${e.firstName} ${e.lastName}`,
@@ -1126,7 +1128,7 @@ export function downloadBordereauCNPSPDF(employees: Employee[], period = 'Novemb
     ]
   })
   const totals = active.reduce((acc, e) => {
-    const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
+    const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)', e.joinedAt)
     return { brut: acc.brut + e.brut, sal: acc.sal + p.cnps, pat: acc.pat + p.brut * 0.169 }
   }, { brut: 0, sal: 0, pat: 0 })
 
@@ -1178,7 +1180,7 @@ export function downloadBordereauCNPSPDF(employees: Employee[], period = 'Novemb
 export function downloadEcrituresOHADA(employees: Employee[], period = 'Novembre 2026') {
   const active = employees.filter((e) => e.status === 'active')
   const totals = active.reduce((acc, e) => {
-    const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
+    const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)', e.joinedAt)
     return {
       brut: acc.brut + e.brut,
       cnpsSal: acc.cnpsSal + p.cnps,
@@ -1311,7 +1313,7 @@ export function downloadReportPDF(employees: Employee[]) {
   drawHeader(doc, { title: 'Rapport analytique RH', subtitle: `${org.name} · Exercice 2026`, ref: `RAP-${new Date().toISOString().slice(0, 10)}` })
 
   const totals = active.reduce((acc, e) => {
-    const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
+    const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)', e.joinedAt)
     return { brut: acc.brut + e.brut, net: acc.net + p.net, patron: acc.patron + p.patron, total: acc.total + p.total }
   }, { brut: 0, net: 0, patron: 0, total: 0 })
 
@@ -1345,7 +1347,7 @@ export function downloadReportPDF(employees: Employee[]) {
     startY: y,
     head: [['Salarié', 'Fonction', 'Brut', 'Coût employeur']],
     body: top.map((e) => {
-      const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
+      const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)', e.joinedAt)
       return [`${e.firstName} ${e.lastName}`, e.role, fmtXOF(e.brut), fmtXOF(Math.round(p.total))]
     }),
     headStyles: { fillColor: INK as any, textColor: [255, 255, 255] as any, fontSize: 8 },

@@ -92,7 +92,7 @@ export function PaySalariesModal({ open, onClose, total, count }: { open: boolea
                 </thead>
                 <tbody>
                   {active.slice(0, 10).map((e) => {
-                    const pp = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
+                    const pp = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)', e.joinedAt)
                     return (
                       <tr key={e.id} className="border-b border-n-100 last:border-0">
                         <td className="px-3 py-2">{e.firstName} {e.lastName}</td>

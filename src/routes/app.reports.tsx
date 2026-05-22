@@ -10,7 +10,7 @@ function ReportsPage() {
   const org = useStore((s) => s.org)
   const active = EMPLOYEES.filter((e) => e.status === 'active')
   const totals = active.reduce((acc, e) => {
-    const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
+    const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)', e.joinedAt)
     return { brut: acc.brut + e.brut, net: acc.net + p.net, patron: acc.patron + p.patron, total: acc.total + p.total, cnps: acc.cnps + p.cnps, its: acc.its + p.its }
   }, { brut: 0, net: 0, patron: 0, total: 0, cnps: 0, its: 0 })
 

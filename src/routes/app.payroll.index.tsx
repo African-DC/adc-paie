@@ -29,7 +29,7 @@ function PayrollPage() {
     return nq ? active.filter((e) => norm(`${e.firstName} ${e.lastName} ${e.role}`).includes(nq)) : active
   }, [query, active])
   const totals = active.reduce((acc, e) => {
-    const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
+    const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)', e.joinedAt)
     return { brut: acc.brut + e.brut, cnps: acc.cnps + p.cnps, its: acc.its + p.its, igr: acc.igr + p.igr, cn: acc.cn + p.cn, net: acc.net + p.net, patron: acc.patron + p.patron }
   }, { brut: 0, cnps: 0, its: 0, igr: 0, cn: 0, net: 0, patron: 0 })
 
@@ -98,7 +98,7 @@ function PayrollPage() {
                 </td></tr>
               )}
               {visible.map((e) => {
-                const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
+                const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)', e.joinedAt)
                 return (
                   <tr key={e.id} className="border-b border-n-100 hover:bg-n-50/50 transition-colors">
                     <td className="px-4 py-3">

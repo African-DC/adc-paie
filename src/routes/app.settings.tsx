@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
-import { Building2, Users, Shield, Bell, History, X, Edit3, Check, CheckCircle2, AlertCircle, LogIn, FileSignature, Send, Wallet, Trash2 } from 'lucide-react'
+import { Building2, Users, Shield, Bell, History, X, Edit3, Check, CheckCircle2, AlertCircle, LogIn, FileSignature, Send, Wallet, Trash2, Scale, Activity } from 'lucide-react'
 import { EMPLOYEES } from '../lib/mock'
 import { store, useStore, CONVENTIONS } from '../lib/store'
 import { downloadAuditLogCSV, downloadEmployeesExcel } from '../lib/downloads'
@@ -63,6 +63,35 @@ function SettingsPage() {
             ))}
           </div>
           <button onClick={() => store.toast('Modal d\'invitation disponible en tier Pro', 'info')} className="mt-4 text-sm font-semibold text-orange hover:text-orange-deep">+ Inviter un collaborateur</button>
+        </Card>
+
+        <Card title="Conformité légale CI" icon={Scale}>
+          <p className="text-xs text-n-600 mb-3">Checklist des obligations employeur PME (Code travail 2015-532, sources MEPS + CNPS).</p>
+          <div className="space-y-2.5">
+            {[
+              { ok: EMPLOYEES.filter(e => e.status === 'active').length >= 11, label: 'Règlement intérieur affiché', detail: `Obligatoire ≥ 11 salariés · effectif actuel ${EMPLOYEES.filter(e => e.status === 'active').length}`, when: EMPLOYEES.filter(e => e.status === 'active').length >= 11 ? 'À mettre en place' : 'Non requis' },
+              { ok: EMPLOYEES.filter(e => e.status === 'active').length >= 11, label: 'Élections délégués du personnel', detail: 'Obligatoires ≥ 11 salariés (Décret 96-207)', when: EMPLOYEES.filter(e => e.status === 'active').length >= 11 ? 'À organiser' : 'Non requis' },
+              { ok: true, label: 'Affichage taux AT et horaires de travail', detail: `Taux AT actuel : ${tenant.taux_at} % · horaires affichés`, when: 'Conforme' },
+              { ok: true, label: 'Affichage convention collective', detail: tenant.convention, when: 'Conforme' },
+              { ok: true, label: 'Visite médicale embauche (OST)', detail: 'Obligation avant fin période d\'essai · ~15-50k FCFA', when: 'À planifier pour chaque embauche' },
+              { ok: true, label: 'Déclaration accident travail 48 h', detail: 'Obligation employeur dès survenance · CNPS', when: 'Module disponible ci-dessous' },
+              { ok: true, label: 'Coordonnées inspection du travail affichées', detail: 'Direction Régionale de l\'Emploi · 26 50 31 31', when: 'Conforme' },
+            ].map((item, i) => (
+              <div key={i} className="flex items-start gap-3 py-2.5 border-b border-n-100 last:border-0">
+                <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${item.ok ? 'bg-green-100 text-green-700' : 'bg-orange-tint text-orange-deep'}`}>
+                  {item.ok ? <Check className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium">{item.label}</p>
+                  <p className="text-[11px] text-n-500 mt-0.5">{item.detail}</p>
+                </div>
+                <span className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-sm shrink-0 ${item.ok ? 'bg-green-100 text-green-700' : 'bg-orange-tint text-orange-deep'}`}>{item.when}</span>
+              </div>
+            ))}
+          </div>
+          <button onClick={() => store.toast('Modèle de règlement intérieur CI téléchargé (placeholder démo)', 'info')} className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-orange hover:text-orange-deep uppercase tracking-wider">
+            <Activity className="w-3.5 h-3.5" /> Déclarer un accident du travail
+          </button>
         </Card>
 
         <Card title="Sécurité" icon={Shield}>

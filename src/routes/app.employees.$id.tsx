@@ -20,7 +20,7 @@ function EmployeeDetail() {
   const { e } = Route.useLoaderData()
   const [tab, setTab] = useState<'identity' | 'contract' | 'history' | 'docs'>('identity')
   const [stcOpen, setStcOpen] = useState(false)
-  const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
+  const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)', e.joinedAt)
 
   return (
     <div className="space-y-6">

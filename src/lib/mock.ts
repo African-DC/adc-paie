@@ -65,17 +65,36 @@ export function fcfaShort(n: number): string {
   return String(n)
 }
 
+// Calcule la prime d'ancienneté mensuelle (CCI 1977 Art. 31)
+// 2 % après 24 mois, +1 % par année supplémentaire, plafond 25 % du salaire de base
+export function computeAncienneteMonths(joinedAt: string): number {
+  const start = new Date(joinedAt)
+  const now = new Date('2026-11-30') // période de référence démo
+  const months = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth())
+  return Math.max(0, months)
+}
+
+export function computeAnciennetePct(months: number): number {
+  if (months < 24) return 0
+  const years = Math.floor(months / 12)
+  const pct = 2 + (years - 2) // 2 % à 2 ans, +1/an
+  return Math.min(pct, 25) / 100
+}
+
 // Calculs paie ivoirien simplifiés
-// Sources : DGI CI, CNPS CI, CLEISS, Code Général des Impôts 2026, Ordonnance 2023-719
-export function computePayslip(brut: number, kids = 0, married = false) {
-  // CNPS salariale 6,3 % du brut (plafond 3 375 000 FCFA = 45 × SMIG)
-  // Décomposée : retraite 3,2 % + CMU 1,5 % + famille 0,75 % + AT 0,75 %
-  const brutPlaf = Math.min(brut, 3_375_000)
+// Sources : DGI CI, CNPS CI, CLEISS, Code Général des Impôts 2026, Ordonnance 2023-719, CCI 1977
+export function computePayslip(brut: number, kids = 0, married = false, joinedAt = '2025-01-01') {
+  // Prime d'ancienneté mensuelle (CCI 1977)
+  const anciennetePct = computeAnciennetePct(computeAncienneteMonths(joinedAt))
+  const ancienneteAmount = Math.round(brut * anciennetePct)
+  const brutTotal = brut + ancienneteAmount
+  // CNPS salariale 6,3 % du brut total (plafond 3 375 000 FCFA = 45 × SMIG)
+  const brutPlaf = Math.min(brutTotal, 3_375_000)
   const cnps = brutPlaf * 0.063
-  // CMU forfait régime général : 500 FCFA salarié + 500 FCFA employeur = 1 000 FCFA total/mois
+  // CMU forfait : 500 FCFA salarié + 500 FCFA employeur
   const cmuSal = 500
   // ITS barème 2026 par tranche annuelle / part (Ordonnance 2023-719)
-  const baseAnnuelle = brut * 12 - cnps * 12 - brut * 12 * 0.15
+  const baseAnnuelle = brutTotal * 12 - cnps * 12 - brutTotal * 12 * 0.15
   const parts = 1 + (married ? 0.5 : 0) + kids * 0.5
   const baseParPart = baseAnnuelle / parts
   let itsParPart = 0
@@ -83,18 +102,20 @@ export function computePayslip(brut: number, kids = 0, married = false) {
   if (baseParPart > 1200000) itsParPart += Math.min(baseParPart - 1200000, 800000) * 0.2
   if (baseParPart > 2000000) itsParPart += (baseParPart - 2000000) * 0.25
   const its = (itsParPart * parts) / 12
-  const igr = brut * 0.015 // Impôt Général sur le Revenu (forfait CI)
-  const cn = brut * 0.015  // Contribution Nationale (Loi 2003-308)
-  const net = brut - cnps - cmuSal - its - igr - cn
-  const patron = brut * 0.169 + 500 // CNPS patronale 16,9 % + CMU patronale 500 FCFA
-  return { brut, cnps, cmuSal, its, igr, cn, net, patron, total: brut + patron }
+  const igr = brutTotal * 0.015 // Impôt Général sur le Revenu (forfait CI)
+  const cn = brutTotal * 0.015  // Contribution Nationale (Loi 2003-308)
+  // Allocations familiales CNPS : 7 500 FCFA/enfant, max 6, versées par CNPS au salarié (pas par employeur)
+  const allocFam = Math.min(kids, 6) * 7500
+  const net = brutTotal - cnps - cmuSal - its - igr - cn
+  const patron = brutTotal * 0.169 + 500 // CNPS patronale 16,9 % + CMU patronale 500 FCFA
+  return { brut, brutTotal, anciennetePct, ancienneteAmount, cnps, cmuSal, its, igr, cn, allocFam, net, patron, total: brutTotal + patron }
 }
 
 export const TOTALS = (() => {
   const active = EMPLOYEES.filter((e) => e.status === 'active')
   const masseBrut = active.reduce((s, e) => s + e.brut, 0)
   const masseNet = active.reduce((s, e) => {
-    const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)')
+    const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)', e.joinedAt)
     return s + p.net
   }, 0)
   const charges = active.reduce((s, e) => s + e.brut * 0.17, 0)
