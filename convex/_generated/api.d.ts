@@ -9,6 +9,7 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as employees from "../employees.js";
 import type * as http from "../http.js";
 import type * as lib_auditLog from "../lib/auditLog.js";
 import type * as lib_rbac from "../lib/rbac.js";
@@ -23,6 +24,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  employees: typeof employees;
   http: typeof http;
   "lib/auditLog": typeof lib_auditLog;
   "lib/rbac": typeof lib_rbac;

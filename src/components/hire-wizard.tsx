@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { X, ChevronRight, ChevronLeft, Check, FileSignature, User, Briefcase, Phone, Wallet, ShieldCheck, Sparkles } from 'lucide-react'
+import { useMutation } from 'convex/react'
 import { fcfa, computePayslip } from '../lib/mock'
+import { useSession } from '../lib/auth-client'
+import { api } from '../../convex/_generated/api'
 import { store } from '../lib/store'
 import { downloadContratPDF } from '../lib/downloads'
 
@@ -27,10 +30,13 @@ const STEPS = [
 ]
 
 export function HireWizard({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const session = useSession()
+  const hireMutation = useMutation(api.employees.hire)
   const [step, setStep] = useState(1)
   const [form, setForm] = useState<Form>(INITIAL)
   const [signing, setSigning] = useState(false)
   const [done, setDone] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   if (!open) return null
 
@@ -44,13 +50,45 @@ export function HireWizard({ open, onClose }: { open: boolean; onClose: () => vo
     return true
   }
 
-  const finalize = () => {
+  const finalize = async () => {
     setSigning(true)
-    setTimeout(() => {
+    setError(null)
+    try {
+      // Si connecté : vraie mutation Convex (multi-tenant, audit log auto)
+      if (session.data) {
+        const matricule = form.cnpsMat || `CI-${Date.now().toString().slice(-8)}`
+        await hireMutation({
+          firstName: form.firstName,
+          lastName: form.lastName,
+          matricule,
+          role: form.role,
+          contract: form.contract === 'Stage' ? 'Stage' : (form.contract as 'CDI' | 'CDD'),
+          brut: form.brut,
+          family: {
+            situation: form.familySituation,
+            kids: form.kids,
+          },
+          joinedAt: form.startDate,
+          email: form.email || undefined,
+          phone: form.phone || undefined,
+          address: form.address || undefined,
+          emergencyContact: form.emergency || undefined,
+          cnpsMat: form.cnpsMat || undefined,
+          bankProvider: form.bankProvider || undefined,
+          bankRef: form.bankRef || undefined,
+        })
+      } else {
+        // Mode démo : juste le délai cosmétique
+        await new Promise((r) => setTimeout(r, 1200))
+      }
+      // PDF contrat généré client-side dans tous les cas
       downloadContratPDF(form)
       setSigning(false)
       setDone(true)
-    }, 1800)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur lors de l\'embauche')
+      setSigning(false)
+    }
   }
 
   const close = () => {
@@ -114,6 +152,15 @@ export function HireWizard({ open, onClose }: { open: boolean; onClose: () => vo
               <div className="w-12 h-12 border-4 border-orange border-t-transparent rounded-full animate-spin mx-auto mb-4" />
               <p className="font-serif text-lg font-semibold">Signature électronique en cours…</p>
               <p className="text-sm text-n-600 mt-2">Génération du contrat PDF, déclaration CNPS, création de la fiche.</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-8">
+              <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <X className="w-7 h-7 text-red-600" />
+              </div>
+              <p className="font-serif text-lg font-semibold text-red-800">Embauche impossible</p>
+              <p className="text-sm text-n-600 mt-2 max-w-md mx-auto">{error}</p>
+              <button onClick={() => setError(null)} className="mt-5 px-5 h-10 text-sm font-semibold uppercase tracking-wider border border-n-300 text-n-700 hover:bg-n-50 rounded-sm">Réessayer</button>
             </div>
           ) : (
             <>

@@ -1,6 +1,8 @@
 import { createFileRoute, Link, Outlet, useLocation } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
 import { useQuery } from 'convex/react'
+import { ConvexBetterAuthProvider } from '@convex-dev/better-auth/react'
+import { convex } from '../lib/convex-client'
 import { authClient, useSession } from '../lib/auth-client'
 import { api } from '../../convex/_generated/api'
 import { LayoutDashboard, Users, Calculator, FileCheck2, Settings, Search, Bell, ChevronRight, Sparkles, CalendarDays, UserCircle2, Wallet, Menu, X, FileText, BadgeCheck, ShieldCheck, ArrowLeftRight, LogOut, Clock, BarChart3, Megaphone } from 'lucide-react'
@@ -14,7 +16,15 @@ import { ConfirmDialog } from '../components/confirm-dialog'
 import { useStore, store } from '../lib/store'
 import { useNavigate } from '@tanstack/react-router'
 
-export const Route = createFileRoute('/app')({ component: AppLayout })
+export const Route = createFileRoute('/app')({ component: AppRoot })
+
+function AppRoot() {
+  return (
+    <ConvexBetterAuthProvider client={convex} authClient={authClient}>
+      <AppLayout />
+    </ConvexBetterAuthProvider>
+  )
+}
 
 const ADMIN_NAV = [
   { to: '/app',              label: 'Tableau de bord',     icon: LayoutDashboard, exact: true },

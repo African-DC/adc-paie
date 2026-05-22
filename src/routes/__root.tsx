@@ -1,8 +1,5 @@
 import { Outlet, createRootRoute, HeadContent, Link, Scripts } from '@tanstack/react-router'
 import { Home, ArrowLeft, Search } from 'lucide-react'
-import { ConvexBetterAuthProvider } from '@convex-dev/better-auth/react'
-import { convex } from '../lib/convex-client'
-import { authClient } from '../lib/auth-client'
 import appCss from '../styles.css?url'
 
 export const Route = createRootRoute({
@@ -40,9 +37,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <ConvexBetterAuthProvider client={convex} authClient={authClient}>
-          {children}
-        </ConvexBetterAuthProvider>
+        {children}
         <Scripts />
       </body>
     </html>

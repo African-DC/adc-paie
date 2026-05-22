@@ -2,13 +2,23 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import { ArrowRight, Building2, ChevronLeft, CheckCircle2, AlertCircle } from 'lucide-react'
 import { useMutation } from 'convex/react'
+import { ConvexBetterAuthProvider } from '@convex-dev/better-auth/react'
+import { convex } from '../lib/convex-client'
 import { authClient, useSession } from '../lib/auth-client'
 import { api } from '../../convex/_generated/api'
 import { CONVENTIONS } from '../lib/store'
 
 export const Route = createFileRoute('/onboarding')({
-  component: OnboardingPage,
+  component: OnboardingRoot,
 })
+
+function OnboardingRoot() {
+  return (
+    <ConvexBetterAuthProvider client={convex} authClient={authClient}>
+      <OnboardingPage />
+    </ConvexBetterAuthProvider>
+  )
+}
 
 type FormState = {
   name: string

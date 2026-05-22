@@ -1,7 +1,10 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { Plus, Filter, Download, MoreHorizontal, Search, ArrowUpDown, ArrowUp, ArrowDown, X, Upload, LayoutGrid, List, Mail, Phone } from 'lucide-react'
+import { Plus, Filter, Download, MoreHorizontal, Search, ArrowUpDown, ArrowUp, ArrowDown, X, Upload, LayoutGrid, List, Mail, Phone, Sparkles } from 'lucide-react'
 import { useState, useMemo } from 'react'
-import { EMPLOYEES, fcfa } from '../lib/mock'
+import { useQuery, useMutation } from 'convex/react'
+import { EMPLOYEES, fcfa, type Employee } from '../lib/mock'
+import { useSession } from '../lib/auth-client'
+import { api } from '../../convex/_generated/api'
 import { store } from '../lib/store'
 import { HireWizard } from '../components/hire-wizard'
 import { downloadEmployeesExcel, downloadImportTemplateExcel } from '../lib/downloads'
@@ -14,6 +17,10 @@ type SortKey = 'name' | 'role' | 'brut' | 'joined' | null
 type SortDir = 'asc' | 'desc'
 
 function EmployeesPage() {
+  const session = useSession()
+  const seedDemo = useMutation(api.employees.seedDemo)
+  const liveEmployees = useQuery(api.employees.list, session.data ? {} : 'skip')
+
   const [filter, setFilter] = useState<'all' | 'CDI' | 'CDD'>('all')
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState<SortKey>(null)
@@ -21,12 +28,36 @@ function EmployeesPage() {
   const [hireOpen, setHireOpen] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
   const [view, setView] = useState<'table' | 'grid'>('table')
+  const [seeding, setSeeding] = useState(false)
 
   const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '')
 
+  // Data source : Convex live si connecté, mock sinon (mode démo)
+  // Adapte le shape Convex doc → Employee type pour zéro régression UI
+  const sourceEmployees: Employee[] = useMemo(() => {
+    if (liveEmployees && liveEmployees.length > 0) {
+      return liveEmployees.map((e) => ({
+        id: e._id,
+        firstName: e.firstName,
+        lastName: e.lastName,
+        matricule: e.matricule,
+        role: e.role,
+        contract: e.contract as Employee['contract'],
+        brut: e.brut,
+        status: e.status as Employee['status'],
+        family: {
+          situation: e.family.situation as Employee['family']['situation'],
+          kids: e.family.kids,
+        },
+        joinedAt: e.joinedAt,
+      }))
+    }
+    return EMPLOYEES
+  }, [liveEmployees])
+
   const list = useMemo(() => {
     const nq = norm(query)
-    let l = EMPLOYEES.filter((e) => filter === 'all' ? true : e.contract === filter)
+    let l = sourceEmployees.filter((e) => filter === 'all' ? true : e.contract === filter)
     if (nq) {
       l = l.filter((e) => norm(`${e.firstName} ${e.lastName} ${e.role} ${e.matricule}`).includes(nq))
     }
@@ -41,7 +72,23 @@ function EmployeesPage() {
       })
     }
     return l
-  }, [filter, query, sort, dir])
+  }, [sourceEmployees, filter, query, sort, dir])
+
+  const handleSeedDemo = async () => {
+    setSeeding(true)
+    try {
+      const result = await seedDemo({})
+      if (result.ok) {
+        store.toast(`${result.count} salariés démo ajoutés à votre espace`, 'success')
+      } else {
+        store.toast(result.reason ?? 'Seed impossible', 'warning')
+      }
+    } catch (err) {
+      store.toast(err instanceof Error ? err.message : 'Erreur seed', 'warning')
+    } finally {
+      setSeeding(false)
+    }
+  }
 
   const toggleSort = (k: SortKey) => {
     if (sort === k) setDir((d) => (d === 'asc' ? 'desc' : 'asc'))
@@ -56,9 +103,14 @@ function EmployeesPage() {
           <h1 className="font-serif text-3xl lg:text-4xl font-semibold tracking-tight">
             Salariés <span className="em-serif">actifs</span>
           </h1>
-          <p className="mt-2 text-n-700">{EMPLOYEES.filter(e => e.status === 'active').length} salariés en poste · {EMPLOYEES.filter(e => e.status === 'leave').length} en congé</p>
+          <p className="mt-2 text-n-700">{sourceEmployees.filter(e => e.status === 'active').length} salariés en poste · {sourceEmployees.filter(e => e.status === 'leave').length} en congé</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
+          {session.data && liveEmployees && liveEmployees.length === 0 && (
+            <button onClick={handleSeedDemo} disabled={seeding} className="inline-flex items-center gap-2 border border-orange/40 bg-orange-tint text-orange-deep px-3 h-9 text-xs font-semibold hover:bg-orange/20 transition-colors rounded-sm uppercase tracking-wider disabled:opacity-60" title="Bootstrap rapide avec 15 salariés réalistes">
+              <Sparkles className="w-3.5 h-3.5" /> {seeding ? 'Création…' : 'Démarrer avec 15 démos'}
+            </button>
+          )}
           <button onClick={() => setImportOpen(true)} className="inline-flex items-center gap-2 border border-n-300 text-n-700 px-3 h-9 text-xs font-medium hover:bg-n-50 transition-colors rounded-sm uppercase tracking-wider" title="Importer depuis Excel">
             <Upload className="w-3.5 h-3.5" /> Importer
           </button>
