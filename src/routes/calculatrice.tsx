@@ -19,11 +19,11 @@ function CalculatricePage() {
     if (mode === 'brut-net') return computePayslip(brut, kids, married)
     let lo = 50000, hi = 5_000_000
     for (let i = 0; i < 35; i++) {
-      const mid = (lo + hi) / 2
+      const mid = Math.round((lo + hi) / 2)
       const r = computePayslip(mid, kids, married)
       if (r.net < net) lo = mid; else hi = mid
     }
-    return computePayslip(hi, kids, married)
+    return computePayslip(Math.round(hi), kids, married)
   }, [mode, brut, net, married, kids])
 
   const display = {
