@@ -28,7 +28,7 @@ const siteUrl = env.SITE_URL ?? env.CONVEX_SITE_URL ?? 'http://localhost:3000'
 export const createAuth = (ctx: GenericCtx<DataModel>) =>
   betterAuth({
     baseURL: siteUrl,
-    database: convexAdapter(ctx as never, components.betterAuth),
+    database: convexAdapter(ctx as never, components.betterAuth as never),
     trustedOrigins: [
       'http://localhost:3000',
       'http://localhost:3001',
