@@ -7,7 +7,7 @@ import { convex } from '../lib/convex-client'
 import { authClient, useSession } from '../lib/auth-client'
 import { api } from '../../convex/_generated/api'
 import { CONVENTIONS } from '../lib/store'
-import { mapOrgCreateError } from '../lib/org-errors'
+import { mapOrgCreateError, debugErrorString } from '../lib/org-errors'
 
 export const Route = createFileRoute('/onboarding')({
   component: OnboardingRoot,
@@ -51,6 +51,7 @@ function OnboardingPage() {
   const [step, setStep] = useState<1 | 2>(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [errorDebug, setErrorDebug] = useState<string | null>(null)
   const [done, setDone] = useState(false)
   const [form, setForm] = useState<FormState>({
     name: '',
@@ -107,6 +108,7 @@ function OnboardingPage() {
       const { error: err } = await authClient.organization.create({ name, slug })
       if (err) {
         setError(mapOrgCreateError(err))
+        setErrorDebug(debugErrorString(err))
         setLoading(false)
         return
       }
@@ -114,6 +116,7 @@ function OnboardingPage() {
       setLoading(false)
     } catch (err) {
       setError(mapOrgCreateError(err))
+      setErrorDebug(debugErrorString(err))
       setLoading(false)
     }
   }
@@ -185,7 +188,15 @@ function OnboardingPage() {
         {error && (
           <div className="mx-6 mt-4 px-3 py-2.5 bg-red-50 border border-red-200 rounded-sm flex items-start gap-2 text-sm text-red-800">
             <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-            <p>{error}</p>
+            <div className="flex-1 min-w-0">
+              <p>{error}</p>
+              {errorDebug && (
+                <details className="mt-2">
+                  <summary className="text-[10px] uppercase tracking-wider text-red-600 cursor-pointer hover:text-red-800">Détails techniques</summary>
+                  <pre className="mt-1 text-[11px] font-mono text-red-700 whitespace-pre-wrap break-all bg-red-100 p-2 rounded">{errorDebug}</pre>
+                </details>
+              )}
+            </div>
           </div>
         )}
 

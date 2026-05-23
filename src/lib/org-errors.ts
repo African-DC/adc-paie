@@ -22,6 +22,7 @@ const MESSAGE_PATTERNS: Array<{ pattern: RegExp; fr: string }> = [
 ]
 
 export function mapOrgCreateError(raw: unknown): string {
+  console.error('[org-create-error]', raw)
   const err = raw as BetterAuthError | Error | null | undefined
   if (!err) return 'Création impossible, réessayez'
 
@@ -36,4 +37,21 @@ export function mapOrgCreateError(raw: unknown): string {
   }
 
   return 'Création impossible, réessayez ou contactez le support'
+}
+
+export function debugErrorString(raw: unknown): string {
+  if (!raw) return 'no-error'
+  try {
+    const err = raw as BetterAuthError
+    const parts = [
+      err.code && `code=${err.code}`,
+      err.status && `status=${err.status}`,
+      err.statusCode && `statusCode=${err.statusCode}`,
+      err.message && `msg="${err.message}"`,
+    ].filter(Boolean)
+    if (parts.length > 0) return parts.join(' · ')
+    return JSON.stringify(raw).slice(0, 200)
+  } catch {
+    return String(raw).slice(0, 200)
+  }
 }
