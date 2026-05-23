@@ -26,8 +26,8 @@ function LandingPage() {
                 Calcul automatique CNPS, ITS, IGR et CN selon les barèmes 2026. Bulletins conformes au Code du travail ivoirien. Exports prêts pour e-CNPS et e-impots.gouv.ci.
               </p>
               <div className="mt-10 flex flex-col sm:flex-row gap-3">
-                <Link to="/app" className="inline-flex items-center justify-between gap-3 bg-ink text-white px-6 h-12 text-sm font-semibold uppercase tracking-wider hover:bg-orange transition-colors">
-                  Tester la démo <ArrowRight className="w-4 h-4" />
+                <Link to="/signup" className="inline-flex items-center justify-between gap-3 bg-ink text-white px-6 h-12 text-sm font-semibold uppercase tracking-wider hover:bg-orange transition-colors">
+                  Créer mon espace <ArrowRight className="w-4 h-4" />
                 </Link>
                 <a href="#pricing" className="inline-flex items-center justify-between gap-3 border border-ink text-ink px-6 h-12 text-sm font-semibold uppercase tracking-wider hover:bg-ink hover:text-white transition-colors">
                   Voir les tarifs <ArrowRight className="w-4 h-4" />
@@ -179,8 +179,8 @@ function LandingPage() {
                     </li>
                   ))}
                 </ul>
-                <Link to="/app" className={`mt-6 inline-flex items-center justify-between gap-2 px-4 h-10 text-xs font-semibold uppercase tracking-wider transition-colors ${t.popular ? 'bg-orange text-white hover:bg-orange-deep' : 'bg-ink text-white hover:bg-orange'}`}>
-                  Démo gratuite <ArrowRight className="w-3.5 h-3.5" />
+                <Link to="/signup" className={`mt-6 inline-flex items-center justify-between gap-2 px-4 h-10 text-xs font-semibold uppercase tracking-wider transition-colors ${t.popular ? 'bg-orange text-white hover:bg-orange-deep' : 'bg-ink text-white hover:bg-orange'}`}>
+                  Commencer <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
             ))}
@@ -235,11 +235,11 @@ function LandingPage() {
             Prêt à clôturer votre <span className="em-serif">prochaine paie</span><br />en quinze minutes ?
           </h2>
           <p className="mt-6 text-lg text-n-700 max-w-2xl mx-auto">
-            Accédez à la démo interactive immédiatement. Aucun engagement, aucune carte bancaire.
+            Créez votre espace en deux minutes. Aucun engagement, aucune carte bancaire requise.
           </p>
           <div className="mt-10 flex flex-col sm:flex-row justify-center gap-3">
-            <Link to="/app" className="inline-flex items-center justify-between gap-3 bg-orange text-white px-7 h-12 text-sm font-semibold uppercase tracking-wider hover:bg-orange-deep transition-colors">
-              Tester la démo maintenant <ArrowRight className="w-4 h-4" />
+            <Link to="/signup" className="inline-flex items-center justify-between gap-3 bg-orange text-white px-7 h-12 text-sm font-semibold uppercase tracking-wider hover:bg-orange-deep transition-colors">
+              Créer mon espace gratuitement <ArrowRight className="w-4 h-4" />
             </Link>
             <a href="mailto:africandigitconsulting@gmail.com?subject=Demande%20beta%20ADC%20Paie" className="inline-flex items-center justify-between gap-3 border border-ink text-ink px-7 h-12 text-sm font-semibold uppercase tracking-wider hover:bg-ink hover:text-white transition-colors">
               Demander un accès beta <ArrowRight className="w-4 h-4" />
