@@ -27,7 +27,7 @@ export function MarketingFooter() {
               <ul className="space-y-3 text-sm">
                 <li><Link to="/" hash="features" className="text-white hover:text-orange transition-colors">Fonctionnalités</Link></li>
                 <li><Link to="/" hash="pricing" className="text-white hover:text-orange transition-colors">Tarifs</Link></li>
-                <li><Link to="/app" className="text-white hover:text-orange transition-colors">Démo</Link></li>
+                <li><Link to="/signup" className="text-white hover:text-orange transition-colors">Créer un compte</Link></li>
                 <li><Link to="/a-propos" className="text-white hover:text-orange transition-colors">À propos</Link></li>
               </ul>
             </div>

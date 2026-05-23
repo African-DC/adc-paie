@@ -12,8 +12,8 @@ export function MarketingHeader() {
           <Link to="/calculatrice" className="hover:text-orange transition-colors" activeProps={{ className: 'text-orange' }}>Calculatrice</Link>
           <Link to="/aide" className="hover:text-orange transition-colors" activeProps={{ className: 'text-orange' }}>Aide & barèmes</Link>
         </nav>
-        <Link to="/app" className="inline-flex items-center gap-2 bg-ink text-white px-4 h-9 text-[13px] font-semibold uppercase tracking-wider hover:bg-orange transition-colors">
-          Démo <ArrowRight className="w-3.5 h-3.5" />
+        <Link to="/signup" className="inline-flex items-center gap-2 bg-ink text-white px-4 h-9 text-[13px] font-semibold uppercase tracking-wider hover:bg-orange transition-colors">
+          Se connecter <ArrowRight className="w-3.5 h-3.5" />
         </Link>
       </div>
     </header>
