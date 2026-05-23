@@ -41,15 +41,19 @@ function ConfidentialitePage() {
             <p>Le traitement repose sur trois bases : (i) <strong>exécution du contrat</strong> SaaS qui vous lie à ADC, (ii) <strong>obligations légales</strong> de l'employeur (CNPS, DGI), (iii) <strong>intérêt légitime</strong> à sécuriser la plateforme.</p>
           </Section>
           <Section title="Hébergement et localisation">
-            <p>Vos données sont hébergées chez <strong>Vercel</strong> (centres de calcul européens et nord-américains certifiés ISO 27001 et SOC 2). Réplication CDN sur le nœud de Dakar (DKR) pour optimiser la latence en Afrique de l'Ouest.</p>
-            <p>Les sauvegardes journalières chiffrées sont stockées chez un prestataire africain (Orange Cloud Côte d'Ivoire), pour garantir une copie sous juridiction nationale.</p>
+            <p>L'application est servie par <strong>Vercel</strong> (Edge Network global, certifié ISO 27001 et SOC 2 Type II) avec CDN optimisé pour l'Afrique de l'Ouest (PoP de Lagos, Johannesburg).</p>
+            <p>Le backend de données et le stockage des bulletins de paie sont opérés par <strong>Convex</strong>, infrastructure hébergée sur Amazon Web Services (AWS) — régions <code className="font-mono text-xs">us-east-1</code> (Virginie) ou <code className="font-mono text-xs">eu-west-1</code> (Irlande) selon le déploiement. Toutes les requêtes sont chiffrées TLS 1.3 en transit et AES-256 au repos. AWS détient les certifications ISO 27001, SOC 2 Type II, PCI DSS, HIPAA.</p>
+            <p>L'authentification est gérée par <strong>Better Auth</strong> via le composant officiel Convex (single-store, pas de DB tierce). Les mots de passe sont hachés en argon2id, jamais stockés en clair.</p>
+            <p>Le transfert international de vos données est encadré par les <strong>Data Processing Addendums (DPA)</strong> AWS et Vercel signés par African Digit Consulting. Une demande d'autorisation a été déposée auprès de l'ARTCI conformément à la Loi 2013-450.</p>
           </Section>
           <Section title="Sécurité">
             <ul className="list-disc pl-5 space-y-1.5 mt-2">
               <li>Chiffrement <strong>TLS 1.3</strong> de bout en bout</li>
               <li>Chiffrement <strong>AES-256</strong> au repos sur les disques</li>
-              <li>Authentification à deux facteurs (MFA) obligatoire pour les administrateurs</li>
-              <li>Audit log exhaustif de toutes les actions sensibles (conservation 5 ans)</li>
+              <li>Authentification à deux facteurs (MFA) disponible pour tous les comptes administrateurs</li>
+              <li><strong>Audit log immuable hash-chained SHA-256</strong> de toutes les actions sensibles : chaque entrée porte le hash de l'entrée précédente, rendant toute altération détectable (conservation 5 ans conforme Code travail CI Loi 2015-532)</li>
+              <li><strong>Multi-tenant strict</strong> : chaque entreprise cliente est isolée logiquement via un identifiant d'organisation (organizationId) vérifié à chaque requête serveur — aucun risque de fuite cross-tenant</li>
+              <li>Mots de passe hachés en <strong>argon2id</strong>, jamais stockés en clair</li>
               <li>Tests d'intrusion annuels par cabinet tiers</li>
             </ul>
           </Section>

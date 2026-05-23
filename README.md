@@ -1,193 +1,143 @@
-Welcome to your new TanStack Start app! 
+# ADC Paie & RH
 
-# Getting Started
+SaaS de gestion de paie conforme CNPS et DGI pour PME ivoiriennes.
+Édité par [African Digit Consulting](https://africandigitconsulting.com).
 
-To run this application:
+## Stack (2026-05-23)
+
+| Couche | Choix |
+|---|---|
+| Framework | **TanStack Start** v1.168 (SSR + server functions) |
+| UI | React 19 + Tailwind v4 + Lucide |
+| Backend | **Convex** v1.39 (DB realtime + storage + serverless) |
+| Auth | **Better Auth** v1.6 + plugin organizations (multi-tenant) |
+| Bundling | Vite 8 + pnpm workspace |
+| Moteur paie | `@adc/payroll-engine` (workspace package, 76 tests Vitest) |
+
+## Setup
 
 ```bash
 pnpm install
+npx convex dev --once  # provision Convex deployment (CONVEX_DEPLOYMENT auto)
+npx convex env set BETTER_AUTH_SECRET "$(openssl rand -base64 32)"
+npx convex env set SITE_URL "http://localhost:3000"
 pnpm dev
 ```
 
-# Building For Production
+L'app démarre sur http://localhost:3000.
 
-To build this application for production:
+## Architecture
 
-```bash
-pnpm build
+### Single store Convex
+
+Better Auth tourne sur Convex via `@convex-dev/better-auth` (component officiel) — pas de DB tierce, tout dans une seule base.
+
+### Multi-tenant strict
+
+Toutes les queries/mutations métier passent par le helper `withOrg(ctx, fn)` (`convex/lib/withOrg.ts`) qui :
+1. Vérifie la session Better Auth
+2. Extrait `activeOrganizationId` du JWT custom claim
+3. Injecte `orgId` + `userId` + `userRole` dans le contexte
+
+Anti-fuite cross-tenant : ne jamais utiliser `ctx.db.query()` direct sans `withOrg`.
+
+### RBAC fine
+
+5 rôles : `owner`, `admin`, `dro` (RH), `comptable`, `salarie`. Matrix de 30+ permissions dans `convex/lib/rbac.ts`. Helper `withOrgRoles(ctx, ['admin'], fn)` pour enforcer.
+
+### Audit log hash-chained
+
+Chaque mutation sensible écrit une entrée dans `auditLog` avec :
+- `sequenceNumber` monotone par org
+- `prevHash` SHA-256 de l'entrée précédente
+- `entryHash` SHA-256 de cette entrée
+
+Conformité ARTCI Loi 2013-450 + Code travail CI 5 ans rétention.
+
+### Pattern data hybride (démo / live)
+
+Toutes les routes UI suivent ce pattern :
+
+```ts
+const session = useSession()
+const liveData = useQuery(api.X.list, session.data ? {} : 'skip')
+const source = liveData?.length ? liveData.map(adapt) : MOCK_FALLBACK
 ```
 
-## Testing
+→ Le mockup commercial reste intact pour les pitchs (mode démo), et tout devient live automatiquement après signup+onboarding.
 
-This project uses [Vitest](https://vitest.dev/) for testing. You can run the tests with:
+### Mode démo via branche `demo`
 
-```bash
-pnpm test
+Branche `demo` gelée (depuis HEAD master pré-migration TanStack Start) déployée par Vercel en preview URL stable. Mockup SPA pur, zéro Convex. À partager aux prospects en RDV.
+
+## Structure
+
+```
+adc-paie/
+├── packages/
+│   └── payroll-engine/        # Pure module, 76 tests Vitest, barèmes CI 2026
+├── convex/
+│   ├── schema.ts              # 11 tables multi-tenant
+│   ├── auth.ts                # Better Auth + organization plugin + JWT claims
+│   ├── http.ts                # Mount /api/auth/*
+│   ├── lib/
+│   │   ├── withOrg.ts         # Helper scoping multi-tenant
+│   │   ├── rbac.ts            # Permissions matrix
+│   │   └── auditLog.ts        # Hash-chained SHA-256
+│   ├── employees.ts           # CRUD + seedDemo
+│   ├── payroll.ts             # generate/pay/validate (engine server-side)
+│   ├── files.ts               # Storage bulletins PDF
+│   ├── advances.ts, leaves.ts, attendance.ts, announcements.ts, reports.ts, notifications.ts
+│   └── organizations.ts       # Settings + audit log queries
+├── src/
+│   ├── router.tsx             # getRouter (convention default-entry Start)
+│   ├── routes/
+│   │   ├── __root.tsx         # shellComponent HTML (pas de ConvexProvider ici)
+│   │   ├── (marketing publics) /, /a-propos, /aide, /cgv, /confidentialite, /mentions-legales, /calculatrice
+│   │   ├── login.tsx, signup.tsx, onboarding.tsx
+│   │   ├── api/auth.$.ts      # Proxy vers Convex Site URL
+│   │   └── app.*.tsx          # Shell + modules (ConvexProvider scoped here)
+│   └── lib/
+│       ├── auth-client.ts, auth-server.ts, convex-client.ts
+│       ├── mock.ts            # Fallback mode démo
+│       ├── store.ts           # UI state (modals, toasts)
+│       └── downloads.ts       # Exports PDF/Excel/ZIP client-side
+└── README.md
 ```
 
-## Styling
+## Commandes utiles
 
-This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
+| Commande | Effet |
+|---|---|
+| `pnpm dev` | Dev server (Vite + Convex sync) |
+| `pnpm build` | Build production |
+| `pnpm test` | Tests app (Vitest) |
+| `pnpm -F @adc/payroll-engine test` | Tests engine paie (76 specs) |
+| `npx convex dev --once` | Push schema/functions sans watch |
+| `npx convex env set FOO bar` | Set Convex env var |
+| `npx convex dashboard` | Ouvrir dashboard Convex web |
 
-### Removing Tailwind CSS
+## Conformité légale CI
 
-If you prefer not to use Tailwind CSS:
+- **Code du travail Loi 2015-532** — bulletins art. 32.5 mentions obligatoires
+- **Convention Collective Interprofessionnelle 1977** — prime ancienneté (Art. 31), heures supp (Art. 24), congés (Art. 25), gratification 13e mois (Art. 41)
+- **Loi de Finances 2026** N°2025-987 du 19 décembre 2025 — barèmes ITS/IGR/CN
+- **Ordonnance 2023-719** — ITS quotient familial
+- **CNPS** — taux 6,3 % salarié + 7,7 % employeur + plafond 45×SMIG
+- **CMU** — forfait 500+500 FCFA
+- **ARTCI Loi 2013-450** — protection données personnelles (DPA AWS+Vercel signés, demande autorisation en cours)
 
-1. Remove the demo pages in `src/routes/demo/`
-2. Replace the Tailwind import in `src/styles.css` with your own styles
-3. Remove `tailwindcss()` from the plugins array in `vite.config.ts`
-4. Uninstall the packages: `pnpm add @tailwindcss/vite tailwindcss --dev`
+## Roadmap restante (post-migration)
 
+Voir [`MEMORY.md`](../.claude/projects/.../memory/MEMORY.md) (memory project) pour la liste détaillée :
+- Audit comptable engine v1.0 (budget 150-300k FCFA prévu)
+- Wave Business sandbox (Phase 6 skip)
+- Wiring UI modules secondaires (backends Convex prêts, checklist par module)
+- Notifications panel live + Settings team management
+- MFA TOTP (Phase 8)
+- E2E test cross-tenant Playwright
+- Observability OpenTelemetry → Grafana Cloud
 
+## License
 
-## Routing
-
-This project uses [TanStack Router](https://tanstack.com/router) with file-based routing. Routes are managed as files in `src/routes`.
-
-### Adding A Route
-
-To add a new route to your application just add a new file in the `./src/routes` directory.
-
-TanStack will automatically generate the content of the route file for you.
-
-Now that you have two routes you can use a `Link` component to navigate between them.
-
-### Adding Links
-
-To use SPA (Single Page Application) navigation you will need to import the `Link` component from `@tanstack/react-router`.
-
-```tsx
-import { Link } from "@tanstack/react-router";
-```
-
-Then anywhere in your JSX you can use it like so:
-
-```tsx
-<Link to="/about">About</Link>
-```
-
-This will create a link that will navigate to the `/about` route.
-
-More information on the `Link` component can be found in the [Link documentation](https://tanstack.com/router/v1/docs/framework/react/api/router/linkComponent).
-
-### Using A Layout
-
-In the File Based Routing setup the layout is located in `src/routes/__root.tsx`. Anything you add to the root route will appear in all the routes. The route content will appear in the JSX where you render `{children}` in the `shellComponent`.
-
-Here is an example layout that includes a header:
-
-```tsx
-import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router'
-
-export const Route = createRootRoute({
-  head: () => ({
-    meta: [
-      { charSet: 'utf-8' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'My App' },
-    ],
-  }),
-  shellComponent: ({ children }) => (
-    <html lang="en">
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        <header>
-          <nav>
-            <Link to="/">Home</Link>
-            <Link to="/about">About</Link>
-          </nav>
-        </header>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  ),
-})
-```
-
-More information on layouts can be found in the [Layouts documentation](https://tanstack.com/router/latest/docs/framework/react/guide/routing-concepts#layouts).
-
-## Server Functions
-
-TanStack Start provides server functions that allow you to write server-side code that seamlessly integrates with your client components.
-
-```tsx
-import { createServerFn } from '@tanstack/react-start'
-
-const getServerTime = createServerFn({
-  method: 'GET',
-}).handler(async () => {
-  return new Date().toISOString()
-})
-
-// Use in a component
-function MyComponent() {
-  const [time, setTime] = useState('')
-  
-  useEffect(() => {
-    getServerTime().then(setTime)
-  }, [])
-  
-  return <div>Server time: {time}</div>
-}
-```
-
-## API Routes
-
-You can create API routes by using the `server` property in your route definitions:
-
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-import { json } from '@tanstack/react-start'
-
-export const Route = createFileRoute('/api/hello')({
-  server: {
-    handlers: {
-      GET: () => json({ message: 'Hello, World!' }),
-    },
-  },
-})
-```
-
-## Data Fetching
-
-There are multiple ways to fetch data in your application. You can use TanStack Query to fetch data from a server. But you can also use the `loader` functionality built into TanStack Router to load the data for a route before it's rendered.
-
-For example:
-
-```tsx
-import { createFileRoute } from '@tanstack/react-router'
-
-export const Route = createFileRoute('/people')({
-  loader: async () => {
-    const response = await fetch('https://swapi.dev/api/people')
-    return response.json()
-  },
-  component: PeopleComponent,
-})
-
-function PeopleComponent() {
-  const data = Route.useLoaderData()
-  return (
-    <ul>
-      {data.results.map((person) => (
-        <li key={person.name}>{person.name}</li>
-      ))}
-    </ul>
-  )
-}
-```
-
-Loaders simplify your data fetching logic dramatically. Check out more information in the [Loader documentation](https://tanstack.com/router/latest/docs/framework/react/guide/data-loading#loader-parameters).
-
-# Demo files
-
-Files prefixed with `demo` can be safely deleted. They are there to provide a starting point for you to play around with the features you've installed.
-
-# Learn More
-
-You can learn more about all of the offerings from TanStack in the [TanStack documentation](https://tanstack.com).
-
-For TanStack Start specific documentation, visit [TanStack Start](https://tanstack.com/start).
+Propriétaire — African Digit Consulting, 2026
