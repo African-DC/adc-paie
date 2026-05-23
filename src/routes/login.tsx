@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate, useSearch } from '@tanstack/react-r
 import { useState } from 'react'
 import { ArrowRight, Lock, Mail, Sparkles, AlertCircle } from 'lucide-react'
 import { z } from 'zod'
-import { signIn, useSession } from '../lib/auth-client'
+import { signIn } from '../lib/auth-client'
 
 const loginSearchSchema = z.object({
   redirect: z.string().optional(),
@@ -17,16 +17,10 @@ export const Route = createFileRoute('/login')({
 function LoginPage() {
   const nav = useNavigate()
   const search = useSearch({ from: '/login' })
-  const session = useSession()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(search.error ?? null)
-
-  if (session.data && !session.isPending) {
-    // déjà connecté → rediriger
-    nav({ to: search.redirect ?? '/app' })
-  }
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()

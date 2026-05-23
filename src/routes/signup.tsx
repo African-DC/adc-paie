@@ -1,23 +1,18 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { ArrowRight, Lock, Mail, User as UserIcon, Sparkles, AlertCircle } from 'lucide-react'
-import { signUp, useSession } from '../lib/auth-client'
+import { signUp } from '../lib/auth-client'
 
 export const Route = createFileRoute('/signup')({
   component: SignupPage,
 })
 
 function SignupPage() {
-  const session = useSession()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  if (session.data && !session.isPending) {
-    if (typeof window !== 'undefined') window.location.href = '/onboarding'
-  }
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
