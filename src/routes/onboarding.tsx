@@ -91,7 +91,12 @@ function OnboardingPage() {
       setError('Le nom de l\'entreprise est requis')
       return
     }
-    if (!form.slug.match(/^[a-z0-9-]+$/)) {
+    const cleanedSlug = form.slug.replace(/^-+|-+$/g, '')
+    if (cleanedSlug.length < 2) {
+      setError('Le slug doit contenir au moins 2 caractères')
+      return
+    }
+    if (!cleanedSlug.match(/^[a-z0-9-]+$/)) {
       setError('Le slug ne peut contenir que des lettres minuscules, chiffres et tirets')
       return
     }
@@ -99,10 +104,11 @@ function OnboardingPage() {
     try {
       const { error: err } = await authClient.organization.create({
         name: form.name.trim(),
-        slug: form.slug,
+        slug: cleanedSlug,
       })
       if (err) {
-        setError(err.message ?? 'Création de l\'organisation impossible')
+        const msg = err.message ?? (err as { code?: string }).code ?? JSON.stringify(err)
+        setError(`Création impossible : ${msg}`)
         setLoading(false)
         return
       }
@@ -205,7 +211,7 @@ function OnboardingPage() {
               <input
                 id="slug"
                 value={form.slug}
-                onChange={(e) => setForm((f) => ({ ...f, slug: slugify(e.target.value) }))}
+                onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') }))}
                 required
                 pattern="[a-z0-9-]+"
                 placeholder="sahel-industries"
