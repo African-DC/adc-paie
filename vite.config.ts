@@ -19,6 +19,7 @@ const config = defineConfig({
     tailwindcss(),
     tanstackStart({
       tsr: { autoCodeSplitting: true },
+      target: 'vercel',
     }),
     viteReact(),
   ],
