@@ -8,6 +8,8 @@ import { authClient, useSession } from '../lib/auth-client'
 import { api } from '../../convex/_generated/api'
 import { CONVENTIONS } from '../lib/store'
 import { mapOrgCreateError, debugErrorString } from '../lib/org-errors'
+import { FieldHelp } from '../components/FieldHelp'
+import { ONBOARDING_HELP, suggestTauxAT } from '../lib/onboarding-help'
 
 export const Route = createFileRoute('/onboarding')({
   component: OnboardingRoot,
@@ -228,7 +230,10 @@ function OnboardingPage() {
           <form onSubmit={submitStep2} className="p-6 space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label htmlFor="ifu" className="text-[10px] uppercase tracking-[0.22em] text-n-600 font-semibold">IFU (DGI)</label>
+                <div className="flex items-center">
+                  <label htmlFor="ifu" className="text-[10px] uppercase tracking-[0.22em] text-n-600 font-semibold">IFU (DGI)</label>
+                  <FieldHelp label="IFU (DGI)" content={ONBOARDING_HELP.ifu} />
+                </div>
                 <input
                   id="ifu"
                   value={form.ifu}
@@ -239,7 +244,10 @@ function OnboardingPage() {
                 />
               </div>
               <div>
-                <label htmlFor="cnps" className="text-[10px] uppercase tracking-[0.22em] text-n-600 font-semibold">N° CNPS employeur</label>
+                <div className="flex items-center">
+                  <label htmlFor="cnps" className="text-[10px] uppercase tracking-[0.22em] text-n-600 font-semibold">N° CNPS employeur</label>
+                  <FieldHelp label="N° CNPS employeur" content={ONBOARDING_HELP.cnps} />
+                </div>
                 <input
                   id="cnps"
                   value={form.cnps}
@@ -252,18 +260,28 @@ function OnboardingPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label htmlFor="sector" className="text-[10px] uppercase tracking-[0.22em] text-n-600 font-semibold">Secteur d'activité</label>
+                <div className="flex items-center">
+                  <label htmlFor="sector" className="text-[10px] uppercase tracking-[0.22em] text-n-600 font-semibold">Secteur d'activité</label>
+                  <FieldHelp label="Secteur d'activité" content={ONBOARDING_HELP.sector} />
+                </div>
                 <select
                   id="sector"
                   value={form.sector}
-                  onChange={(e) => setForm({ ...form, sector: e.target.value })}
+                  onChange={(e) => {
+                    const newSector = e.target.value
+                    setForm({ ...form, sector: newSector, tauxAT: suggestTauxAT(newSector) })
+                  }}
                   className="mt-2 w-full h-11 px-3 border border-n-300 rounded-sm text-sm bg-white focus:outline-none focus:border-orange focus:ring-1 focus:ring-orange"
                 >
                   {SECTEURS.map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
+                <p className="mt-1.5 text-[10px] text-n-500">Le Taux AT est suggéré automatiquement.</p>
               </div>
               <div>
-                <label htmlFor="tauxAT" className="text-[10px] uppercase tracking-[0.22em] text-n-600 font-semibold">Taux AT (%)</label>
+                <div className="flex items-center">
+                  <label htmlFor="tauxAT" className="text-[10px] uppercase tracking-[0.22em] text-n-600 font-semibold">Taux AT (%)</label>
+                  <FieldHelp label="Taux Accidents du Travail" content={ONBOARDING_HELP.tauxAT} />
+                </div>
                 <input
                   id="tauxAT"
                   type="number"
@@ -275,11 +293,14 @@ function OnboardingPage() {
                   required
                   className="mt-2 w-full h-11 px-3 border border-n-300 rounded-sm text-sm font-mono focus:outline-none focus:border-orange focus:ring-1 focus:ring-orange"
                 />
-                <p className="mt-1.5 text-[10px] text-n-500">Entre 2 % et 5 % selon votre secteur (décret CNPS).</p>
+                <p className="mt-1.5 text-[10px] text-n-500">Entre 2 % et 5 % selon décret CNPS.</p>
               </div>
             </div>
             <div>
-              <label htmlFor="city" className="text-[10px] uppercase tracking-[0.22em] text-n-600 font-semibold">Ville</label>
+              <div className="flex items-center">
+                <label htmlFor="city" className="text-[10px] uppercase tracking-[0.22em] text-n-600 font-semibold">Ville</label>
+                <FieldHelp label="Ville" content={ONBOARDING_HELP.city} />
+              </div>
               <input
                 id="city"
                 value={form.city}
@@ -290,7 +311,10 @@ function OnboardingPage() {
               />
             </div>
             <div>
-              <label htmlFor="convention" className="text-[10px] uppercase tracking-[0.22em] text-n-600 font-semibold">Convention collective applicable</label>
+              <div className="flex items-center">
+                <label htmlFor="convention" className="text-[10px] uppercase tracking-[0.22em] text-n-600 font-semibold">Convention collective applicable</label>
+                <FieldHelp label="Convention collective" content={ONBOARDING_HELP.convention} />
+              </div>
               <select
                 id="convention"
                 value={form.convention}
