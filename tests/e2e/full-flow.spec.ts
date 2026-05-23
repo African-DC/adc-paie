@@ -51,7 +51,7 @@ test.describe('ADC Paie — Smoke E2E', () => {
     await page.goto(`${BASE_URL}/`)
     await expect(page).toHaveTitle(/ADC Paie/)
     await expect(page.locator('h1').first()).toBeVisible()
-    await expect(page.locator('a[href="/app"]').first()).toBeVisible()
+    await expect(page.locator('a[href="/signup"]').first()).toBeVisible()
     await expect(page.locator('a[href="/calculatrice"]').first()).toBeVisible()
   })
 
@@ -112,3 +112,32 @@ test.skip('Signup API Better Auth (skip — trustedOrigins à configurer)', asyn
 // Test full UI flow signup → onboard → seed → payroll (skip headless)
 // Voir memory dev-browser-headless-limits.md
 test.skip('Full UI flow (skip headless — exécuter en browser réel)', async () => {})
+
+// Sign-up + organization create — vérifie que Local Install du component betterAuth
+// accepte bien le model "organization" (régression ArgumentValidationError 2026-05-23).
+test('Signup + organization.create flow against prod Vercel', async ({ request }) => {
+  const ts = Date.now()
+  const email = `e2e-org-${ts}@adc-paie.ci`
+  const signupRes = await request.post(`${BASE_URL}/api/auth/sign-up/email`, {
+    data: { email, password: 'TestPaie2026!', name: 'E2E Org Test' },
+    headers: { 'Content-Type': 'application/json', Origin: BASE_URL },
+  })
+  expect(signupRes.status(), `signup body: ${await signupRes.text()}`).toBeLessThan(400)
+
+  const setCookieRaw = signupRes.headers()['set-cookie'] ?? ''
+  const cookieHeader = setCookieRaw
+    .split(/\r?\n/)
+    .map((line) => line.split(';')[0]?.trim())
+    .filter(Boolean)
+    .join('; ')
+  expect(cookieHeader, 'session cookie should be set').toBeTruthy()
+
+  const slug = `e2e-org-${ts}`
+  const createRes = await request.post(`${BASE_URL}/api/auth/organization/create`, {
+    data: { name: `E2E Org ${ts}`, slug },
+    headers: { 'Content-Type': 'application/json', Origin: BASE_URL, Cookie: cookieHeader },
+  })
+  const body = await createRes.text()
+  expect(createRes.status(), `create body: ${body}`).toBeLessThan(400)
+  expect(body).toContain(slug)
+})
