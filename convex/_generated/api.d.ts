@@ -8,15 +8,21 @@
  * @module
  */
 
+import type * as advances from "../advances.js";
+import type * as announcements from "../announcements.js";
+import type * as attendance from "../attendance.js";
 import type * as auth from "../auth.js";
 import type * as employees from "../employees.js";
 import type * as files from "../files.js";
 import type * as http from "../http.js";
+import type * as leaves from "../leaves.js";
 import type * as lib_auditLog from "../lib/auditLog.js";
 import type * as lib_rbac from "../lib/rbac.js";
 import type * as lib_withOrg from "../lib/withOrg.js";
+import type * as notifications from "../notifications.js";
 import type * as organizations from "../organizations.js";
 import type * as payroll from "../payroll.js";
+import type * as reports from "../reports.js";
 
 import type {
   ApiFromModules,
@@ -25,15 +31,21 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  advances: typeof advances;
+  announcements: typeof announcements;
+  attendance: typeof attendance;
   auth: typeof auth;
   employees: typeof employees;
   files: typeof files;
   http: typeof http;
+  leaves: typeof leaves;
   "lib/auditLog": typeof lib_auditLog;
   "lib/rbac": typeof lib_rbac;
   "lib/withOrg": typeof lib_withOrg;
+  notifications: typeof notifications;
   organizations: typeof organizations;
   payroll: typeof payroll;
+  reports: typeof reports;
 }>;
 
 /**
