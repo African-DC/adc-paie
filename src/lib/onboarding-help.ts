@@ -94,3 +94,17 @@ export function suggestTauxAT(sector: string): string {
   if (s.includes('agric')) return '3.5'
   return '2.5'
 }
+
+/**
+ * Suggestion intelligente de la convention collective applicable selon le secteur.
+ * La CCI 1977 reste le défaut sécurisé pour la majorité des PME tertiaires.
+ * Conventions sectorielles à privilégier si applicable.
+ */
+export function suggestConvention(sector: string, available: string[]): string {
+  const s = sector.toLowerCase()
+  const find = (needle: string) => available.find((c) => c.toLowerCase().includes(needle))
+  if (s.includes('btp')) return find('btp') ?? available[0]
+  if (s.includes('transport')) return find('transport') ?? available[0]
+  if (s.includes('banque') || s.includes('assur')) return find('banque') ?? find('assur') ?? available[0]
+  return available[0]
+}

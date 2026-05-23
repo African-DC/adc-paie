@@ -9,7 +9,8 @@ import { api } from '../../convex/_generated/api'
 import { CONVENTIONS } from '../lib/store'
 import { mapOrgCreateError, debugErrorString } from '../lib/org-errors'
 import { FieldHelp } from '../components/FieldHelp'
-import { ONBOARDING_HELP, suggestTauxAT } from '../lib/onboarding-help'
+import { ONBOARDING_HELP, suggestTauxAT, suggestConvention } from '../lib/onboarding-help'
+import { Sparkles } from 'lucide-react'
 
 export const Route = createFileRoute('/onboarding')({
   component: OnboardingRoot,
@@ -228,11 +229,18 @@ function OnboardingPage() {
           </form>
         ) : (
           <form onSubmit={submitStep2} className="p-6 space-y-4">
+            <div className="px-3 py-2.5 bg-orange-soft border border-orange/30 rounded-sm flex items-start gap-2.5 text-[12.5px] text-ink leading-relaxed">
+              <Sparkles className="w-4 h-4 mt-0.5 shrink-0 text-orange" />
+              <p>
+                Cliquez sur <span className="inline-flex items-center justify-center w-4 h-4 rounded-full border border-n-400 text-[10px] font-bold text-n-600 align-middle">?</span> à côté de chaque label pour comprendre où trouver l'information.
+                Le Taux AT et la convention sont suggérés selon votre secteur.
+              </p>
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <div className="flex items-center">
                   <label htmlFor="ifu" className="text-[10px] uppercase tracking-[0.22em] text-n-600 font-semibold">IFU (DGI)</label>
-                  <FieldHelp label="IFU (DGI)" content={ONBOARDING_HELP.ifu} />
+                  <FieldHelp label="IFU (DGI)" content={ONBOARDING_HELP.ifu} fieldId="ifu" />
                 </div>
                 <input
                   id="ifu"
@@ -246,7 +254,7 @@ function OnboardingPage() {
               <div>
                 <div className="flex items-center">
                   <label htmlFor="cnps" className="text-[10px] uppercase tracking-[0.22em] text-n-600 font-semibold">N° CNPS employeur</label>
-                  <FieldHelp label="N° CNPS employeur" content={ONBOARDING_HELP.cnps} />
+                  <FieldHelp label="N° CNPS employeur" content={ONBOARDING_HELP.cnps} fieldId="cnps" />
                 </div>
                 <input
                   id="cnps"
@@ -262,14 +270,19 @@ function OnboardingPage() {
               <div>
                 <div className="flex items-center">
                   <label htmlFor="sector" className="text-[10px] uppercase tracking-[0.22em] text-n-600 font-semibold">Secteur d'activité</label>
-                  <FieldHelp label="Secteur d'activité" content={ONBOARDING_HELP.sector} />
+                  <FieldHelp label="Secteur d'activité" content={ONBOARDING_HELP.sector} fieldId="sector" />
                 </div>
                 <select
                   id="sector"
                   value={form.sector}
                   onChange={(e) => {
                     const newSector = e.target.value
-                    setForm({ ...form, sector: newSector, tauxAT: suggestTauxAT(newSector) })
+                    setForm({
+                      ...form,
+                      sector: newSector,
+                      tauxAT: suggestTauxAT(newSector),
+                      convention: suggestConvention(newSector, CONVENTIONS),
+                    })
                   }}
                   className="mt-2 w-full h-11 px-3 border border-n-300 rounded-sm text-sm bg-white focus:outline-none focus:border-orange focus:ring-1 focus:ring-orange"
                 >
@@ -280,7 +293,7 @@ function OnboardingPage() {
               <div>
                 <div className="flex items-center">
                   <label htmlFor="tauxAT" className="text-[10px] uppercase tracking-[0.22em] text-n-600 font-semibold">Taux AT (%)</label>
-                  <FieldHelp label="Taux Accidents du Travail" content={ONBOARDING_HELP.tauxAT} />
+                  <FieldHelp label="Taux Accidents du Travail" content={ONBOARDING_HELP.tauxAT} fieldId="tauxAT" />
                 </div>
                 <input
                   id="tauxAT"
@@ -299,7 +312,7 @@ function OnboardingPage() {
             <div>
               <div className="flex items-center">
                 <label htmlFor="city" className="text-[10px] uppercase tracking-[0.22em] text-n-600 font-semibold">Ville</label>
-                <FieldHelp label="Ville" content={ONBOARDING_HELP.city} />
+                <FieldHelp label="Ville" content={ONBOARDING_HELP.city} fieldId="city" />
               </div>
               <input
                 id="city"
@@ -313,7 +326,7 @@ function OnboardingPage() {
             <div>
               <div className="flex items-center">
                 <label htmlFor="convention" className="text-[10px] uppercase tracking-[0.22em] text-n-600 font-semibold">Convention collective applicable</label>
-                <FieldHelp label="Convention collective" content={ONBOARDING_HELP.convention} />
+                <FieldHelp label="Convention collective" content={ONBOARDING_HELP.convention} fieldId="convention" />
               </div>
               <select
                 id="convention"
