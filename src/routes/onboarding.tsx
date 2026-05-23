@@ -23,7 +23,6 @@ function OnboardingRoot() {
 
 type FormState = {
   name: string
-  slug: string
   ifu: string
   cnps: string
   sector: string
@@ -55,7 +54,6 @@ function OnboardingPage() {
   const [done, setDone] = useState(false)
   const [form, setForm] = useState<FormState>({
     name: '',
-    slug: '',
     ifu: '',
     cnps: '',
     sector: 'Tech & digital',
@@ -82,39 +80,31 @@ function OnboardingPage() {
       .slice(0, 48)
 
   const setName = (name: string) => {
-    setForm((f) => ({ ...f, name, slug: f.slug || slugify(name) }))
+    setForm((f) => ({ ...f, name }))
+  }
+
+  const findAvailableSlug = async (base: string): Promise<string> => {
+    const candidates = [base, ...Array.from({ length: 5 }, () => `${base}-${Math.random().toString(36).slice(2, 6)}`)]
+    for (const candidate of candidates) {
+      const { data, error: checkErr } = await authClient.organization.checkSlug({ slug: candidate })
+      if (!checkErr && data?.status !== false) return candidate
+    }
+    return `${base}-${Date.now().toString(36)}`
   }
 
   const submitStep1 = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
-    if (!form.name.trim() || form.name.length < 2) {
+    const name = form.name.trim()
+    if (!name || name.length < 2) {
       setError('Le nom de l\'entreprise est requis')
-      return
-    }
-    const cleanedSlug = form.slug.replace(/^-+|-+$/g, '')
-    if (cleanedSlug.length < 2) {
-      setError('Le slug doit contenir au moins 2 caractères')
-      return
-    }
-    if (!cleanedSlug.match(/^[a-z0-9-]+$/)) {
-      setError('Le slug ne peut contenir que des lettres minuscules, chiffres et tirets')
       return
     }
     setLoading(true)
     try {
-      const { data: slugCheck, error: checkErr } = await authClient.organization.checkSlug({
-        slug: cleanedSlug,
-      })
-      if (checkErr || slugCheck?.status === false) {
-        setError('Ce slug est déjà utilisé, choisissez-en un autre')
-        setLoading(false)
-        return
-      }
-      const { error: err } = await authClient.organization.create({
-        name: form.name.trim(),
-        slug: cleanedSlug,
-      })
+      const baseSlug = slugify(name) || `org-${Date.now().toString(36)}`
+      const slug = await findAvailableSlug(baseSlug)
+      const { error: err } = await authClient.organization.create({ name, slug })
       if (err) {
         setError(mapOrgCreateError(err))
         setLoading(false)
@@ -212,19 +202,6 @@ function OnboardingPage() {
                 placeholder="Sahel Industries SARL"
                 className="mt-2 w-full h-11 px-3 border border-n-300 rounded-sm text-sm focus:outline-none focus:border-orange focus:ring-1 focus:ring-orange"
               />
-            </div>
-            <div>
-              <label htmlFor="slug" className="text-[10px] uppercase tracking-[0.22em] text-n-600 font-semibold">Slug unique</label>
-              <input
-                id="slug"
-                value={form.slug}
-                onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') }))}
-                required
-                pattern="[a-z0-9-]+"
-                placeholder="sahel-industries"
-                className="mt-2 w-full h-11 px-3 border border-n-300 rounded-sm text-sm font-mono focus:outline-none focus:border-orange focus:ring-1 focus:ring-orange"
-              />
-              <p className="mt-1.5 text-[10px] text-n-500">Identifie votre espace dans les URLs. Lettres minuscules, chiffres et tirets uniquement.</p>
             </div>
             <div className="pt-2 flex items-center justify-end">
               <button
