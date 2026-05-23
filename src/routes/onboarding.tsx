@@ -7,6 +7,7 @@ import { convex } from '../lib/convex-client'
 import { authClient, useSession } from '../lib/auth-client'
 import { api } from '../../convex/_generated/api'
 import { CONVENTIONS } from '../lib/store'
+import { mapOrgCreateError } from '../lib/org-errors'
 
 export const Route = createFileRoute('/onboarding')({
   component: OnboardingRoot,
@@ -102,21 +103,27 @@ function OnboardingPage() {
     }
     setLoading(true)
     try {
+      const { data: slugCheck, error: checkErr } = await authClient.organization.checkSlug({
+        slug: cleanedSlug,
+      })
+      if (checkErr || slugCheck?.status === false) {
+        setError('Ce slug est déjà utilisé, choisissez-en un autre')
+        setLoading(false)
+        return
+      }
       const { error: err } = await authClient.organization.create({
         name: form.name.trim(),
         slug: cleanedSlug,
       })
       if (err) {
-        const msg = err.message ?? (err as { code?: string }).code ?? JSON.stringify(err)
-        setError(`Création impossible : ${msg}`)
+        setError(mapOrgCreateError(err))
         setLoading(false)
         return
       }
-      // L'organisation créée devient automatiquement active (creatorRole = owner)
       setStep(2)
       setLoading(false)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur')
+      setError(mapOrgCreateError(err))
       setLoading(false)
     }
   }
