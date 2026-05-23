@@ -1,7 +1,10 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
+import { useQuery } from 'convex/react'
 import { TrendingUp, Users, CalendarClock, Wallet, ArrowRight, AlertCircle, Calculator, Send, UserPlus } from 'lucide-react'
 import { TOTALS, EMPLOYEES, DECLARATIONS, fcfa } from '../lib/mock'
+import { useSession } from '../lib/auth-client'
+import { api } from '../../convex/_generated/api'
 import { AnomaliesBanner } from '../components/extras'
 import { store, useStore } from '../lib/store'
 
@@ -10,9 +13,49 @@ export const Route = createFileRoute('/app/')({
 })
 
 function Dashboard() {
+  const session = useSession()
+  const liveKPIs = useQuery(api.reports.dashboardKPIs, session.data ? {} : 'skip')
+  const liveEmployees = useQuery(api.employees.list, session.data ? { status: 'active' } : 'skip')
+
   const next = DECLARATIONS.find(d => d.status === 'À soumettre' || d.status === 'En cours')
-  const recentHires = EMPLOYEES.filter(e => e.status === 'active').slice(-3).reverse()
   const org = useStore((s) => s.org)
+
+  // KPIs hybrides : Convex live ou fallback mock
+  const kpis = useMemo(() => {
+    if (liveKPIs) {
+      return {
+        masseBrut: liveKPIs.masseBrut,
+        active: liveKPIs.effectif.active,
+        onLeave: liveKPIs.effectif.onLeave,
+        charges: liveKPIs.chargesPatronales,
+        pendingLeaves: liveKPIs.pendingLeaves,
+        pendingAdvances: liveKPIs.pendingAdvances,
+      }
+    }
+    return {
+      masseBrut: TOTALS.masseBrut,
+      active: TOTALS.active,
+      onLeave: EMPLOYEES.filter((e) => e.status === 'leave').length,
+      charges: TOTALS.charges,
+      pendingLeaves: 0,
+      pendingAdvances: 2, // legacy mockup value
+    }
+  }, [liveKPIs])
+
+  const recentHires = useMemo(() => {
+    if (liveEmployees && liveEmployees.length > 0) {
+      return liveEmployees.slice(0, 3).map((e) => ({
+        id: e._id,
+        firstName: e.firstName,
+        lastName: e.lastName,
+        role: e.role,
+        joinedAt: e.joinedAt,
+        brut: e.brut,
+      }))
+    }
+    return EMPLOYEES.filter((e) => e.status === 'active').slice(-3).reverse()
+  }, [liveEmployees])
+
   useEffect(() => {
     if (typeof window !== 'undefined' && window.location.hash === '#hire') {
       store.openHire()
@@ -36,15 +79,15 @@ function Dashboard() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <QuickAction to="/app/payroll"      label="Lancer la paie"        sub="Novembre 2026"        icon={Calculator} primary />
           <QuickAction to="/app/declarations" label="Soumettre CNPS"        sub="Échéance 15 déc."     icon={Send} />
-          <QuickAction to="/app/advances"     label="Valider les avances"   sub="2 demandes"           icon={Wallet} />
+          <QuickAction to="/app/advances"     label="Valider les avances"   sub={`${kpis.pendingAdvances} demande${kpis.pendingAdvances > 1 ? 's' : ''}`} icon={Wallet} />
           <QuickAction onClick={() => store.openHire()} label="Embaucher" sub="Wizard 5 étapes · contrat signé" icon={UserPlus} />
         </div>
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPI to="/app/payroll"      label="Masse salariale brute" value={fcfa(TOTALS.masseBrut)} delta="+2,3 % vs mois précédent" icon={TrendingUp} />
-        <KPI to="/app/employees"    label="Salariés actifs"        value={String(TOTALS.active)}   delta="2 CDD · 1 en congé" icon={Users} />
-        <KPI to="/app/payroll"      label="Charges patronales"     value={fcfa(TOTALS.charges)}    delta="17 % du brut" icon={Wallet} />
+        <KPI to="/app/payroll"      label="Masse salariale brute" value={fcfa(kpis.masseBrut)} delta={liveKPIs ? 'Données temps réel' : '+2,3 % vs mois précédent'} icon={TrendingUp} />
+        <KPI to="/app/employees"    label="Salariés actifs"        value={String(kpis.active)}   delta={`${kpis.onLeave} en congé`} icon={Users} />
+        <KPI to="/app/payroll"      label="Charges patronales"     value={fcfa(kpis.charges)}    delta="17 % du brut" icon={Wallet} />
         <KPI to="/app/declarations" label="Prochaine échéance"     value={next ? next.due : '—'}   delta={next?.type || ''} icon={CalendarClock} accent />
       </div>
 
