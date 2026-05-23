@@ -13,3 +13,8 @@ __unconfig*
 todos.json
 
 .vercel
+
+# Playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
