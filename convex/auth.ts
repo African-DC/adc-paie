@@ -63,7 +63,22 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
         creatorRole: 'owner',
         invitationExpiresIn: 60 * 60 * 24 * 7, // 7 jours
       }),
-      convex({ authConfig }),
+      convex({
+        authConfig,
+        // CRITIQUE : custom JWT claims pour multi-tenant scoping.
+        // Le helper withOrg() Convex lit identity.activeOrganizationId.
+        // Sans ce definePayload, toutes les mutations multi-tenant échouent
+        // avec "No active organization".
+        jwt: {
+          definePayload: ({ user, session }) => ({
+            email: user.email,
+            name: user.name,
+            emailVerified: user.emailVerified,
+            activeOrganizationId:
+              (session as { activeOrganizationId?: string }).activeOrganizationId ?? null,
+          }),
+        },
+      }),
     ],
     logger: {
       level: 'warn',

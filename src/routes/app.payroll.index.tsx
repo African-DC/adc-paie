@@ -1,7 +1,10 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
+import { useQuery, useMutation } from 'convex/react'
 import { Calculator, FileText, ChevronDown, Calendar, Eye, Send, Archive, Search, X, RotateCcw, Sparkles, Gift, Plus } from 'lucide-react'
 import { EMPLOYEES, computePayslip, fcfa } from '../lib/mock'
+import { useSession } from '../lib/auth-client'
+import { api } from '../../convex/_generated/api'
 import { store } from '../lib/store'
 import { PaySalariesModal, ExportAuditModal } from '../components/payroll-modals'
 import { GratificationModal } from '../components/gratification-modal'
@@ -12,6 +15,7 @@ import type { Employee } from '../lib/mock'
 export const Route = createFileRoute('/app/payroll/')({ component: PayrollPage })
 
 function PayrollPage() {
+  const session = useSession()
   const [month, setMonth] = useState('Novembre 2026')
   const [periodOpen, setPeriodOpen] = useState(false)
   const [days, setDays] = useState<Record<string, string>>({})
@@ -22,7 +26,60 @@ function PayrollPage() {
   const [complOpen, setComplOpen] = useState<Employee | null>(null)
   const [comps, setComps] = useState<Record<string, Complements>>({})
   const [query, setQuery] = useState('')
-  const active = EMPLOYEES.filter(e => e.status === 'active')
+  const [generating, setGenerating] = useState(false)
+
+  // Parse month "Novembre 2026" → { year, month: 11 }
+  const period = useMemo(() => {
+    const MOIS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
+    const [m, y] = month.split(' ')
+    return { year: parseInt(y, 10), month: MOIS.indexOf(m) + 1 }
+  }, [month])
+
+  // Convex live data
+  const liveEmployees = useQuery(api.employees.list, session.data ? { status: 'active' } : 'skip')
+  const livePayslips = useQuery(api.payroll.listForPeriod, session.data ? { period } : 'skip')
+  const generateMutation = useMutation(api.payroll.generate)
+
+  // Data source : Convex live si connecté + employees, sinon mock
+  const active = useMemo(() => {
+    if (liveEmployees && liveEmployees.length > 0) {
+      return liveEmployees.map((e) => ({
+        id: e._id,
+        firstName: e.firstName,
+        lastName: e.lastName,
+        matricule: e.matricule,
+        role: e.role,
+        contract: e.contract as Employee['contract'],
+        brut: e.brut,
+        status: 'active' as const,
+        family: { situation: e.family.situation as Employee['family']['situation'], kids: e.family.kids },
+        joinedAt: e.joinedAt,
+      }))
+    }
+    return EMPLOYEES.filter(e => e.status === 'active')
+  }, [liveEmployees])
+
+  const handleGenerate = async () => {
+    if (!session.data) {
+      // Mode démo : pas de mutation, download direct ZIP
+      store.toast(`${active.length} bulletins calculés · archive ZIP en préparation…`, 'info')
+      await downloadPayslipsZip(active, [month])
+      store.toast(`${active.length} bulletins ${month} téléchargés (ZIP)`, 'success')
+      return
+    }
+    setGenerating(true)
+    try {
+      const result = await generateMutation({ period })
+      store.toast(`${result.count} bulletins ${month} générés sur le serveur (engine v0.1.0)`, 'success')
+      // ZIP client-side après (utilise le résultat Convex pour les vrais montants)
+      await downloadPayslipsZip(active, [month])
+      store.toast('Archive ZIP téléchargée', 'success')
+    } catch (err) {
+      store.toast(err instanceof Error ? err.message : 'Erreur génération', 'warning')
+    } finally {
+      setGenerating(false)
+    }
+  }
   const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '')
   const visible = useMemo(() => {
     const nq = norm(query)
@@ -158,8 +215,8 @@ function PayrollPage() {
             <button onClick={() => store.toast('Brouillon enregistré localement', 'info')} className="inline-flex items-center gap-2 border border-n-300 px-3 h-10 text-xs font-medium hover:bg-n-50 transition-colors rounded-sm uppercase tracking-wider">
               <FileText className="w-3.5 h-3.5" /> Brouillon
             </button>
-            <button onClick={async () => { store.toast(`${active.length} bulletins calculés · archive ZIP en préparation…`, 'info'); await downloadPayslipsZip(active, [month]); store.toast(`${active.length} bulletins ${month} téléchargés (ZIP)`, 'success') }} className="inline-flex items-center gap-2 border-2 border-orange text-orange-deep px-4 h-10 text-xs font-semibold uppercase tracking-wider hover:bg-orange-tint transition-colors rounded-sm">
-              <Calculator className="w-3.5 h-3.5" /> Calculer & ZIP
+            <button onClick={handleGenerate} disabled={generating} className="inline-flex items-center gap-2 border-2 border-orange text-orange-deep px-4 h-10 text-xs font-semibold uppercase tracking-wider hover:bg-orange-tint transition-colors rounded-sm disabled:opacity-60 disabled:cursor-not-allowed">
+              <Calculator className="w-3.5 h-3.5" /> {generating ? 'Génération…' : (session.data ? 'Calculer & sauvegarder' : 'Calculer & ZIP')}
             </button>
             <button onClick={() => setPayOpen(true)} className="inline-flex items-center gap-2 bg-orange text-white px-5 h-10 text-xs font-semibold uppercase tracking-wider hover:bg-orange-deep transition-colors rounded-sm">
               <Send className="w-3.5 h-3.5" /> Payer les salaires

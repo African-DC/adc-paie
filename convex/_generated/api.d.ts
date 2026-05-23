@@ -10,11 +10,13 @@
 
 import type * as auth from "../auth.js";
 import type * as employees from "../employees.js";
+import type * as files from "../files.js";
 import type * as http from "../http.js";
 import type * as lib_auditLog from "../lib/auditLog.js";
 import type * as lib_rbac from "../lib/rbac.js";
 import type * as lib_withOrg from "../lib/withOrg.js";
 import type * as organizations from "../organizations.js";
+import type * as payroll from "../payroll.js";
 
 import type {
   ApiFromModules,
@@ -25,11 +27,13 @@ import type {
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   employees: typeof employees;
+  files: typeof files;
   http: typeof http;
   "lib/auditLog": typeof lib_auditLog;
   "lib/rbac": typeof lib_rbac;
   "lib/withOrg": typeof lib_withOrg;
   organizations: typeof organizations;
+  payroll: typeof payroll;
 }>;
 
 /**
