@@ -77,6 +77,25 @@ function AppLayout() {
     : session.data
       ? { ...fallbackOrg, name: liveOrgName ?? fallbackOrg.name }
       : fallbackOrg
+
+  // Sync local store avec données live → composants lisant useStore.org reçoivent
+  // automatiquement la vraie org (élimine les "Sahel Industries SARL" résiduels).
+  useEffect(() => {
+    if (!isAuthed) return
+    if (orgSettings && liveOrgName) {
+      store.setOrg({
+        name: liveOrgName,
+        ifu: orgSettings.ifu,
+        cnps: orgSettings.cnps,
+        sector: orgSettings.sector,
+        taux_at: String(orgSettings.tauxAT * 100),
+        city: orgSettings.city,
+        convention: orgSettings.convention,
+      })
+    } else if (liveOrgName && liveOrgName !== fallbackOrg.name) {
+      store.setOrg({ name: liveOrgName })
+    }
+  }, [isAuthed, orgSettings, liveOrgName, fallbackOrg.name])
   const isMac = typeof navigator !== 'undefined' && navigator.platform.toLowerCase().includes('mac')
   const [drawer, setDrawer] = useState(false)
   const [confirmLogout, setConfirmLogout] = useState(false)
