@@ -5,7 +5,7 @@ import { ConvexBetterAuthProvider } from '@convex-dev/better-auth/react'
 import { convex } from '../lib/convex-client'
 import { authClient, useSession } from '../lib/auth-client'
 import { api } from '../../convex/_generated/api'
-import { LayoutDashboard, Users, Calculator, FileCheck2, Settings, Search, Bell, ChevronRight, Sparkles, CalendarDays, UserCircle2, Wallet, Menu, X, FileText, BadgeCheck, ShieldCheck, ArrowLeftRight, LogOut, Clock, BarChart3, Megaphone } from 'lucide-react'
+import { LayoutDashboard, Users, Calculator, FileCheck2, Settings, Search, Bell, ChevronRight, Sparkles, CalendarDays, UserCircle2, Wallet, Menu, X, FileText, BadgeCheck, ShieldCheck, LogOut, Clock, BarChart3, Megaphone } from 'lucide-react'
 import { CURRENT_USER, EMPLOYEES } from '../lib/mock'
 import { Spotlight } from '../components/spotlight'
 import { NotificationsPanel, Toast } from '../components/notifications'
@@ -80,8 +80,16 @@ function AppLayout() {
   const [confirmLogout, setConfirmLogout] = useState(false)
   useEffect(() => { setDrawer(false) }, [loc.pathname])
 
+  // Role check : si l'utilisateur connecté est member (employé), bascule sur /app/me
+  // Owner/admin reste sur /app. Routing déterminé au login uniquement, pas de toggle.
+  const activeMemberResult = (authClient as unknown as {
+    useActiveMember?: () => { data?: { role?: string } | null }
+  }).useActiveMember?.()
+  const activeRole = activeMemberResult?.data?.role
+
   // Auth guard : si pas connecté → /login
   // Si connecté mais pas d'org active → /onboarding
+  // Si role member et on est sur une route admin → /app/me
   useEffect(() => {
     if (session.isPending || typeof window === 'undefined') return
     if (!session.data) {
@@ -90,7 +98,6 @@ function AppLayout() {
     }
     const activeOrgId = (session.data.user as { activeOrganizationId?: string }).activeOrganizationId
     if (!activeOrgId) {
-      // Vérifier si l'user a des orgs (juste pas active) ou aucune
       authClient.organization.list().then(({ data }) => {
         if (!data || data.length === 0) {
           navigate({ to: '/onboarding' })
@@ -98,8 +105,12 @@ function AppLayout() {
           authClient.organization.setActive({ organizationId: data[0].id })
         }
       })
+      return
     }
-  }, [session.data, session.isPending, navigate, loc.pathname])
+    if (activeRole === 'member' && !loc.pathname.startsWith('/app/me')) {
+      navigate({ to: '/app/me' })
+    }
+  }, [session.data, session.isPending, activeRole, navigate, loc.pathname])
 
   const search = (loc as any).searchStr || (typeof window !== 'undefined' ? window.location.search : '') || ''
   const isEmployeeMode = loc.pathname.startsWith('/app/me') || search.includes('from=me')
@@ -166,21 +177,6 @@ function AppLayout() {
             <Sparkles className="w-4 h-4" /> Demander à ADCA
           </button>
         )}
-
-        <div className="px-3 pb-3">
-          {!isEmployeeMode ? (
-            <Link to="/app/me" className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium text-n-300 hover:bg-white/5 hover:text-white rounded-sm transition-colors border border-white/10" title="Basculer vers l'espace salarié (démo)">
-              <ArrowLeftRight className="w-4 h-4 shrink-0" />
-              <span>Basculer en mode salarié</span>
-              <span className="ml-auto text-[9px] uppercase tracking-wider text-orange font-semibold">démo</span>
-            </Link>
-          ) : (
-            <Link to="/app" className="flex items-center gap-2 px-3 py-2.5 text-sm font-medium bg-orange/10 border border-orange/40 text-orange hover:bg-orange/20 hover:text-white rounded-sm transition-colors" title="Retour au panneau d'administration">
-              <LogOut className="w-4 h-4 shrink-0 rotate-180" />
-              <span>Quitter le mode salarié</span>
-            </Link>
-          )}
-        </div>
 
         <div className="px-3 py-3 border-t border-white/10 flex items-center gap-2">
           {!isEmployeeMode ? (
