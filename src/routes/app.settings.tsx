@@ -163,7 +163,19 @@ function SettingsPage() {
           {showDemoSeed && (
             <p className="mt-3 text-[10px] text-n-400 italic">Données de démonstration · Connectez-vous pour voir le vrai journal d'audit Convex</p>
           )}
-          <button onClick={() => { downloadAuditLogCSV(AUDIT_LOG); store.toast('Audit log CSV téléchargé', 'success') }} className="mt-4 text-xs font-semibold text-orange hover:text-orange-deep uppercase tracking-wider">Exporter le journal complet (CSV)</button>
+          <button onClick={() => {
+            const realRows = (auditEntries ?? []).map((l) => ({
+              action: l.action,
+              actor: l.actorName,
+              ip: '—',
+              when: new Date(l._creationTime).toLocaleString('fr-FR'),
+              severity: l.severity,
+            }))
+            const rows = showDemoSeed ? AUDIT_LOG : realRows
+            if (rows.length === 0) { store.toast('Journal vide · aucune action enregistrée à ce jour', 'info'); return }
+            downloadAuditLogCSV(rows as Parameters<typeof downloadAuditLogCSV>[0])
+            store.toast('Audit log CSV téléchargé', 'success')
+          }} className="mt-4 text-xs font-semibold text-orange hover:text-orange-deep uppercase tracking-wider">Exporter le journal complet (CSV)</button>
         </Card>
 
         <Card title="Zone dangereuse" icon={AlertCircle}>
@@ -173,7 +185,14 @@ function SettingsPage() {
                 <p className="text-sm font-semibold">Exporter toutes les données</p>
                 <p className="text-[11px] text-n-600">Archive ZIP RGPD-compatible · 12 mois de données</p>
               </div>
-              <button onClick={() => { downloadEmployeesExcel(EMPLOYEES_LIST); store.toast('Export annuaire RGPD téléchargé · audit log CSV en bonus', 'success'); setTimeout(() => downloadAuditLogCSV(AUDIT_LOG), 600) }} className="px-3 h-8 text-xs font-semibold border border-orange text-orange-deep hover:bg-orange-tint rounded-sm">Exporter</button>
+              <button onClick={() => {
+                if (EMPLOYEES_LIST.length === 0) { store.toast('Aucun salarié à exporter pour le moment', 'info'); return }
+                downloadEmployeesExcel(EMPLOYEES_LIST)
+                const realRows = (auditEntries ?? []).map((l) => ({ action: l.action, actor: l.actorName, ip: '—', when: new Date(l._creationTime).toLocaleString('fr-FR'), severity: l.severity }))
+                const rows = showDemoSeed ? AUDIT_LOG : realRows
+                if (rows.length > 0) setTimeout(() => downloadAuditLogCSV(rows as Parameters<typeof downloadAuditLogCSV>[0]), 600)
+                store.toast('Export annuaire RGPD téléchargé' + (rows.length > 0 ? ' · audit log CSV en bonus' : ''), 'success')
+              }} className="px-3 h-8 text-xs font-semibold border border-orange text-orange-deep hover:bg-orange-tint rounded-sm">Exporter</button>
             </div>
             <div className="flex items-center justify-between p-3 bg-red-50 border border-red-200 rounded-sm">
               <div>
