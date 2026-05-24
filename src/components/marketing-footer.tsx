@@ -7,7 +7,9 @@ export function MarketingFooter() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           <div className="lg:col-span-5">
             <div className="flex items-center gap-3 mb-6">
-              <span className="font-serif text-2xl font-semibold">ADC <span className="em-serif">Paie</span></span>
+              <div className="bg-white inline-block px-3 py-2 rounded-sm">
+                <img src="/adc-paie-logo.png" alt="ADC Paie" className="h-7 w-auto" />
+              </div>
             </div>
             <p className="font-serif italic text-lg text-n-300 max-w-md leading-relaxed">
               « Le digital au service des peuples. » Une plateforme conçue à Grand-Bassam pour les PME ivoiriennes.
@@ -54,7 +56,9 @@ export function MarketingFooter() {
 
         <div className="mt-20 pt-8 border-t border-white/15 grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
           <div>
-            <p className="font-serif text-[clamp(3rem,10vw,7rem)] leading-none tracking-tighter text-white">ADC <span className="em-serif" style={{color:'var(--color-orange)'}}>Paie</span></p>
+            <div className="bg-white inline-block px-6 py-4 rounded-sm">
+              <img src="/adc-paie-logo.png" alt="ADC Paie" className="h-16 sm:h-20 lg:h-24 w-auto" />
+            </div>
           </div>
           <div className="flex flex-col md:items-end gap-3">
             <p className="text-[11px] tracking-wider uppercase text-n-400">© {new Date().getFullYear()} African Digit Consulting · Tous droits réservés</p>
