@@ -60,7 +60,9 @@ function LoginPage() {
     <div className="min-h-screen flex">
       <div className="flex-1 flex items-center justify-center px-6 py-12 bg-white">
         <div className="w-full max-w-sm">
-          <Link to="/" className="font-serif text-xl font-semibold tracking-tight inline-block mb-12">ADC <span className="em-serif">Paie</span></Link>
+          <Link to="/" className="inline-block mb-12" aria-label="ADC Paie — Retour à l'accueil">
+            <img src="/adc-paie-logo.png" alt="ADC Paie" className="h-8 w-auto" />
+          </Link>
           <p className="text-[11px] tracking-[0.28em] uppercase text-n-500 font-semibold mb-2">Espace partenaire</p>
           <h1 className="font-serif text-3xl font-semibold tracking-tight">Connectez-vous à votre <span className="em-serif">espace</span>.</h1>
           <p className="mt-3 text-sm text-n-700">Accédez à votre paie, vos déclarations et vos salariés.</p>
