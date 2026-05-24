@@ -1,25 +1,80 @@
-import { createFileRoute, Link, notFound } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { ChevronLeft, Mail, Phone, MapPin, Calendar, FileText, Download, LogOut, BadgeCheck } from 'lucide-react'
-import { EMPLOYEES, fcfa, computePayslip } from '../lib/mock'
+import { useQuery } from 'convex/react'
+import { EMPLOYEES, fcfa, computePayslip, type Employee } from '../lib/mock'
 import { store } from '../lib/store'
 import { downloadPayslipPDF, downloadEmployeeDocument, downloadDPAEPDF } from '../lib/downloads'
 import { STCModal } from '../components/stc-modal'
+import { useSession } from '../lib/auth-client'
+import { api } from '../../convex/_generated/api'
+import type { Id } from '../../convex/_generated/dataModel'
 
 export const Route = createFileRoute('/app/employees/$id')({
-  loader: ({ params }) => {
-    const e = EMPLOYEES.find((x) => x.id === params.id)
-    if (!e) throw notFound()
-    return { e }
-  },
   component: EmployeeDetail,
-  notFoundComponent: () => <p className="p-6">Salarié introuvable.</p>,
 })
 
 function EmployeeDetail() {
-  const { e } = Route.useLoaderData()
+  const { id } = Route.useParams()
+  const session = useSession()
+  const showDemoSeed = !session.isPending && !session.data
+  // En mode démo : id est un index mock ('1', '2', ...). En auth : Convex doc id.
+  const liveEmp = useQuery(
+    api.employees.get,
+    session.data ? { id: id as Id<'employees'> } : 'skip',
+  )
+
   const [tab, setTab] = useState<'identity' | 'contract' | 'history' | 'docs'>('identity')
   const [stcOpen, setStcOpen] = useState(false)
+
+  // Skeleton pendant load Convex
+  if (session.data && liveEmp === undefined) {
+    return <EmployeeDetailSkeleton />
+  }
+  // 404 si auth + employé introuvable (mauvais id ou cross-tenant)
+  if (session.data && liveEmp === null) {
+    return (
+      <div className="p-6">
+        <Link to="/app/employees" className="inline-flex items-center gap-1.5 text-sm text-n-600 hover:text-orange mb-4">
+          <ChevronLeft className="w-3.5 h-3.5" /> Retour à la liste
+        </Link>
+        <p className="text-n-700">Salarié introuvable dans votre espace.</p>
+      </div>
+    )
+  }
+
+  // Mode démo : lookup dans mock array
+  const mockEmp = showDemoSeed ? EMPLOYEES.find((x) => x.id === id) : null
+  if (showDemoSeed && !mockEmp) {
+    return (
+      <div className="p-6">
+        <Link to="/app/employees" className="inline-flex items-center gap-1.5 text-sm text-n-600 hover:text-orange mb-4">
+          <ChevronLeft className="w-3.5 h-3.5" /> Retour à la liste
+        </Link>
+        <p className="text-n-700">Salarié introuvable.</p>
+      </div>
+    )
+  }
+
+  // Adapter Convex doc → Employee type pour zéro régression UI
+  const e: Employee = liveEmp
+    ? {
+        id: liveEmp._id,
+        firstName: liveEmp.firstName,
+        lastName: liveEmp.lastName,
+        matricule: liveEmp.matricule,
+        role: liveEmp.role,
+        contract: liveEmp.contract as Employee['contract'],
+        brut: liveEmp.brut,
+        status: liveEmp.status as Employee['status'],
+        family: {
+          situation: liveEmp.family.situation as Employee['family']['situation'],
+          kids: liveEmp.family.kids,
+        },
+        joinedAt: liveEmp.joinedAt,
+      }
+    : mockEmp!
+
   const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)', e.joinedAt)
 
   return (
@@ -171,6 +226,35 @@ function Info({ icon: Icon, label, value, mono }: { icon?: any; label: string; v
         {Icon && <Icon className="w-3 h-3" />} {label}
       </p>
       <p className={`text-sm font-medium ${mono ? 'font-mono' : ''}`}>{value}</p>
+    </div>
+  )
+}
+
+function EmployeeDetailSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="h-4 w-32 bg-n-200 rounded-sm animate-pulse" />
+      <div className="bg-white border border-n-200 rounded-sm p-6">
+        <div className="flex items-start gap-5 flex-wrap">
+          <div className="w-20 h-20 bg-n-200 rounded-full animate-pulse shrink-0" />
+          <div className="flex-1 space-y-3">
+            <div className="h-6 w-56 bg-n-200 rounded-sm animate-pulse" />
+            <div className="h-4 w-40 bg-n-100 rounded-sm animate-pulse" />
+            <div className="flex gap-2 mt-3">
+              <div className="h-6 w-20 bg-n-100 rounded-sm animate-pulse" />
+              <div className="h-6 w-24 bg-n-100 rounded-sm animate-pulse" />
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[0,1,2,3].map(i => (
+          <div key={i} className="bg-white border border-n-200 rounded-sm p-5 space-y-2">
+            <div className="h-3 w-24 bg-n-100 rounded-sm animate-pulse" />
+            <div className="h-6 w-32 bg-n-200 rounded-sm animate-pulse" />
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

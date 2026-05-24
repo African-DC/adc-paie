@@ -16,7 +16,11 @@ const ADMIN_ACTIONS = [
   { id: 'a8', label: 'Valider une demande de congé', icon: CalendarDays, to: '/app/leave', tag: 'action' },
   { id: 'a5', label: 'Réglages de l\'espace', icon: Settings, to: '/app/settings', tag: 'navigation' },
   { id: 'a6', label: 'Ouvrir l\'assistant IA ADCA', icon: Sparkles, to: '', tag: 'ia', action: () => { store.closeSpotlight(); store.toggleChat() } },
-  { id: 'a7', label: 'Voir l\'aperçu d\'un bulletin', icon: FileText, to: '/app/payroll/payslip/1', tag: 'action' },
+  // Deeplinks Réglages (auto-scroll vers section via hash)
+  { id: 'd1', label: 'Modifier mon IFU (DGI)', icon: Settings, to: '/app/settings#ifu', tag: 'navigation' },
+  { id: 'd2', label: 'Modifier mon numéro CNPS', icon: Settings, to: '/app/settings#cnps', tag: 'navigation' },
+  { id: 'd3', label: 'Changer la convention collective', icon: Settings, to: '/app/settings#convention', tag: 'navigation' },
+  { id: 'd4', label: 'Voir le journal d\'audit', icon: FileText, to: '/app/settings#audit', tag: 'navigation' },
 ]
 
 const EMPLOYEE_ACTIONS = [
