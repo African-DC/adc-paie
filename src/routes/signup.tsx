@@ -120,13 +120,15 @@ function SignupPage() {
           </p>
         </div>
       </div>
-      <div className="hidden lg:flex flex-1 ink-glow text-white items-center justify-center p-12 relative">
+      <div className="hidden lg:flex flex-1 relative text-white items-center justify-center p-12 overflow-hidden">
+        <img src="/auth-side.png" alt="" className="absolute inset-0 w-full h-full object-cover" loading="eager" />
+        <div className="absolute inset-0 bg-gradient-to-br from-ink/85 via-ink/70 to-ink/85" />
         <div className="relative z-10 max-w-md">
           <Sparkles className="w-6 h-6 text-orange mb-6" />
-          <p className="font-serif text-3xl italic font-medium leading-snug">
+          <p className="font-serif text-3xl italic font-medium leading-snug drop-shadow-lg">
             « En 15 minutes, votre paie mensuelle est faite. CNPS, ITS, IGR, CN — tout est calculé selon les barèmes 2026 officiels. »
           </p>
-          <p className="mt-6 text-[11px] tracking-[0.22em] uppercase text-n-400 font-semibold">ADC Paie · Conformité Côte d'Ivoire</p>
+          <p className="mt-6 text-[11px] tracking-[0.22em] uppercase text-n-200 font-semibold">ADC Paie · Conformité Côte d'Ivoire</p>
           <div className="mt-12 grid grid-cols-3 gap-6 border-t border-white/15 pt-8">
             <div><p className="font-serif text-3xl font-semibold">100%</p><p className="text-[10px] uppercase tracking-wider text-orange mt-1 font-semibold">Conforme DGI</p></div>
             <div><p className="font-serif text-3xl font-semibold">CNPS</p><p className="text-[10px] uppercase tracking-wider text-orange mt-1 font-semibold">Bordereau auto</p></div>

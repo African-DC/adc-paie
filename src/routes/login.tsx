@@ -119,13 +119,15 @@ function LoginPage() {
           <p className="mt-2 text-[11px] text-center text-n-400">8 caractères minimum pour le mot de passe</p>
         </div>
       </div>
-      <div className="hidden lg:flex flex-1 ink-glow text-white items-center justify-center p-12 relative">
+      <div className="hidden lg:flex flex-1 relative text-white items-center justify-center p-12 overflow-hidden">
+        <img src="/auth-side.png" alt="" className="absolute inset-0 w-full h-full object-cover" loading="eager" />
+        <div className="absolute inset-0 bg-gradient-to-br from-ink/85 via-ink/70 to-ink/85" />
         <div className="relative z-10 max-w-md">
           <Sparkles className="w-6 h-6 text-orange mb-6" />
-          <p className="font-serif text-3xl italic font-medium leading-snug">
+          <p className="font-serif text-3xl italic font-medium leading-snug drop-shadow-lg">
             « Bulletins, déclarations, paiements. Tout en quinze minutes par mois, plus jamais trois jours. »
           </p>
-          <p className="mt-6 text-[11px] tracking-[0.22em] uppercase text-n-400 font-semibold">Pilote interne · novembre 2026</p>
+          <p className="mt-6 text-[11px] tracking-[0.22em] uppercase text-n-200 font-semibold">Pilote interne · novembre 2026</p>
           <div className="mt-12 grid grid-cols-3 gap-6 border-t border-white/15 pt-8">
             <div><p className="font-serif text-3xl font-semibold">10</p><p className="text-[10px] uppercase tracking-wider text-orange mt-1 font-semibold">Écoles en prod</p></div>
             <div><p className="font-serif text-3xl font-semibold">50+</p><p className="text-[10px] uppercase tracking-wider text-orange mt-1 font-semibold">Projets livrés</p></div>
