@@ -62,11 +62,20 @@ function SettingsPage() {
 
         <Card title="Équipe et rôles" icon={Users}>
           <div className="space-y-3">
-            {[
-              { name: 'Marcel Djedje-li', role: 'Administrateur', email: 'marcel@adc-paie.ci' },
-              { name: 'Aïcha Koné', role: 'DRH', email: 'aicha.kone@example.ci' },
-              { name: 'Mamadou Diabaté', role: 'Comptable', email: 'mamadou.diabate@example.ci' },
-            ].map((u) => (
+            {(showDemoSeed
+              ? [
+                  { name: 'Marcel Djedje-li', role: 'Administrateur', email: 'marcel@adc-paie.ci' },
+                  { name: 'Aïcha Koné', role: 'DRH', email: 'aicha.kone@example.ci' },
+                  { name: 'Mamadou Diabaté', role: 'Comptable', email: 'mamadou.diabate@example.ci' },
+                ]
+              : [
+                  {
+                    name: (session.data?.user?.name as string) ?? session.data?.user?.email ?? 'Vous',
+                    role: 'Propriétaire',
+                    email: (session.data?.user?.email as string) ?? '',
+                  },
+                ]
+            ).map((u) => (
               <div key={u.email} className="flex items-center justify-between gap-4 py-2 border-b border-n-100 last:border-0">
                 <div>
                   <p className="font-medium text-sm">{u.name}</p>
@@ -136,7 +145,7 @@ function SettingsPage() {
                 </li>
               ))}
             </ul>
-          ) : (
+          ) : showDemoSeed ? (
             <ul className="divide-y divide-n-100 -mx-6">
               {AUDIT_LOG.map((l, i) => (
                 <li key={i} className="px-6 py-3 flex items-start gap-3">
@@ -148,8 +157,10 @@ function SettingsPage() {
                 </li>
               ))}
             </ul>
+          ) : (
+            <p className="text-sm text-n-500 italic">Aucune activité enregistrée pour le moment.</p>
           )}
-          {!auditEntries && (
+          {showDemoSeed && (
             <p className="mt-3 text-[10px] text-n-400 italic">Données de démonstration · Connectez-vous pour voir le vrai journal d'audit Convex</p>
           )}
           <button onClick={() => { downloadAuditLogCSV(AUDIT_LOG); store.toast('Audit log CSV téléchargé', 'success') }} className="mt-4 text-xs font-semibold text-orange hover:text-orange-deep uppercase tracking-wider">Exporter le journal complet (CSV)</button>
