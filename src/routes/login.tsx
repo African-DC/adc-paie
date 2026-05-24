@@ -4,6 +4,17 @@ import { ArrowRight, Lock, Mail, Sparkles, AlertCircle } from 'lucide-react'
 import { z } from 'zod'
 import { signIn } from '../lib/auth-client'
 
+function mapLoginError(err: unknown): string {
+  const e = err as { code?: string; message?: string; status?: number }
+  if (e?.code === 'INVALID_EMAIL_OR_PASSWORD' || e?.message === 'Invalid email or password') return 'E-mail ou mot de passe incorrect.'
+  if (e?.code === 'EMAIL_NOT_VERIFIED') return 'Votre adresse e-mail n\'est pas vérifiée.'
+  if (e?.code === 'USER_NOT_FOUND') return 'Aucun compte ne correspond à cet e-mail.'
+  if (e?.status === 429 || e?.message?.toLowerCase().includes('rate')) return 'Trop de tentatives, réessayez dans quelques minutes.'
+  if (e?.status && e.status >= 500) return 'Service temporairement indisponible, réessayez dans un instant.'
+  if (e?.message && !/HTTPError|Error|Status/.test(e.message)) return e.message
+  return 'Connexion impossible, vérifiez vos identifiants.'
+}
+
 const loginSearchSchema = z.object({
   redirect: z.string().optional(),
   error: z.string().optional(),
@@ -33,7 +44,7 @@ function LoginPage() {
         rememberMe: true,
       })
       if (err) {
-        setError(err.message ?? 'Identifiants invalides')
+        setError(mapLoginError(err))
         setLoading(false)
         return
       }

@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useEffect, useMemo } from 'react'
 import { useQuery } from 'convex/react'
-import { TrendingUp, Users, CalendarClock, Wallet, ArrowRight, AlertCircle, Calculator, Send, UserPlus } from 'lucide-react'
+import { TrendingUp, Users, CalendarClock, Wallet, ArrowRight, AlertCircle, Calculator, Send, UserPlus, BarChart3, UserCircle2 } from 'lucide-react'
 import { TOTALS, EMPLOYEES, DECLARATIONS, fcfa } from '../lib/mock'
 import { useSession } from '../lib/auth-client'
 import { api } from '../../convex/_generated/api'
@@ -62,17 +62,19 @@ function Dashboard() {
       window.history.replaceState(null, '', window.location.pathname + window.location.search)
     }
   }, [])
+  const isEmptyOrg = !!liveKPIs && kpis.active === 0 && kpis.masseBrut === 0
+
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-[11px] tracking-[0.28em] uppercase text-n-500 font-semibold mb-2">{org.name} · Tableau de bord Novembre 2026</p>
+        <p className="text-[11px] tracking-[0.28em] uppercase text-n-500 font-semibold mb-2">{org.name} · Tableau de bord</p>
         <h1 className="font-serif text-3xl lg:text-4xl font-semibold tracking-tight">
           Bienvenue, <span className="em-serif">Marcel</span>.
         </h1>
         <p className="mt-2 text-n-700">Voici un aperçu de la paie de <strong>{org.name}</strong> pour la période en cours.</p>
       </div>
 
-      <AnomaliesBanner />
+      {!isEmptyOrg && <AnomaliesBanner />}
 
       <div>
         <p className="text-[10px] tracking-[0.22em] uppercase text-n-500 font-semibold mb-2">Actions rapides</p>
@@ -98,9 +100,17 @@ function Dashboard() {
               <h2 className="font-serif text-xl font-semibold tracking-tight">Évolution de la masse salariale</h2>
               <p className="text-sm text-n-500 mt-1">Six derniers mois</p>
             </div>
-            <p className="font-serif italic text-orange text-sm">+12,4 % vs N-1</p>
+            {!isEmptyOrg && <p className="font-serif italic text-orange text-sm">+12,4 % vs N-1</p>}
           </div>
-          <Chart />
+          {isEmptyOrg ? (
+            <div className="h-48 mt-4 flex flex-col items-center justify-center text-center border-2 border-dashed border-n-200 rounded-sm">
+              <BarChart3 className="w-8 h-8 text-n-400 mb-3" />
+              <p className="text-sm font-medium text-n-700">Aucune paie encore traitée</p>
+              <p className="text-xs text-n-500 mt-1 max-w-xs">Lancez votre première paie pour voir l'évolution de la masse salariale s'afficher ici.</p>
+            </div>
+          ) : (
+            <Chart />
+          )}
         </div>
         <div className="bg-white border border-n-200 rounded-sm p-6">
           <h2 className="font-serif text-xl font-semibold tracking-tight mb-4">Déclarations à venir</h2>
@@ -140,20 +150,30 @@ function Dashboard() {
             <h2 className="font-serif text-xl font-semibold tracking-tight">Derniers arrivés</h2>
             <Link to="/app/employees" className="text-xs font-semibold text-orange hover:text-orange-deep uppercase tracking-wider">Voir tous</Link>
           </div>
-          <ul className="space-y-3">
-            {recentHires.map((e) => (
-              <li key={e.id} className="flex items-center gap-3">
-                <div className="w-9 h-9 bg-n-100 text-n-700 font-semibold text-sm rounded-full flex items-center justify-center shrink-0">
-                  {e.firstName[0]}{e.lastName[0]}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium truncate">{e.firstName} {e.lastName}</p>
-                  <p className="text-[11px] text-n-500 truncate">{e.role} · arrivé(e) {e.joinedAt}</p>
-                </div>
-                <span className="text-xs font-mono text-n-700">{fcfa(e.brut)}</span>
-              </li>
-            ))}
-          </ul>
+          {isEmptyOrg ? (
+            <div className="py-8 flex flex-col items-center justify-center text-center">
+              <UserCircle2 className="w-8 h-8 text-n-400 mb-3" />
+              <p className="text-sm font-medium text-n-700">Aucun salarié pour l'instant</p>
+              <Link to="/app/employees" className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-orange hover:text-orange-deep uppercase tracking-wider">
+                Embaucher mon 1<sup>er</sup> salarié <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+          ) : (
+            <ul className="space-y-3">
+              {recentHires.map((e) => (
+                <li key={e.id} className="flex items-center gap-3">
+                  <div className="w-9 h-9 bg-n-100 text-n-700 font-semibold text-sm rounded-full flex items-center justify-center shrink-0">
+                    {e.firstName[0]}{e.lastName[0]}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium truncate">{e.firstName} {e.lastName}</p>
+                    <p className="text-[11px] text-n-500 truncate">{e.role} · arrivé(e) {e.joinedAt}</p>
+                  </div>
+                  <span className="text-xs font-mono text-n-700">{fcfa(e.brut)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
     </div>

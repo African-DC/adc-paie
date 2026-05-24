@@ -60,9 +60,11 @@ function AppLayout() {
     api.organizations.getCurrentOrgSettings,
     session.data ? {} : 'skip',
   )
+  const activeOrgResult = (authClient as unknown as { useActiveOrganization?: () => { data?: { name?: string; slug?: string } | null } }).useActiveOrganization?.()
+  const liveOrgName = activeOrgResult?.data?.name
   const org = orgSettings
     ? {
-        name: fallbackOrg.name, // TODO Phase 2.7 : lire depuis Better Auth org name
+        name: liveOrgName ?? fallbackOrg.name,
         ifu: orgSettings.ifu,
         cnps: orgSettings.cnps,
         sector: orgSettings.sector,
@@ -70,7 +72,9 @@ function AppLayout() {
         city: orgSettings.city,
         convention: orgSettings.convention,
       }
-    : fallbackOrg
+    : session.data
+      ? { ...fallbackOrg, name: liveOrgName ?? fallbackOrg.name }
+      : fallbackOrg
   const isMac = typeof navigator !== 'undefined' && navigator.platform.toLowerCase().includes('mac')
   const [drawer, setDrawer] = useState(false)
   const [confirmLogout, setConfirmLogout] = useState(false)
