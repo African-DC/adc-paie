@@ -20,9 +20,12 @@ function Dashboard() {
 
   const next = DECLARATIONS.find(d => d.status === 'À soumettre' || d.status === 'En cours')
   const storeOrg = useStore((s) => s.org)
-  const activeOrgResult = (authClient as unknown as { useActiveOrganization?: () => { data?: { name?: string } | null } }).useActiveOrganization?.()
+  const activeOrgResult = (authClient as unknown as { useActiveOrganization?: () => { data?: { name?: string } | null; isPending?: boolean } }).useActiveOrganization?.()
   const liveName = activeOrgResult?.data?.name
   const org = { ...storeOrg, name: liveName ?? storeOrg.name }
+  const isAuthed = !!session.data
+  const isLoading = isAuthed && (liveKPIs === undefined || liveEmployees === undefined)
+  const isLoadingOrgName = isAuthed && activeOrgResult?.data === undefined
 
   // KPIs hybrides : Convex live ou fallback mock
   const kpis = useMemo(() => {
@@ -71,14 +74,22 @@ function Dashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-[11px] tracking-[0.28em] uppercase text-n-500 font-semibold mb-2">{org.name} · Tableau de bord</p>
+        {isLoadingOrgName ? (
+          <div className="h-3 w-56 bg-n-200 rounded-sm animate-pulse mb-2" />
+        ) : (
+          <p className="text-[11px] tracking-[0.28em] uppercase text-n-500 font-semibold mb-2">{org.name} · Tableau de bord</p>
+        )}
         <h1 className="font-serif text-3xl lg:text-4xl font-semibold tracking-tight">
           Bienvenue, <span className="em-serif">Marcel</span>.
         </h1>
-        <p className="mt-2 text-n-700">Voici un aperçu de la paie de <strong>{org.name}</strong> pour la période en cours.</p>
+        {isLoadingOrgName ? (
+          <div className="h-4 w-80 bg-n-100 rounded-sm animate-pulse mt-3" />
+        ) : (
+          <p className="mt-2 text-n-700">Voici un aperçu de la paie de <strong>{org.name}</strong> pour la période en cours.</p>
+        )}
       </div>
 
-      {!isEmptyOrg && <AnomaliesBanner />}
+      {!isLoading && !isEmptyOrg && <AnomaliesBanner />}
 
       <div>
         <p className="text-[10px] tracking-[0.22em] uppercase text-n-500 font-semibold mb-2">Actions rapides</p>
@@ -91,10 +102,21 @@ function Dashboard() {
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPI to="/app/payroll"      label="Masse salariale brute" value={fcfa(kpis.masseBrut)} delta={liveKPIs ? 'Données temps réel' : '+2,3 % vs mois précédent'} icon={TrendingUp} />
-        <KPI to="/app/employees"    label="Salariés actifs"        value={String(kpis.active)}   delta={`${kpis.onLeave} en congé`} icon={Users} />
-        <KPI to="/app/payroll"      label="Charges patronales"     value={fcfa(kpis.charges)}    delta="17 % du brut" icon={Wallet} />
-        <KPI to="/app/declarations" label="Prochaine échéance"     value={next ? next.due : '—'}   delta={next?.type || ''} icon={CalendarClock} accent />
+        {isLoading ? (
+          <>
+            <KPISkeleton />
+            <KPISkeleton />
+            <KPISkeleton />
+            <KPISkeleton accent />
+          </>
+        ) : (
+          <>
+            <KPI to="/app/payroll"      label="Masse salariale brute" value={fcfa(kpis.masseBrut)} delta="Données temps réel" icon={TrendingUp} />
+            <KPI to="/app/employees"    label="Salariés actifs"        value={String(kpis.active)}   delta={`${kpis.onLeave} en congé`} icon={Users} />
+            <KPI to="/app/payroll"      label="Charges patronales"     value={fcfa(kpis.charges)}    delta="17 % du brut" icon={Wallet} />
+            <KPI to="/app/declarations" label="Prochaine échéance"     value={next ? next.due : '—'}   delta={next?.type || ''} icon={CalendarClock} accent />
+          </>
+        )}
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
@@ -104,9 +126,11 @@ function Dashboard() {
               <h2 className="font-serif text-xl font-semibold tracking-tight">Évolution de la masse salariale</h2>
               <p className="text-sm text-n-500 mt-1">Six derniers mois</p>
             </div>
-            {!isEmptyOrg && <p className="font-serif italic text-orange text-sm">+12,4 % vs N-1</p>}
+            {!isLoading && !isEmptyOrg && <p className="font-serif italic text-orange text-sm">+12,4 % vs N-1</p>}
           </div>
-          {isEmptyOrg ? (
+          {isLoading ? (
+            <ChartSkeleton />
+          ) : isEmptyOrg ? (
             <div className="h-48 mt-4 flex flex-col items-center justify-center text-center border-2 border-dashed border-n-200 rounded-sm">
               <BarChart3 className="w-8 h-8 text-n-400 mb-3" />
               <p className="text-sm font-medium text-n-700">Aucune paie encore traitée</p>
@@ -154,7 +178,9 @@ function Dashboard() {
             <h2 className="font-serif text-xl font-semibold tracking-tight">Derniers arrivés</h2>
             <Link to="/app/employees" className="text-xs font-semibold text-orange hover:text-orange-deep uppercase tracking-wider">Voir tous</Link>
           </div>
-          {isEmptyOrg ? (
+          {isLoading ? (
+            <HiresSkeleton />
+          ) : isEmptyOrg ? (
             <div className="py-8 flex flex-col items-center justify-center text-center">
               <UserCircle2 className="w-8 h-8 text-n-400 mb-3" />
               <p className="text-sm font-medium text-n-700">Aucun salarié pour l'instant</p>
@@ -256,3 +282,52 @@ function Chart() {
     </div>
   )
 }
+
+
+function KPISkeleton({ accent }: { accent?: boolean }) {
+  const cls = `block p-5 rounded-sm border ${accent ? 'bg-orange-tint/30 border-orange/20' : 'bg-white border-n-200'}`
+  return (
+    <div className={cls}>
+      <div className="flex items-center justify-between mb-3">
+        <div className="h-2.5 w-24 bg-n-100 rounded-sm animate-pulse" />
+        <div className="w-4 h-4 bg-n-100 rounded-sm animate-pulse" />
+      </div>
+      <div className="h-8 w-32 bg-n-200 rounded-sm animate-pulse" />
+      <div className="h-3 w-20 bg-n-100 rounded-sm animate-pulse mt-3" />
+    </div>
+  )
+}
+
+function ChartSkeleton() {
+  return (
+    <div className="flex items-end justify-between gap-2 h-48 mt-4">
+      {[0.5, 0.6, 0.65, 0.7, 0.75, 0.8].map((h, i) => (
+        <div key={i} className="flex-1 flex flex-col items-center gap-2">
+          <div className="h-2.5 w-8 bg-n-100 rounded-sm animate-pulse" />
+          <div className="w-full bg-n-100 relative rounded-sm overflow-hidden animate-pulse" style={{ height: '160px' }}>
+            <div className="absolute bottom-0 left-0 right-0 bg-n-200" style={{ height: `${h * 100}%` }} />
+          </div>
+          <div className="h-2.5 w-10 bg-n-100 rounded-sm animate-pulse" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function HiresSkeleton() {
+  return (
+    <ul className="space-y-3">
+      {[0, 1, 2].map((i) => (
+        <li key={i} className="flex items-center gap-3">
+          <div className="w-9 h-9 bg-n-200 rounded-full animate-pulse shrink-0" />
+          <div className="flex-1 min-w-0 space-y-1.5">
+            <div className="h-3 w-32 bg-n-200 rounded-sm animate-pulse" />
+            <div className="h-2.5 w-44 bg-n-100 rounded-sm animate-pulse" />
+          </div>
+          <div className="h-3 w-16 bg-n-100 rounded-sm animate-pulse" />
+        </li>
+      ))}
+    </ul>
+  )
+}
+

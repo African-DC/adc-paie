@@ -62,6 +62,8 @@ function AppLayout() {
   )
   const activeOrgResult = (authClient as unknown as { useActiveOrganization?: () => { data?: { name?: string; slug?: string } | null } }).useActiveOrganization?.()
   const liveOrgName = activeOrgResult?.data?.name
+  const isAuthed = !!session.data
+  const isOrgLoading = isAuthed && (orgSettings === undefined || activeOrgResult?.data === undefined)
   const org = orgSettings
     ? {
         name: liveOrgName ?? fallbackOrg.name,
@@ -137,8 +139,17 @@ function AppLayout() {
         {!isEmployeeMode ? (
           <Link to="/app/settings" className="px-6 py-4 border-b border-white/10 text-left hover:bg-white/5 block" title="Modifier les informations dans Réglages">
             <p className="text-[10px] tracking-[0.22em] uppercase text-n-400 font-semibold mb-1">Organisation</p>
-            <p className="text-sm font-semibold truncate">{org.name}</p>
-            <p className="text-[11px] text-n-400 mt-0.5">IFU · {org.ifu}</p>
+            {isOrgLoading ? (
+              <>
+                <div className="h-4 w-40 bg-white/10 rounded-sm animate-pulse" />
+                <div className="h-2.5 w-28 bg-white/5 rounded-sm animate-pulse mt-2" />
+              </>
+            ) : (
+              <>
+                <p className="text-sm font-semibold truncate">{org.name}</p>
+                <p className="text-[11px] text-n-400 mt-0.5">IFU · {org.ifu}</p>
+              </>
+            )}
           </Link>
         ) : (
           <div className="px-6 py-4 border-b border-white/10 bg-gradient-to-br from-orange/15 to-transparent">
