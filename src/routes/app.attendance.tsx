@@ -46,8 +46,11 @@ function AttendancePage() {
   const today = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 
   const stats = useMemo(() => {
+    if (active.length === 0) return { present: 0, late: 0, absent: 0, leave: 0, remote: 0, total: 0 }
     let present = 0, late = 0, absent = 0, leave = 0, remote = 0
-    punches.forEach((p) => {
+    const activeIds = new Set(active.map((e) => e.id))
+    punches.forEach((p, id) => {
+      if (!activeIds.has(id)) return
       if (p.status === 'present') present++
       else if (p.status === 'late') late++
       else if (p.status === 'absent') absent++
@@ -55,7 +58,7 @@ function AttendancePage() {
       else if (p.status === 'remote') remote++
     })
     return { present, late, absent, leave, remote, total: active.length }
-  }, [punches, active.length])
+  }, [punches, active])
 
   const visible = useMemo(() => {
     const nq = norm(query)
