@@ -14,6 +14,7 @@
  * Une ESLint rule custom sera ajoutée Phase 1.6 pour enforcer.
  */
 import type { GenericMutationCtx, GenericQueryCtx } from 'convex/server'
+import { components } from '../_generated/api'
 
 export type OrgContext<Ctx> = Ctx & {
   orgId: string
@@ -30,15 +31,29 @@ export async function withOrg<Ctx extends GenericQueryCtx<any> | GenericMutation
     throw new Error('Unauthenticated — login required')
   }
 
-  // Better Auth injecte l'org active dans le JWT via `activeOrganizationId` claim
-  // (configuré via le plugin organization)
   const orgId = (identity as any).activeOrganizationId as string | undefined
   if (!orgId) {
     throw new Error('No active organization — user must select an org')
   }
 
   const userId = identity.subject
-  const userRole = ((identity as any).activeOrganizationRole as string | undefined) ?? 'member'
+  // Better Auth's session has activeOrganizationId only — role is stored in
+  // the `member` table. Look it up via the betterAuth component adapter.
+  let userRole = 'member'
+  try {
+    const member = await ctx.runQuery((components as any).betterAuth.adapter.findOne, {
+      input: {
+        model: 'member',
+        where: [
+          { field: 'organizationId', value: orgId },
+          { field: 'userId', value: userId, connector: 'AND' },
+        ],
+      },
+    })
+    if (member?.role) userRole = String(member.role)
+  } catch {
+    /* member lookup failed — fall back to 'member' role, audit will catch */
+  }
 
   return fn({ ...ctx, orgId, userId, userRole } as OrgContext<Ctx>)
 }
