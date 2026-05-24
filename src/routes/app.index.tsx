@@ -18,7 +18,11 @@ function Dashboard() {
   const liveKPIs = useQuery(api.reports.dashboardKPIs, session.data ? {} : 'skip')
   const liveEmployees = useQuery(api.employees.list, session.data ? { status: 'active' } : 'skip')
 
-  const next = DECLARATIONS.find(d => d.status === 'À soumettre' || d.status === 'En cours')
+  // Les déclarations seront calculées depuis Convex (Phase 5). Pour l'instant :
+  // - mode démo (déconnecté + session loaded) → garde le mock DECLARATIONS comme arme commerciale
+  // - mode authentifié → null (Prochaine échéance affichera '—')
+  const showDemoDeclarations = !session.isPending && !session.data
+  const next = showDemoDeclarations ? DECLARATIONS.find(d => d.status === 'À soumettre' || d.status === 'En cours') : null
   const storeOrg = useStore((s) => s.org)
   const activeOrgResult = (authClient as unknown as { useActiveOrganization?: () => { data?: { name?: string } | null; isPending?: boolean } }).useActiveOrganization?.()
   const liveName = activeOrgResult?.data?.name
