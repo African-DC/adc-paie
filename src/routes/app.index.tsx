@@ -7,6 +7,7 @@ import { useSession } from '../lib/auth-client'
 import { api } from '../../convex/_generated/api'
 import { AnomaliesBanner } from '../components/extras'
 import { store, useStore } from '../lib/store'
+import { authClient } from '../lib/auth-client'
 
 export const Route = createFileRoute('/app/')({
   component: Dashboard,
@@ -18,7 +19,10 @@ function Dashboard() {
   const liveEmployees = useQuery(api.employees.list, session.data ? { status: 'active' } : 'skip')
 
   const next = DECLARATIONS.find(d => d.status === 'À soumettre' || d.status === 'En cours')
-  const org = useStore((s) => s.org)
+  const storeOrg = useStore((s) => s.org)
+  const activeOrgResult = (authClient as unknown as { useActiveOrganization?: () => { data?: { name?: string } | null } }).useActiveOrganization?.()
+  const liveName = activeOrgResult?.data?.name
+  const org = { ...storeOrg, name: liveName ?? storeOrg.name }
 
   // KPIs hybrides : Convex live ou fallback mock
   const kpis = useMemo(() => {
