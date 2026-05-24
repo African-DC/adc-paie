@@ -63,6 +63,10 @@ function PayrollPage() {
   }, [liveEmployees, session.data, session.isPending])
 
   const handleGenerate = async () => {
+    if (active.length === 0) {
+      store.toast('Aucun salarié dans votre espace. Embauchez d\'abord un salarié pour générer une paie.', 'warning')
+      return
+    }
     if (!session.data) {
       // Mode démo : pas de mutation, download direct ZIP
       store.toast(`${active.length} bulletins calculés · archive ZIP en préparation…`, 'info')

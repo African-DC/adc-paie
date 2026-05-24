@@ -1,10 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useMutation } from 'convex/react'
 import { Building2, Users, Shield, Bell, History, X, Edit3, Check, CheckCircle2, AlertCircle, LogIn, FileSignature, Send, Wallet, Trash2, Scale, Activity } from 'lucide-react'
 import { EMPLOYEES as MOCK_EMPLOYEES } from '../lib/mock'
 import { store, useStore, CONVENTIONS } from '../lib/store'
-import { useSession } from '../lib/auth-client'
+import { useSession, authClient } from '../lib/auth-client'
+import { InviteMemberModal } from '../components/invite-member-modal'
 import { api } from '../../convex/_generated/api'
 import { downloadAuditLogCSV, downloadEmployeesExcel } from '../lib/downloads'
 
@@ -14,6 +15,12 @@ function SettingsPage() {
   const session = useSession()
   const liveEmployees = useQuery(api.employees.list, session.data ? { status: 'active' } : 'skip')
   const showDemoSeed = !session.isPending && !session.data
+  const [inviteOpen, setInviteOpen] = useState(false)
+  // Liste des membres réels de l'org (Better Auth)
+  const activeOrgResult = (authClient as unknown as {
+    useListMembers?: () => { data?: { members?: Array<{ id: string; userId: string; role: string; createdAt: number; user?: { name?: string; email?: string } }> } | null }
+  }).useListMembers?.()
+  const realMembers = activeOrgResult?.data?.members ?? []
   const EMPLOYEES_LIST = showDemoSeed
     ? MOCK_EMPLOYEES
     : (liveEmployees?.map((e) => ({ ...e, id: e._id })) ?? [])
@@ -59,6 +66,24 @@ function SettingsPage() {
     store.toast(`${label} mis à jour${session.data ? ' (local — sync backend à venir)' : ''}`, session.data ? 'info' : 'success')
   }
   const tenant = org
+
+  // Hash deeplinks (depuis Spotlight) : scroll vers la section + highlight bref
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const hash = window.location.hash.slice(1)
+    if (!hash) return
+    const tryScroll = () => {
+      const el = document.getElementById(hash)
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        el.classList.add('ring-2', 'ring-orange', 'ring-offset-2', 'transition-all')
+        setTimeout(() => el.classList.remove('ring-2', 'ring-orange', 'ring-offset-2'), 2000)
+      }
+    }
+    const t = setTimeout(tryScroll, 250)
+    return () => clearTimeout(t)
+  }, [])
+
   return (
     <div className="space-y-6 max-w-4xl">
       <div>
@@ -69,13 +94,13 @@ function SettingsPage() {
 
       <div className="space-y-6">
         <Card title="Informations légales" icon={Building2}>
-          <EditableField label="Raison sociale"            k="name"    value={tenant.name}    editing={editing} setEditing={setEditing} onChange={setField} onSave={saveField} />
-          <EditableField label="IFU (DGI)"                 k="ifu"     value={tenant.ifu}     editing={editing} setEditing={setEditing} onChange={setField} onSave={saveField} mono />
-          <EditableField label="Numéro CNPS employeur"     k="cnps"    value={tenant.cnps}    editing={editing} setEditing={setEditing} onChange={setField} onSave={saveField} mono />
-          <EditableField label="Secteur d'activité"        k="sector"  value={tenant.sector}  editing={editing} setEditing={setEditing} onChange={setField} onSave={saveField} />
-          <EditableField label="Taux Accidents du travail" k="taux_at" value={tenant.taux_at} editing={editing} setEditing={setEditing} onChange={setField} onSave={saveField} suffix=" %" />
-          <EditableField label="Ville"                     k="city"    value={tenant.city}    editing={editing} setEditing={setEditing} onChange={setField} onSave={saveField} />
-          <div className="flex items-center justify-between py-2.5 border-b border-n-100 last:border-0 gap-3">
+          <div id="name"><EditableField label="Raison sociale"            k="name"    value={tenant.name}    editing={editing} setEditing={setEditing} onChange={setField} onSave={saveField} /></div>
+          <div id="ifu"><EditableField label="IFU (DGI)"                 k="ifu"     value={tenant.ifu}     editing={editing} setEditing={setEditing} onChange={setField} onSave={saveField} mono /></div>
+          <div id="cnps"><EditableField label="Numéro CNPS employeur"     k="cnps"    value={tenant.cnps}    editing={editing} setEditing={setEditing} onChange={setField} onSave={saveField} mono /></div>
+          <div id="sector"><EditableField label="Secteur d'activité"        k="sector"  value={tenant.sector}  editing={editing} setEditing={setEditing} onChange={setField} onSave={saveField} /></div>
+          <div id="taux_at"><EditableField label="Taux Accidents du travail" k="taux_at" value={tenant.taux_at} editing={editing} setEditing={setEditing} onChange={setField} onSave={saveField} suffix=" %" /></div>
+          <div id="city"><EditableField label="Ville"                     k="city"    value={tenant.city}    editing={editing} setEditing={setEditing} onChange={setField} onSave={saveField} /></div>
+          <div id="convention" className="flex items-center justify-between py-2.5 border-b border-n-100 last:border-0 gap-3">
             <div className="min-w-0 flex-1">
               <p className="text-[10px] uppercase tracking-wider text-n-500 font-semibold mb-0.5">Convention collective applicable</p>
               <select value={tenant.convention} onChange={(e) => { setField('convention', e.target.value); saveField('convention') }} className="text-sm font-medium border border-n-300 rounded-sm h-9 px-2 focus:border-orange focus:ring-1 focus:ring-orange outline-none w-full">
@@ -90,19 +115,27 @@ function SettingsPage() {
           <div className="space-y-3">
             {(showDemoSeed
               ? [
-                  { name: 'Marcel Djedje-li', role: 'Administrateur', email: 'marcel@adc-paie.ci' },
-                  { name: 'Aïcha Koné', role: 'DRH', email: 'aicha.kone@example.ci' },
-                  { name: 'Mamadou Diabaté', role: 'Comptable', email: 'mamadou.diabate@example.ci' },
+                  { id: 'd1', name: 'Marcel Djedje-li', role: 'Administrateur', email: 'marcel@adc-paie.ci' },
+                  { id: 'd2', name: 'Aïcha Koné', role: 'DRH', email: 'aicha.kone@example.ci' },
+                  { id: 'd3', name: 'Mamadou Diabaté', role: 'Comptable', email: 'mamadou.diabate@example.ci' },
                 ]
-              : [
-                  {
-                    name: (session.data?.user?.name as string) ?? session.data?.user?.email ?? 'Vous',
-                    role: 'Propriétaire',
-                    email: (session.data?.user?.email as string) ?? '',
-                  },
-                ]
+              : realMembers.length > 0
+                ? realMembers.map((m) => ({
+                    id: m.id,
+                    name: m.user?.name ?? m.user?.email ?? '—',
+                    role: m.role === 'owner' ? 'Propriétaire' : m.role === 'admin' ? 'Administrateur' : 'Membre',
+                    email: m.user?.email ?? '',
+                  }))
+                : [
+                    {
+                      id: 'self',
+                      name: (session.data?.user?.name as string) ?? session.data?.user?.email ?? 'Vous',
+                      role: 'Propriétaire',
+                      email: (session.data?.user?.email as string) ?? '',
+                    },
+                  ]
             ).map((u) => (
-              <div key={u.email} className="flex items-center justify-between gap-4 py-2 border-b border-n-100 last:border-0">
+              <div key={u.id} className="flex items-center justify-between gap-4 py-2 border-b border-n-100 last:border-0">
                 <div>
                   <p className="font-medium text-sm">{u.name}</p>
                   <p className="text-xs text-n-500">{u.email}</p>
@@ -111,7 +144,15 @@ function SettingsPage() {
               </div>
             ))}
           </div>
-          <button onClick={() => store.toast('Modal d\'invitation disponible en tier Pro', 'info')} className="mt-4 text-sm font-semibold text-orange hover:text-orange-deep">+ Inviter un collaborateur</button>
+          <button
+            onClick={() => {
+              if (!session.data) { store.toast('Connectez-vous pour inviter un collaborateur', 'info'); return }
+              setInviteOpen(true)
+            }}
+            className="mt-4 text-sm font-semibold text-orange hover:text-orange-deep inline-flex items-center gap-1.5"
+          >
+            <Users className="w-3.5 h-3.5" /> Inviter un collaborateur
+          </button>
         </Card>
 
         <Card title="Conformité légale CI" icon={Scale}>
@@ -155,7 +196,8 @@ function SettingsPage() {
           <Toggle k="whatsapp" label="Alertes WhatsApp Business" desc="Notifications légales urgentes via WhatsApp" toggles={toggles} flip={flip} />
         </Card>
 
-        <Card title="Journal d'audit" icon={History}>
+        <InviteMemberModal open={inviteOpen} onClose={() => setInviteOpen(false)} />
+        <div id="audit" /><Card title="Journal d'audit" icon={History}>
           <p className="text-xs text-n-600 mb-4">Toutes les actions sensibles sont tracées pour la conformité ARTCI (Loi 2013-450). Conservation 5 ans, chaîne SHA-256 hash-chained, accès restreint.</p>
           {auditEntries && auditEntries.length > 0 ? (
             <ul className="divide-y divide-n-100 -mx-6">

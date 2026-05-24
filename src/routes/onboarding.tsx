@@ -132,9 +132,28 @@ function OnboardingPage() {
     setError(null)
     setLoading(true)
     try {
+      // Validations format ivoirien (Loi 2015-532, Code Général Impôts CI)
+      const ifu = form.ifu.trim()
+      const cnps = form.cnps.trim()
+      const city = form.city.trim()
+      if (ifu.length < 4) {
+        setError('Le numéro IFU/IDU est requis (au moins 4 caractères).')
+        setLoading(false)
+        return
+      }
+      if (cnps.length < 1) {
+        setError('Le numéro CNPS employeur est requis.')
+        setLoading(false)
+        return
+      }
+      if (city.length < 2) {
+        setError('La ville du siège social est requise.')
+        setLoading(false)
+        return
+      }
       const tauxAT = parseFloat(form.tauxAT)
       if (Number.isNaN(tauxAT) || tauxAT < 2 || tauxAT > 5) {
-        setError('Le taux Accidents du travail doit être entre 2 % et 5 %')
+        setError('Le taux Accidents du travail doit être entre 2 % et 5 % (décret CNPS).')
         setLoading(false)
         return
       }
@@ -248,8 +267,9 @@ function OnboardingPage() {
                 <input
                   id="ifu"
                   value={form.ifu}
-                  onChange={(e) => setForm({ ...form, ifu: e.target.value })}
+                  onChange={(e) => setForm({ ...form, ifu: e.target.value.toUpperCase() })}
                   required
+                  minLength={4}
                   placeholder="CI-2104-A-098456"
                   className="mt-2 w-full h-11 px-3 border border-n-300 rounded-sm text-sm font-mono focus:outline-none focus:border-orange focus:ring-1 focus:ring-orange"
                 />
@@ -262,8 +282,9 @@ function OnboardingPage() {
                 <input
                   id="cnps"
                   value={form.cnps}
-                  onChange={(e) => setForm({ ...form, cnps: e.target.value })}
+                  onChange={(e) => setForm({ ...form, cnps: e.target.value.replace(/[^0-9]/g, '') })}
                   required
+                  pattern="[0-9]+"
                   placeholder="048120"
                   className="mt-2 w-full h-11 px-3 border border-n-300 rounded-sm text-sm font-mono focus:outline-none focus:border-orange focus:ring-1 focus:ring-orange"
                 />

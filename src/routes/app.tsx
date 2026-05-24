@@ -13,6 +13,7 @@ import { ADCAChat, ChatFAB } from '../components/adca-chat'
 import { HelpModal, OnboardingWizard } from '../components/extras'
 import { HireWizard } from '../components/hire-wizard'
 import { ConfirmDialog } from '../components/confirm-dialog'
+import { AppErrorBoundary } from '../components/error-boundary'
 import { useStore, store } from '../lib/store'
 import { useNavigate } from '@tanstack/react-router'
 
@@ -279,7 +280,9 @@ function AppLayout() {
           </div>
         </header>
         <main className="flex-1 p-6 lg:p-8 max-w-full overflow-x-hidden">
-          <Outlet />
+          <AppErrorBoundary>
+            <Outlet />
+          </AppErrorBoundary>
         </main>
       </div>
 
