@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useEffect, useMemo } from 'react'
 import { useQuery } from 'convex/react'
-import { TrendingUp, Users, CalendarClock, Wallet, ArrowRight, AlertCircle, Calculator, Send, UserPlus, BarChart3, UserCircle2 } from 'lucide-react'
+import { TrendingUp, Users, CalendarClock, Wallet, ArrowRight, AlertCircle, Calculator, Send, UserPlus, BarChart3, UserCircle2, FileCheck } from 'lucide-react'
 import { TOTALS, EMPLOYEES, DECLARATIONS, fcfa } from '../lib/mock'
 import { useSession } from '../lib/auth-client'
 import { api } from '../../convex/_generated/api'
@@ -142,18 +142,28 @@ function Dashboard() {
         </div>
         <div className="bg-white border border-n-200 rounded-sm p-6">
           <h2 className="font-serif text-xl font-semibold tracking-tight mb-4">Déclarations à venir</h2>
-          <ul className="space-y-3">
-            {DECLARATIONS.filter(d => d.status !== 'Validé').slice(0, 4).map((d) => (
-              <li key={d.id} className="flex items-start gap-3 pb-3 border-b border-n-100 last:border-0 last:pb-0">
-                <div className="w-1 h-12 bg-orange shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm truncate">{d.type}</p>
-                  <p className="text-[11px] text-n-500 mt-0.5">{d.period} · {d.due}</p>
-                </div>
-                <StatusBadge status={d.status} />
-              </li>
-            ))}
-          </ul>
+          {isLoading ? (
+            <DeclarationsSkeleton />
+          ) : isEmptyOrg ? (
+            <div className="py-6 flex flex-col items-center justify-center text-center">
+              <FileCheck className="w-7 h-7 text-n-400 mb-2" />
+              <p className="text-sm font-medium text-n-700">Aucune déclaration à venir</p>
+              <p className="text-xs text-n-500 mt-1 max-w-xs">Les déclarations ITS et CNPS apparaîtront ici dès votre première paie traitée.</p>
+            </div>
+          ) : (
+            <ul className="space-y-3">
+              {DECLARATIONS.filter(d => d.status !== 'Validé').slice(0, 4).map((d) => (
+                <li key={d.id} className="flex items-start gap-3 pb-3 border-b border-n-100 last:border-0 last:pb-0">
+                  <div className="w-1 h-12 bg-orange shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">{d.type}</p>
+                    <p className="text-[11px] text-n-500 mt-0.5">{d.period} · {d.due}</p>
+                  </div>
+                  <StatusBadge status={d.status} />
+                </li>
+              ))}
+            </ul>
+          )}
           <Link to="/app/declarations" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-orange hover:text-orange-deep transition-colors">
             Voir toutes <ArrowRight className="w-3.5 h-3.5" />
           </Link>
@@ -331,3 +341,20 @@ function HiresSkeleton() {
   )
 }
 
+
+function DeclarationsSkeleton() {
+  return (
+    <ul className="space-y-3">
+      {[0, 1, 2].map((i) => (
+        <li key={i} className="flex items-start gap-3 pb-3 border-b border-n-100 last:border-0 last:pb-0">
+          <div className="w-1 h-12 bg-n-100 shrink-0 animate-pulse" />
+          <div className="flex-1 min-w-0 space-y-1.5 mt-1">
+            <div className="h-3 w-28 bg-n-200 rounded-sm animate-pulse" />
+            <div className="h-2.5 w-40 bg-n-100 rounded-sm animate-pulse" />
+          </div>
+          <div className="h-5 w-20 bg-n-100 rounded-sm animate-pulse" />
+        </li>
+      ))}
+    </ul>
+  )
+}

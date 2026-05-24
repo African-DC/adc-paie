@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { Plus, Filter, Download, MoreHorizontal, Search, ArrowUpDown, ArrowUp, ArrowDown, X, Upload, LayoutGrid, List, Mail, Phone, Sparkles } from 'lucide-react'
+import { Plus, Filter, Download, MoreHorizontal, Search, ArrowUpDown, ArrowUp, ArrowDown, X, Upload, LayoutGrid, List, Mail, Phone, Sparkles, Trash2 } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import { useQuery, useMutation } from 'convex/react'
 import { EMPLOYEES, fcfa, type Employee } from '../lib/mock'
@@ -7,6 +7,7 @@ import { useSession } from '../lib/auth-client'
 import { api } from '../../convex/_generated/api'
 import { store } from '../lib/store'
 import { HireWizard } from '../components/hire-wizard'
+import { ConfirmDialog } from '../components/confirm-dialog'
 import { downloadEmployeesExcel, downloadImportTemplateExcel } from '../lib/downloads'
 
 export const Route = createFileRoute('/app/employees/')({
@@ -19,6 +20,7 @@ type SortDir = 'asc' | 'desc'
 function EmployeesPage() {
   const session = useSession()
   const seedDemo = useMutation(api.employees.seedDemo)
+  const removeAll = useMutation(api.employees.removeAllEmployees)
   const liveEmployees = useQuery(api.employees.list, session.data ? {} : 'skip')
 
   const [filter, setFilter] = useState<'all' | 'CDI' | 'CDD'>('all')
@@ -29,6 +31,8 @@ function EmployeesPage() {
   const [importOpen, setImportOpen] = useState(false)
   const [view, setView] = useState<'table' | 'grid'>('table')
   const [seeding, setSeeding] = useState(false)
+  const [confirmWipe, setConfirmWipe] = useState(false)
+  const [wiping, setWiping] = useState(false)
 
   const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '')
 
@@ -90,6 +94,19 @@ function EmployeesPage() {
     }
   }
 
+  const handleWipeAll = async () => {
+    setWiping(true)
+    try {
+      const result = await removeAll({})
+      store.toast(`${result.count} salariés supprimés`, 'success')
+      setConfirmWipe(false)
+    } catch (err) {
+      store.toast(err instanceof Error ? err.message : 'Suppression impossible', 'warning')
+    } finally {
+      setWiping(false)
+    }
+  }
+
   const toggleSort = (k: SortKey) => {
     if (sort === k) setDir((d) => (d === 'asc' ? 'desc' : 'asc'))
     else { setSort(k); setDir('asc') }
@@ -109,6 +126,11 @@ function EmployeesPage() {
           {session.data && liveEmployees && liveEmployees.length === 0 && (
             <button onClick={handleSeedDemo} disabled={seeding} className="inline-flex items-center gap-2 border border-orange/40 bg-orange-tint text-orange-deep px-3 h-9 text-xs font-semibold hover:bg-orange/20 transition-colors rounded-sm uppercase tracking-wider disabled:opacity-60" title="Bootstrap rapide avec 15 salariés réalistes">
               <Sparkles className="w-3.5 h-3.5" /> {seeding ? 'Création…' : 'Démarrer avec 15 démos'}
+            </button>
+          )}
+          {session.data && liveEmployees && liveEmployees.length > 0 && (
+            <button onClick={() => setConfirmWipe(true)} disabled={wiping} className="inline-flex items-center gap-2 border border-red-300 text-red-700 hover:bg-red-50 px-3 h-9 text-xs font-medium transition-colors rounded-sm uppercase tracking-wider disabled:opacity-60" title="Supprimer tous les salariés (revoque les démos ou wipe complet)">
+              <Trash2 className="w-3.5 h-3.5" /> Tout supprimer
             </button>
           )}
           <button onClick={() => setImportOpen(true)} className="inline-flex items-center gap-2 border border-n-300 text-n-700 px-3 h-9 text-xs font-medium hover:bg-n-50 transition-colors rounded-sm uppercase tracking-wider" title="Importer depuis Excel">
@@ -268,6 +290,16 @@ function EmployeesPage() {
       )}
       <HireWizard open={hireOpen} onClose={() => setHireOpen(false)} />
       <ImportEmployeesModal open={importOpen} onClose={() => setImportOpen(false)} />
+      <ConfirmDialog
+        open={confirmWipe}
+        title="Supprimer tous les salariés ?"
+        message={<>Cette action supprimera <strong>{liveEmployees?.length ?? 0} salarié(s)</strong> définitivement. Les bulletins, paies et historiques associés ne seront plus rattachés à eux. Cette opération est irréversible.</>}
+        confirmLabel="Tout supprimer"
+        cancelLabel="Annuler"
+        variant="danger"
+        onCancel={() => setConfirmWipe(false)}
+        onConfirm={handleWipeAll}
+      />
     </div>
   )
 }

@@ -251,6 +251,36 @@ export const setStatus = mutation({
 })
 
 /**
+ * Supprime TOUS les employés de l'org active (revoque seedDemo ou wipe complet).
+ * Garde le tracking via auditLog. À utiliser via la UI avec un ConfirmDialog.
+ */
+export const removeAllEmployees = mutation({
+  args: {},
+  handler: async (ctx) =>
+    withOrgRoles(ctx, ['owner'], async (octx) => {
+      const all = await octx.db
+        .query('employees')
+        .withIndex('by_org', (idx) => idx.eq('organizationId', octx.orgId))
+        .collect()
+      for (const emp of all) {
+        await octx.db.delete(emp._id)
+      }
+      const identity = (await octx.auth.getUserIdentity())!
+      await appendAuditEntry(octx, {
+        organizationId: octx.orgId,
+        actorId: octx.userId,
+        actorName: (identity.name as string) ?? identity.email ?? octx.userId,
+        entry: {
+          action: `Suppression de ${all.length} salarié(s) (revoke démo)`,
+          severity: 'high',
+          metadata: { count: all.length },
+        },
+      })
+      return { ok: true, count: all.length }
+    }),
+})
+
+/**
  * Seed démo : injecte 15 employés réalistes pour bootstrap rapide d'un nouvel
  * espace. Idempotent (skip si l'org a déjà des employees).
  */
