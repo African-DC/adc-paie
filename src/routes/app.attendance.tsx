@@ -4,6 +4,7 @@ import { Clock, UserCheck, UserX, AlertCircle, Search, X, ChevronLeft, ChevronRi
 import { EMPLOYEES } from '../lib/mock'
 import { store } from '../lib/store'
 import { downloadAttendanceSheetPDF } from '../lib/downloads'
+import { useSession } from '../lib/auth-client'
 
 export const Route = createFileRoute('/app/attendance')({ component: AttendancePage })
 
@@ -34,7 +35,8 @@ function buildInitial(active: typeof EMPLOYEES) {
 }
 
 function AttendancePage() {
-  const active = EMPLOYEES.filter((e) => e.status === 'active')
+  const session = useSession()
+  const active = session.data ? [] : EMPLOYEES.filter((e) => e.status === 'active')
   const [punches, setPunches] = useState(() => buildInitial(active))
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<'all' | Status>('all')

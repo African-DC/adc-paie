@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react'
 import { Plus, X, CheckCircle2, Clock, AlertCircle, ChevronRight, Wallet, TrendingDown, Search } from 'lucide-react'
 import { EMPLOYEES, fcfa } from '../lib/mock'
 import { store } from '../lib/store'
+import { useSession } from '../lib/auth-client'
 
 export const Route = createFileRoute('/app/advances')({ component: AdvancesPage })
 
@@ -19,7 +20,8 @@ const INIT: Advance[] = [
 ]
 
 export function AdvancesPage() {
-  const [advances, setAdvances] = useState<Advance[]>(INIT)
+  const session = useSession()
+  const [advances, setAdvances] = useState<Advance[]>(session.data ? [] : INIT)
   const [filter, setFilter] = useState<'all' | Status>('all')
   const [showNew, setShowNew] = useState(false)
   const [query, setQuery] = useState('')

@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import { Megaphone, Plus, X, AlertCircle, Bell, Users, ChevronRight } from 'lucide-react'
 import { store, useStore } from '../lib/store'
+import { useSession } from '../lib/auth-client'
 
 export const Route = createFileRoute('/app/announcements')({ component: AnnouncementsPage })
 
@@ -23,11 +24,12 @@ const SEED: Annonce[] = [
 ]
 
 function AnnouncementsPage() {
+  const session = useSession()
   const isEmployeeMode = useStore((s) => {
     if (typeof window === 'undefined') return false
     return window.location.pathname.startsWith('/app/me') || window.location.search.includes('from=me')
   })
-  const [annonces, setAnnonces] = useState<Annonce[]>(SEED)
+  const [annonces, setAnnonces] = useState<Annonce[]>(session.data ? [] : SEED)
   const [showNew, setShowNew] = useState(false)
 
   return (

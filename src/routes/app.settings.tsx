@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useQuery, useMutation } from 'convex/react'
 import { Building2, Users, Shield, Bell, History, X, Edit3, Check, CheckCircle2, AlertCircle, LogIn, FileSignature, Send, Wallet, Trash2, Scale, Activity } from 'lucide-react'
-import { EMPLOYEES } from '../lib/mock'
+import { EMPLOYEES as MOCK_EMPLOYEES } from '../lib/mock'
 import { store, useStore, CONVENTIONS } from '../lib/store'
 import { useSession } from '../lib/auth-client'
 import { api } from '../../convex/_generated/api'
@@ -12,6 +12,10 @@ export const Route = createFileRoute('/app/settings')({ component: SettingsPage 
 
 function SettingsPage() {
   const session = useSession()
+  const liveEmployees = useQuery(api.employees.list, session.data ? { status: 'active' } : 'skip')
+  const EMPLOYEES_LIST = session.data
+    ? (liveEmployees?.map((e) => ({ ...e, id: e._id })) ?? [])
+    : MOCK_EMPLOYEES
   // Convex audit log (real) — fallback mock si pas connecté
   const auditEntries = useQuery(
     api.organizations.listAuditLog,
@@ -78,8 +82,8 @@ function SettingsPage() {
           <p className="text-xs text-n-600 mb-3">Checklist des obligations employeur PME (Code travail 2015-532, sources MEPS + CNPS).</p>
           <div className="space-y-2.5">
             {[
-              { ok: EMPLOYEES.filter(e => e.status === 'active').length >= 11, label: 'Règlement intérieur affiché', detail: `Obligatoire ≥ 11 salariés · effectif actuel ${EMPLOYEES.filter(e => e.status === 'active').length}`, when: EMPLOYEES.filter(e => e.status === 'active').length >= 11 ? 'À mettre en place' : 'Non requis' },
-              { ok: EMPLOYEES.filter(e => e.status === 'active').length >= 11, label: 'Élections délégués du personnel', detail: 'Obligatoires ≥ 11 salariés (Décret 96-207)', when: EMPLOYEES.filter(e => e.status === 'active').length >= 11 ? 'À organiser' : 'Non requis' },
+              { ok: EMPLOYEES_LIST.filter(e => e.status === 'active').length >= 11, label: 'Règlement intérieur affiché', detail: `Obligatoire ≥ 11 salariés · effectif actuel ${EMPLOYEES_LIST.filter(e => e.status === 'active').length}`, when: EMPLOYEES_LIST.filter(e => e.status === 'active').length >= 11 ? 'À mettre en place' : 'Non requis' },
+              { ok: EMPLOYEES_LIST.filter(e => e.status === 'active').length >= 11, label: 'Élections délégués du personnel', detail: 'Obligatoires ≥ 11 salariés (Décret 96-207)', when: EMPLOYEES_LIST.filter(e => e.status === 'active').length >= 11 ? 'À organiser' : 'Non requis' },
               { ok: true, label: 'Affichage taux AT et horaires de travail', detail: `Taux AT actuel : ${tenant.taux_at} % · horaires affichés`, when: 'Conforme' },
               { ok: true, label: 'Affichage convention collective', detail: tenant.convention, when: 'Conforme' },
               { ok: true, label: 'Visite médicale embauche (OST)', detail: 'Obligation avant fin période d\'essai · ~15-50k FCFA', when: 'À planifier pour chaque embauche' },
@@ -157,7 +161,7 @@ function SettingsPage() {
                 <p className="text-sm font-semibold">Exporter toutes les données</p>
                 <p className="text-[11px] text-n-600">Archive ZIP RGPD-compatible · 12 mois de données</p>
               </div>
-              <button onClick={() => { downloadEmployeesExcel(EMPLOYEES); store.toast('Export annuaire RGPD téléchargé · audit log CSV en bonus', 'success'); setTimeout(() => downloadAuditLogCSV(AUDIT_LOG), 600) }} className="px-3 h-8 text-xs font-semibold border border-orange text-orange-deep hover:bg-orange-tint rounded-sm">Exporter</button>
+              <button onClick={() => { downloadEmployeesExcel(EMPLOYEES_LIST); store.toast('Export annuaire RGPD téléchargé · audit log CSV en bonus', 'success'); setTimeout(() => downloadAuditLogCSV(AUDIT_LOG), 600) }} className="px-3 h-8 text-xs font-semibold border border-orange text-orange-deep hover:bg-orange-tint rounded-sm">Exporter</button>
             </div>
             <div className="flex items-center justify-between p-3 bg-red-50 border border-red-200 rounded-sm">
               <div>

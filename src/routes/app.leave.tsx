@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react'
 import { CalendarDays, Plus, Check, X, Clock, CalendarCheck, Search } from 'lucide-react'
 import { EMPLOYEES } from '../lib/mock'
 import { store } from '../lib/store'
+import { useSession } from '../lib/auth-client'
 
 export const Route = createFileRoute('/app/leave')({ component: LeavePage })
 
@@ -20,7 +21,8 @@ const INITIAL: Request[] = [
 export default function LeaveDefault() { return null }
 
 function LeavePage() {
-  const [reqs, setReqs] = useState<Request[]>(INITIAL)
+  const session = useSession()
+  const [reqs, setReqs] = useState<Request[]>(session.data ? [] : INITIAL)
   const [tab, setTab] = useState<'all' | 'pending' | 'calendar'>('pending')
   const [showNew, setShowNew] = useState(false)
 

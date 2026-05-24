@@ -40,9 +40,11 @@ function PayrollPage() {
   const livePayslips = useQuery(api.payroll.listForPeriod, session.data ? { period } : 'skip')
   const generateMutation = useMutation(api.payroll.generate)
 
-  // Data source : Convex live si connecté + employees, sinon mock
+  // Data source : Convex live si connecté + employees, sinon mock (démo)
+  // Authentifié sans employés = liste vide (pas de mock), pour afficher empty state
   const active = useMemo(() => {
-    if (liveEmployees && liveEmployees.length > 0) {
+    if (liveEmployees) {
+      if (liveEmployees.length === 0) return []
       return liveEmployees.map((e) => ({
         id: e._id,
         firstName: e.firstName,
@@ -56,8 +58,8 @@ function PayrollPage() {
         joinedAt: e.joinedAt,
       }))
     }
-    return EMPLOYEES.filter(e => e.status === 'active')
-  }, [liveEmployees])
+    return session.data ? [] : EMPLOYEES.filter(e => e.status === 'active')
+  }, [liveEmployees, session.data])
 
   const handleGenerate = async () => {
     if (!session.data) {
