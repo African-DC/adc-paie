@@ -1,23 +1,52 @@
-import { createFileRoute, Link, notFound, useLocation, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link, useLocation, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { ChevronLeft, ChevronRight, Download, Mail, Printer, Info, BookOpen, EyeOff } from 'lucide-react'
-import { EMPLOYEES, TENANT, fcfa, computePayslip } from '../lib/mock'
+import { useQuery } from 'convex/react'
+import { EMPLOYEES, TENANT, fcfa, computePayslip, type Employee } from '../lib/mock'
 import { store } from '../lib/store'
 import { downloadPayslipPDF } from '../lib/downloads'
+import { useSession } from '../lib/auth-client'
+import { api } from '../../convex/_generated/api'
+import type { Id } from '../../convex/_generated/dataModel'
 
 export const Route = createFileRoute('/app/payroll/payslip/$id')({
-  loader: ({ params }) => {
-    const e = EMPLOYEES.find((x) => x.id === params.id)
-    if (!e) throw notFound()
-    return { e }
-  },
   component: PayslipPage,
-  notFoundComponent: () => <p className="p-6">Bulletin introuvable.</p>,
   validateSearch: (s: Record<string, unknown>) => ({ from: s.from as string | undefined }),
 })
 
 function PayslipPage() {
-  const { e } = Route.useLoaderData()
+  const { id } = Route.useParams()
+  const session = useSession()
+  const showDemoSeed = !session.isPending && !session.data
+  const liveEmp = useQuery(api.employees.get, session.data ? { id: id as Id<'employees'> } : 'skip')
+
+  // Loading / 404 states
+  if (session.data && liveEmp === undefined) {
+    return <div className="p-6"><div className="h-6 w-40 bg-n-200 rounded-sm animate-pulse mb-4" /><div className="h-96 bg-n-100 rounded-sm animate-pulse" /></div>
+  }
+  if (session.data && liveEmp === null) {
+    return <div className="p-6"><Link to="/app/payroll" className="inline-flex items-center gap-1.5 text-sm text-n-600 hover:text-orange mb-4"><ChevronLeft className="w-3.5 h-3.5" /> Retour</Link><p className="text-n-700">Bulletin introuvable dans votre espace.</p></div>
+  }
+  const mockEmp = showDemoSeed ? EMPLOYEES.find((x) => x.id === id) : null
+  if (showDemoSeed && !mockEmp) {
+    return <div className="p-6"><Link to="/app/payroll" className="inline-flex items-center gap-1.5 text-sm text-n-600 hover:text-orange mb-4"><ChevronLeft className="w-3.5 h-3.5" /> Retour</Link><p className="text-n-700">Bulletin introuvable.</p></div>
+  }
+
+  const e: Employee = liveEmp
+    ? {
+        id: liveEmp._id,
+        firstName: liveEmp.firstName,
+        lastName: liveEmp.lastName,
+        matricule: liveEmp.matricule,
+        role: liveEmp.role,
+        contract: liveEmp.contract as Employee['contract'],
+        brut: liveEmp.brut,
+        status: liveEmp.status as Employee['status'],
+        family: { situation: liveEmp.family.situation as Employee['family']['situation'], kids: liveEmp.family.kids },
+        joinedAt: liveEmp.joinedAt,
+      }
+    : mockEmp!
+
   const navigate = useNavigate()
   const loc = useLocation()
   const fromMe = ((loc as any).searchStr || (typeof window !== 'undefined' ? window.location.search : '') || '').includes('from=me')

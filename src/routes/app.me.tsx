@@ -1,9 +1,10 @@
 import { createFileRoute, Link, useLocation, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
-import { Download, FileText, Calendar, Mail, Phone, MapPin, ShieldCheck, Sparkles, Plus, ChevronRight, CheckCircle2, Clock } from 'lucide-react'
+import { Download, FileText, Calendar, Mail, Phone, MapPin, ShieldCheck, Sparkles, Plus, ChevronRight, CheckCircle2, Clock, Building2 } from 'lucide-react'
 import { EMPLOYEES, fcfa, computePayslip } from '../lib/mock'
 import { store } from '../lib/store'
 import { downloadPayslipPDF, downloadAttestationPDF, downloadPayslipsZip, downloadEmployeeDocument } from '../lib/downloads'
+import { useSession, authClient } from '../lib/auth-client'
 
 export const Route = createFileRoute('/app/me')({
   component: MePage,
@@ -16,6 +17,35 @@ const MONTHS = ['Novembre 2026', 'Octobre 2026', 'Septembre 2026', 'Août 2026',
 type Tab = 'home' | 'payslips' | 'leave' | 'docs'
 
 function MePage() {
+  const session = useSession()
+  const activeMember = (authClient as unknown as { useActiveMember?: () => { data?: { role?: string } | null } }).useActiveMember?.()
+  const activeRole = activeMember?.data?.role
+  const isOwnerOrAdmin = activeRole === 'owner' || activeRole === 'admin'
+
+  // Owner/admin : pas salarié de leur propre entreprise → bloquer accès
+  if (session.data && isOwnerOrAdmin) {
+    return (
+      <div className="max-w-xl mx-auto py-12 text-center">
+        <div className="w-14 h-14 mx-auto bg-orange-tint text-orange-deep rounded-full flex items-center justify-center mb-5">
+          <Building2 className="w-6 h-6" />
+        </div>
+        <h1 className="font-serif text-2xl font-semibold tracking-tight">Espace salarié non disponible</h1>
+        <p className="mt-3 text-n-700 leading-relaxed">
+          Vous administrez cette entreprise — l'espace salarié est réservé aux <strong>employés</strong> que vous embauchez.
+          Pour tester l'expérience employé, créez un salarié puis invitez-le avec son adresse e-mail.
+        </p>
+        <div className="mt-6 flex items-center justify-center gap-3">
+          <Link to="/app" className="bg-orange text-white px-4 h-10 inline-flex items-center text-sm font-semibold uppercase tracking-wider hover:bg-orange-deep transition-colors rounded-sm">
+            Retour au tableau de bord
+          </Link>
+          <Link to="/app/employees" className="border border-n-300 px-4 h-10 inline-flex items-center text-sm font-medium hover:bg-n-50 transition-colors rounded-sm">
+            Gérer les salariés
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
   const me = EMPLOYEES.find((e) => e.id === ME_ID)!
   const loc = useLocation()
   const navigate = useNavigate()

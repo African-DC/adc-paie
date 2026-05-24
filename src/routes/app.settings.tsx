@@ -29,9 +29,35 @@ function SettingsPage() {
     store.toast(next ? 'Préférence activée' : 'Préférence désactivée', 'success')
   }
   const org = useStore((s) => s.org)
+  const updateField = useMutation(api.organizations.updateOrgSettingsField)
   const [editing, setEditing] = useState<string | null>(null)
   const setField = (k: string, v: string) => store.setOrg({ [k]: v } as any)
-  const saveField = (k: string) => { setEditing(null); store.toast(`${({ name: 'Raison sociale', ifu: 'IFU', cnps: 'CNPS', sector: 'Secteur', taux_at: 'Taux AT', city: 'Ville', convention: 'Convention collective' } as any)[k]} mis à jour · répercuté dans toute l'app`, 'success') }
+
+  // Mapping clé store → clé Convex API (taux_at → tauxAT, name reste local seulement)
+  const CONVEX_FIELD_MAP: Record<string, 'ifu' | 'cnps' | 'sector' | 'tauxAT' | 'city' | 'convention'> = {
+    ifu: 'ifu', cnps: 'cnps', sector: 'sector', taux_at: 'tauxAT', city: 'city', convention: 'convention',
+  }
+
+  const saveField = async (k: string) => {
+    setEditing(null)
+    const labels: Record<string, string> = { name: 'Raison sociale', ifu: 'IFU', cnps: 'CNPS', sector: 'Secteur', taux_at: 'Taux AT', city: 'Ville', convention: 'Convention collective' }
+    const label = labels[k] ?? k
+    // Persist Convex si authentifié + champ supporté côté backend
+    if (session.data && CONVEX_FIELD_MAP[k]) {
+      try {
+        const raw = (org as any)[k]
+        const value = k === 'taux_at' ? Number(raw) / 100 : raw
+        await updateField({ field: CONVEX_FIELD_MAP[k], value })
+        store.toast(`${label} mis à jour · sauvegardé`, 'success')
+        return
+      } catch (err) {
+        store.toast(err instanceof Error ? err.message : `Erreur sauvegarde ${label}`, 'warning')
+        return
+      }
+    }
+    // Mode démo ou champ non supporté (name) → local seulement
+    store.toast(`${label} mis à jour${session.data ? ' (local — sync backend à venir)' : ''}`, session.data ? 'info' : 'success')
+  }
   const tenant = org
   return (
     <div className="space-y-6 max-w-4xl">
