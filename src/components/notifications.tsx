@@ -1,9 +1,15 @@
 import { X, AlertCircle, CheckCircle2, Info, BellOff } from 'lucide-react'
 import { useStore, store } from '../lib/store'
+import { useSession } from '../lib/auth-client'
 
 export function NotificationsPanel() {
+  const session = useSession()
+  const showDemoSeed = !session.isPending && !session.data
   const open = useStore((s) => s.notifOpen)
-  const notifs = useStore((s) => s.notifs)
+  const allNotifs = useStore((s) => s.notifs)
+  // En mode authentifié, on n'affiche que les notifications réelles (vide pour l'instant).
+  // Le seed démo (Bordereau CNPS prêt, Aïcha posé congé, etc.) ne doit pas leak en prod.
+  const notifs = showDemoSeed ? allNotifs : []
   const unread = notifs.filter((n) => !n.read).length
   if (!open) return null
 

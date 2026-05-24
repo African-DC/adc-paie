@@ -52,7 +52,8 @@ function AppLayout() {
   const loc = useLocation()
   const navigate = useNavigate()
   const session = useSession()
-  const unread = useStore((s) => s.notifs.filter((n) => !n.read).length)
+  const showDemoNotifs = !session.isPending && !session.data
+  const unread = useStore((s) => showDemoNotifs ? s.notifs.filter((n) => !n.read).length : 0)
   // Org : combine Better Auth (nom org) + Convex (paramètres métier IFU/CNPS/etc.)
   // Fallback localStorage demo si pas encore connecté (mode démo)
   const fallbackOrg = useStore((s) => s.org)

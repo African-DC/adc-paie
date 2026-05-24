@@ -2,7 +2,10 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { Search, ArrowRight, Users, LayoutDashboard, Calculator, FileCheck2, Settings, FileText, Sparkles, CalendarDays, Wallet, UserCircle2, LogOut, BadgeCheck } from 'lucide-react'
 import { useStore, store } from '../lib/store'
-import { EMPLOYEES } from '../lib/mock'
+import { EMPLOYEES as MOCK_EMPLOYEES } from '../lib/mock'
+import { useSession } from '../lib/auth-client'
+import { useQuery } from 'convex/react'
+import { api } from '../../convex/_generated/api'
 
 const ADMIN_ACTIONS = [
   { id: 'a1', label: 'Aller au tableau de bord', icon: LayoutDashboard, to: '/app', tag: 'navigation' },
@@ -14,7 +17,6 @@ const ADMIN_ACTIONS = [
   { id: 'a5', label: 'Réglages de l\'espace', icon: Settings, to: '/app/settings', tag: 'navigation' },
   { id: 'a6', label: 'Ouvrir l\'assistant IA ADCA', icon: Sparkles, to: '', tag: 'ia', action: () => { store.closeSpotlight(); store.toggleChat() } },
   { id: 'a7', label: 'Voir l\'aperçu d\'un bulletin', icon: FileText, to: '/app/payroll/payslip/1', tag: 'action' },
-  { id: 'a10', label: 'Basculer en mode salarié (démo)', icon: UserCircle2, to: '/app/me', tag: 'navigation' },
 ]
 
 const EMPLOYEE_ACTIONS = [
@@ -30,6 +32,18 @@ export function Spotlight({ isEmployeeMode = false }: { isEmployeeMode?: boolean
   const open = useStore((s) => s.spotlightOpen)
   const [q, setQ] = useState('')
   const navigate = useNavigate()
+  const session = useSession()
+  const showDemoSeed = !session.isPending && !session.data
+  const liveEmployees = useQuery(api.employees.list, session.data ? {} : 'skip')
+  const EMPLOYEES = showDemoSeed
+    ? MOCK_EMPLOYEES
+    : (liveEmployees?.map((e) => ({
+        id: e._id,
+        firstName: e.firstName,
+        lastName: e.lastName,
+        matricule: e.matricule,
+        role: e.role,
+      })) ?? [])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
