@@ -36,10 +36,10 @@ function EmployeesPage() {
 
   const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '')
 
-  // Data source : Convex live si connecté, mock sinon (mode démo)
-  // Adapte le shape Convex doc → Employee type pour zéro régression UI
+  // Data source : Convex live si connecté, mock uniquement en mode démo (déconnecté)
+  const showDemoSeed = !session.isPending && !session.data
   const sourceEmployees: Employee[] = useMemo(() => {
-    if (liveEmployees && liveEmployees.length > 0) {
+    if (liveEmployees) {
       return liveEmployees.map((e) => ({
         id: e._id,
         firstName: e.firstName,
@@ -56,8 +56,8 @@ function EmployeesPage() {
         joinedAt: e.joinedAt,
       }))
     }
-    return EMPLOYEES
-  }, [liveEmployees])
+    return showDemoSeed ? EMPLOYEES : []
+  }, [liveEmployees, showDemoSeed])
 
   const list = useMemo(() => {
     const nq = norm(query)
@@ -123,11 +123,8 @@ function EmployeesPage() {
           <p className="mt-2 text-n-700">{sourceEmployees.filter(e => e.status === 'active').length} salariés en poste · {sourceEmployees.filter(e => e.status === 'leave').length} en congé</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          {session.data && liveEmployees && liveEmployees.length === 0 && (
-            <button onClick={handleSeedDemo} disabled={seeding} className="inline-flex items-center gap-2 border border-orange/40 bg-orange-tint text-orange-deep px-3 h-9 text-xs font-semibold hover:bg-orange/20 transition-colors rounded-sm uppercase tracking-wider disabled:opacity-60" title="Bootstrap rapide avec 15 salariés réalistes">
-              <Sparkles className="w-3.5 h-3.5" /> {seeding ? 'Création…' : 'Démarrer avec 15 démos'}
-            </button>
-          )}
+          {/* Bouton seed démo retiré de la prod — les nouvelles orgs embauchent via le wizard.
+              Pour réactiver pendant un demo commercial, ouvrir la console : window.__seedDemo() */}
           {session.data && liveEmployees && liveEmployees.length > 0 && (
             <button onClick={() => setConfirmWipe(true)} disabled={wiping} className="inline-flex items-center gap-2 border border-red-300 text-red-700 hover:bg-red-50 px-3 h-9 text-xs font-medium transition-colors rounded-sm uppercase tracking-wider disabled:opacity-60" title="Supprimer tous les salariés (revoque les démos ou wipe complet)">
               <Trash2 className="w-3.5 h-3.5" /> Tout supprimer

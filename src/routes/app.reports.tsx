@@ -22,9 +22,9 @@ function ReportsPage() {
   const enConge = showDemoSeed ? EMPLOYEES.filter((e) => e.status !== 'active').length : 0
   const masseAnnuelle = totals.brut * 12
   const masseCoutAnnuel = totals.total * 12
-  const avgBrut = Math.round(totals.brut / active.length)
+  const avgBrut = active.length > 0 ? Math.round(totals.brut / active.length) : 0
   const topPostes = [...active].sort((a, b) => b.brut - a.brut).slice(0, 5)
-  const ratioPatron = Math.round((totals.patron / totals.brut) * 100)
+  const ratioPatron = totals.brut > 0 ? Math.round((totals.patron / totals.brut) * 100) : 0
 
   return (
     <div className="space-y-6">

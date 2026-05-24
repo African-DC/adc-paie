@@ -1,12 +1,16 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Download, Upload, ExternalLink, FileText, Calendar } from 'lucide-react'
-import { DECLARATIONS, EMPLOYEES, fcfa } from '../lib/mock'
+import { DECLARATIONS as MOCK_DECLARATIONS, EMPLOYEES, fcfa } from '../lib/mock'
 import { store } from '../lib/store'
 import { downloadDeclarationExcel, downloadBordereauCNPSPDF, downloadDISAExcel, downloadEtat301Excel } from '../lib/downloads'
+import { useSession } from '../lib/auth-client'
 
 export const Route = createFileRoute('/app/declarations')({ component: DeclarationsPage })
 
 function DeclarationsPage() {
+  const session = useSession()
+  const showDemoSeed = !session.isPending && !session.data
+  const DECLARATIONS = showDemoSeed ? MOCK_DECLARATIONS : []
   return (
     <div className="space-y-6">
       <div>
@@ -47,6 +51,13 @@ function DeclarationsPage() {
               </tr>
             </thead>
             <tbody>
+              {DECLARATIONS.length === 0 && (
+                <tr><td colSpan={6} className="px-4 py-12 text-center">
+                  <FileText className="w-7 h-7 text-n-400 mx-auto mb-2" />
+                  <p className="text-sm font-medium text-n-700">Aucune déclaration à venir</p>
+                  <p className="text-xs text-n-500 mt-1 max-w-md mx-auto">Les bordereaux CNPS et ITS mensuels apparaîtront ici dès la première paie traitée. Les déclarations annuelles (DISA, État 301) seront générées en fin d'exercice.</p>
+                </td></tr>
+              )}
               {DECLARATIONS.map((d) => (
                 <tr key={d.id} className="border-b border-n-100 hover:bg-n-50/50 transition-colors">
                   <td className="px-4 py-3">
