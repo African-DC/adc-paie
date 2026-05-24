@@ -13,9 +13,10 @@ export const Route = createFileRoute('/app/settings')({ component: SettingsPage 
 function SettingsPage() {
   const session = useSession()
   const liveEmployees = useQuery(api.employees.list, session.data ? { status: 'active' } : 'skip')
-  const EMPLOYEES_LIST = session.data
-    ? (liveEmployees?.map((e) => ({ ...e, id: e._id })) ?? [])
-    : MOCK_EMPLOYEES
+  const showDemoSeed = !session.isPending && !session.data
+  const EMPLOYEES_LIST = showDemoSeed
+    ? MOCK_EMPLOYEES
+    : (liveEmployees?.map((e) => ({ ...e, id: e._id })) ?? [])
   // Convex audit log (real) — fallback mock si pas connecté
   const auditEntries = useQuery(
     api.organizations.listAuditLog,

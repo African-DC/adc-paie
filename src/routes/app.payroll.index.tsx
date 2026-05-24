@@ -58,8 +58,9 @@ function PayrollPage() {
         joinedAt: e.joinedAt,
       }))
     }
-    return session.data ? [] : EMPLOYEES.filter(e => e.status === 'active')
-  }, [liveEmployees, session.data])
+    const showDemoSeed = !session.isPending && !session.data
+    return showDemoSeed ? EMPLOYEES.filter(e => e.status === 'active') : []
+  }, [liveEmployees, session.data, session.isPending])
 
   const handleGenerate = async () => {
     if (!session.data) {

@@ -29,7 +29,10 @@ function AnnouncementsPage() {
     if (typeof window === 'undefined') return false
     return window.location.pathname.startsWith('/app/me') || window.location.search.includes('from=me')
   })
-  const [annonces, setAnnonces] = useState<Annonce[]>(session.data ? [] : SEED)
+  // Mock SEED only if we're certain user is NOT authenticated (i.e. demo mode)
+  // session.data === undefined means still loading → start empty to avoid mock flash
+  const showDemoSeed = !session.isPending && !session.data
+  const [annonces, setAnnonces] = useState<Annonce[]>(showDemoSeed ? SEED : [])
   const [showNew, setShowNew] = useState(false)
 
   return (

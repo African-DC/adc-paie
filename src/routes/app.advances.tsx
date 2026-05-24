@@ -21,7 +21,8 @@ const INIT: Advance[] = [
 
 export function AdvancesPage() {
   const session = useSession()
-  const [advances, setAdvances] = useState<Advance[]>(session.data ? [] : INIT)
+  const showDemoSeed = !session.isPending && !session.data
+  const [advances, setAdvances] = useState<Advance[]>(showDemoSeed ? INIT : [])
   const [filter, setFilter] = useState<'all' | Status>('all')
   const [showNew, setShowNew] = useState(false)
   const [query, setQuery] = useState('')

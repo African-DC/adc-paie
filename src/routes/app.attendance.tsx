@@ -36,7 +36,8 @@ function buildInitial(active: typeof EMPLOYEES) {
 
 function AttendancePage() {
   const session = useSession()
-  const active = session.data ? [] : EMPLOYEES.filter((e) => e.status === 'active')
+  const showDemoSeed = !session.isPending && !session.data
+  const active = showDemoSeed ? EMPLOYEES.filter((e) => e.status === 'active') : []
   const [punches, setPunches] = useState(() => buildInitial(active))
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<'all' | Status>('all')

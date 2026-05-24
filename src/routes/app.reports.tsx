@@ -9,8 +9,9 @@ export const Route = createFileRoute('/app/reports')({ component: ReportsPage })
 
 function ReportsPage() {
   const session = useSession()
+  const showDemoSeed = !session.isPending && !session.data
   const org = useStore((s) => s.org)
-  const active = session.data ? [] : EMPLOYEES.filter((e) => e.status === 'active')
+  const active = showDemoSeed ? EMPLOYEES.filter((e) => e.status === 'active') : []
   const totals = active.reduce((acc, e) => {
     const p = computePayslip(e.brut, e.family.kids, e.family.situation === 'marié(e)', e.joinedAt)
     return { brut: acc.brut + e.brut, net: acc.net + p.net, patron: acc.patron + p.patron, total: acc.total + p.total, cnps: acc.cnps + p.cnps, its: acc.its + p.its }
@@ -18,7 +19,7 @@ function ReportsPage() {
 
   const cdi = active.filter((e) => e.contract === 'CDI').length
   const cdd = active.filter((e) => e.contract === 'CDD').length
-  const enConge = session.data ? 0 : EMPLOYEES.filter((e) => e.status !== 'active').length
+  const enConge = showDemoSeed ? EMPLOYEES.filter((e) => e.status !== 'active').length : 0
   const masseAnnuelle = totals.brut * 12
   const masseCoutAnnuel = totals.total * 12
   const avgBrut = Math.round(totals.brut / active.length)

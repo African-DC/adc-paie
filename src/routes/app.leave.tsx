@@ -1,9 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
 import { CalendarDays, Plus, Check, X, Clock, CalendarCheck, Search } from 'lucide-react'
-import { EMPLOYEES } from '../lib/mock'
+import { EMPLOYEES as MOCK_EMPLOYEES } from '../lib/mock'
 import { store } from '../lib/store'
 import { useSession } from '../lib/auth-client'
+import { useQuery } from 'convex/react'
+import { api } from '../../convex/_generated/api'
 
 export const Route = createFileRoute('/app/leave')({ component: LeavePage })
 
@@ -22,7 +24,17 @@ export default function LeaveDefault() { return null }
 
 function LeavePage() {
   const session = useSession()
-  const [reqs, setReqs] = useState<Request[]>(session.data ? [] : INITIAL)
+  const liveEmployees = useQuery(api.employees.list, session.data ? { status: 'active' } : 'skip')
+  const EMPLOYEES = session.data
+    ? (liveEmployees?.map((e) => ({
+        id: e._id,
+        firstName: e.firstName,
+        lastName: e.lastName,
+        status: 'active' as const,
+      })) ?? [])
+    : MOCK_EMPLOYEES
+  const showDemoSeed = !session.isPending && !session.data
+  const [reqs, setReqs] = useState<Request[]>(showDemoSeed ? INITIAL : [])
   const [tab, setTab] = useState<'all' | 'pending' | 'calendar'>('pending')
   const [showNew, setShowNew] = useState(false)
 
