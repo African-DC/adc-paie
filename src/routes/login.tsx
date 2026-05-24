@@ -120,8 +120,8 @@ function LoginPage() {
         </div>
       </div>
       <div className="hidden lg:flex flex-1 relative text-white items-center justify-center p-12 overflow-hidden">
-        <img src="/auth-side.png" alt="" className="absolute inset-0 w-full h-full object-cover" loading="eager" />
-        <div className="absolute inset-0 bg-gradient-to-br from-ink/85 via-ink/70 to-ink/85" />
+        <img src="/auth-side.png" alt="" className="absolute inset-0 w-full h-full object-cover object-center" loading="eager" />
+        <div className="absolute inset-0 bg-gradient-to-br from-ink/55 via-ink/35 to-ink/55" />
         <div className="relative z-10 max-w-md">
           <Sparkles className="w-6 h-6 text-orange mb-6" />
           <p className="font-serif text-3xl italic font-medium leading-snug drop-shadow-lg">
