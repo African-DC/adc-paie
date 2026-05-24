@@ -150,7 +150,7 @@ function AppLayout() {
       <aside className={`fixed lg:sticky inset-y-0 lg:inset-y-auto lg:top-0 lg:h-screen left-0 w-72 lg:w-64 bg-ink-2 text-white shrink-0 z-50 lg:z-auto transform transition-transform duration-200 lg:transform-none flex flex-col ${drawer ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
         <div className="px-6 py-5 border-b border-white/10 flex items-center justify-between">
           <Link to={isEmployeeMode ? '/app/me' : '/app'} className="block" title={isEmployeeMode ? 'Mon espace salarié' : 'Accueil dashboard'}>
-            <span className="font-serif text-xl font-semibold">ADC <span style={{color:'var(--color-orange)',fontStyle:'italic',fontWeight:500}}>Paie</span></span>
+            <img src="/adc-paie-logo.png" alt="ADC Paie" className="h-7 w-auto brightness-0 invert" />
           </Link>
           <button onClick={() => setDrawer(false)} className="lg:hidden w-8 h-8 rounded-sm hover:bg-white/10 flex items-center justify-center" aria-label="Fermer le menu">
             <X className="w-4 h-4" />
@@ -244,7 +244,9 @@ function AppLayout() {
             <button onClick={() => setDrawer(true)} className="lg:hidden w-9 h-9 hover:bg-n-100 rounded-sm inline-flex items-center justify-center" aria-label="Ouvrir le menu">
               <Menu className="w-5 h-5 text-ink" />
             </button>
-            <Link to={isEmployeeMode ? '/app/me' : '/app'} className="lg:hidden font-serif text-base font-semibold" title={isEmployeeMode ? 'Mon espace salarié' : 'Accueil dashboard'}>ADC <span className="em-serif">Paie</span></Link>
+            <Link to={isEmployeeMode ? '/app/me' : '/app'} className="lg:hidden inline-flex items-center" title={isEmployeeMode ? 'Mon espace salarié' : 'Accueil dashboard'} aria-label="ADC Paie">
+              <img src="/adc-paie-logo.png" alt="ADC Paie" className="h-6 w-auto" />
+            </Link>
             <div className="hidden md:flex items-center gap-2 text-[13px] text-n-500">
               {isEmployeeMode ? (
                 <>

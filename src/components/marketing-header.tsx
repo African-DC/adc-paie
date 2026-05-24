@@ -11,7 +11,9 @@ export function MarketingHeader() {
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-n-100">
       <div className="max-w-7xl mx-auto px-6 lg:px-12 h-16 flex items-center justify-between">
-        <Link to="/" className="font-serif text-xl font-semibold tracking-tight">ADC <span className="em-serif">Paie</span></Link>
+        <Link to="/" className="inline-flex items-center" aria-label="ADC Paie — Accueil">
+          <img src="/adc-paie-logo.png" alt="ADC Paie" className="h-7 w-auto" />
+        </Link>
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-n-700">
           <Link to="/" hash="features" className="hover:text-orange transition-colors">Fonctionnalités</Link>
           <Link to="/" hash="pricing" className="hover:text-orange transition-colors">Tarifs</Link>

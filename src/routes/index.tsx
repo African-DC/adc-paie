@@ -12,10 +12,10 @@ function LandingPage() {
     <div className="min-h-screen bg-white">
       <MarketingHeader />
 
-      <section className="dot-pattern relative">
-        <div className="max-w-7xl mx-auto px-6 lg:px-12 pt-20 pb-24 lg:pt-28 lg:pb-32">
-          <div className="grid lg:grid-cols-12 gap-12 items-end">
-            <div className="lg:col-span-8">
+      <section className="dot-pattern relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12 pt-20 pb-24 lg:pt-28 lg:pb-32 relative z-10">
+          <div className="grid lg:grid-cols-12 gap-10 items-center">
+            <div className="lg:col-span-7">
               <div className="inline-flex items-center gap-3 text-[11px] tracking-[0.28em] uppercase text-n-700 font-semibold mb-6">
                 <span className="w-8 h-px bg-orange" />Produit ADC · SaaS Conformité
               </div>
@@ -33,12 +33,19 @@ function LandingPage() {
                   Voir les tarifs <ArrowRight className="w-4 h-4" />
                 </a>
               </div>
-            </div>
-            <div className="lg:col-span-4">
-              <p className="font-serif italic text-xl text-n-700 leading-relaxed border-l-2 border-orange pl-5 max-w-sm">
+              <p className="mt-10 font-serif italic text-lg text-n-700 leading-relaxed border-l-2 border-orange pl-5 max-w-md">
                 « Bulletins, déclarations, paiements. Tout en quinze minutes par mois, plus jamais trois jours. »
               </p>
-              <p className="mt-4 text-[10px] tracking-[0.28em] uppercase text-n-500 pl-5">— Pilote interne · novembre 2026</p>
+              <p className="mt-2 text-[10px] tracking-[0.28em] uppercase text-n-500 pl-5">— Pilote interne · novembre 2026</p>
+            </div>
+            <div className="lg:col-span-5 relative">
+              <div className="relative aspect-[4/5] lg:aspect-auto lg:h-[560px] overflow-hidden rounded-sm shadow-2xl ring-1 ring-n-200">
+                <img src="/hero-landing.png" alt="Comptable PME ivoirienne au travail" className="absolute inset-0 w-full h-full object-cover" loading="eager" fetchPriority="high" />
+                <div className="absolute inset-0 bg-gradient-to-tr from-ink/20 via-transparent to-transparent pointer-events-none" />
+              </div>
+              <div className="absolute -bottom-3 -left-3 bg-orange text-white px-4 py-2 text-[10px] uppercase tracking-[0.22em] font-semibold rounded-sm hidden sm:inline-block">
+                Fait pour la Côte d'Ivoire
+              </div>
             </div>
           </div>
         </div>

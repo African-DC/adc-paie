@@ -13,10 +13,11 @@ export const Route = createRootRoute({
       { property: 'og:title', content: 'ADC Paie & RH · Le SaaS paie conforme des PME ivoiriennes' },
       { property: 'og:description', content: 'Calcul automatique CNPS, ITS, IGR. Bulletins PDF. Déclarations DGI. Conçu par African Digit Consulting.' },
       { property: 'og:type', content: 'website' },
-      { property: 'og:image', content: '/logo-adc.png' },
+      { property: 'og:image', content: '/adc-paie-logo.png' },
     ],
     links: [
-      { rel: 'icon', type: 'image/png', href: '/logo-adc-icon.png' },
+      { rel: 'icon', type: 'image/png', href: '/favicon-src.png' },
+      { rel: 'apple-touch-icon', href: '/favicon-src.png' },
       { rel: 'stylesheet', href: appCss },
       { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
       { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossOrigin: 'anonymous' },
