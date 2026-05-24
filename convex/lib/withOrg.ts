@@ -42,17 +42,16 @@ export async function withOrg<Ctx extends GenericQueryCtx<any> | GenericMutation
   let userRole = 'member'
   try {
     const member = await ctx.runQuery((components as any).betterAuth.adapter.findOne, {
-      input: {
-        model: 'member',
-        where: [
-          { field: 'organizationId', value: orgId },
-          { field: 'userId', value: userId, connector: 'AND' },
-        ],
-      },
+      model: 'member',
+      where: [
+        { field: 'organizationId', value: orgId },
+        { field: 'userId', value: userId, connector: 'AND' },
+      ],
     })
     if (member?.role) userRole = String(member.role)
-  } catch {
-    /* member lookup failed — fall back to 'member' role, audit will catch */
+    else console.warn(`[withOrg] no member row for org=${orgId} user=${userId}, defaulting to 'member'`)
+  } catch (err) {
+    console.error('[withOrg] member lookup failed:', err)
   }
 
   return fn({ ...ctx, orgId, userId, userRole } as OrgContext<Ctx>)
