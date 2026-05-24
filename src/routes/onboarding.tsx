@@ -51,7 +51,8 @@ const SECTEURS = [
 function OnboardingPage() {
   const session = useSession()
   const initSettings = useMutation(api.organizations.initOrgSettings)
-  const [step, setStep] = useState<1 | 2>(1)
+  const initialStep = (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('step') === '2') ? 2 : 1
+  const [step, setStep] = useState<1 | 2>(initialStep)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [errorDebug, setErrorDebug] = useState<string | null>(null)
@@ -115,8 +116,10 @@ function OnboardingPage() {
         setLoading(false)
         return
       }
-      setStep(2)
-      setLoading(false)
+      // Hard reload to refresh JWT cache — Convex client needs the new
+      // activeOrganizationId claim before initOrgSettings can succeed.
+      // Voir gotcha JWT cache : ~/.claude/rules/convex-better-auth-setup.md
+      window.location.href = '/onboarding?step=2'
     } catch (err) {
       setError(mapOrgCreateError(err))
       setErrorDebug(debugErrorString(err))
